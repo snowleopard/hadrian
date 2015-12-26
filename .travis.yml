@@ -1,0 +1,22 @@
+sudo: false
+
+matrix:
+  include:
+    - env: CABALVER=1.22 GHCVER=7.10.3
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,zlib1g-dev,terminfo-dev],  sources: [hvr-ghc]}}
+
+before_install:
+ - export PATH=$HOME/.cabal/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+ - cabal --version
+ - cabal update
+ - cabal install happy alex
+ - git clone git://git.haskell.org/ghc
+ - ( cd ghc && git submodule update --init && git clone .. shake-build && ./boot )
+
+install:
+ - cabal install --only-dependencies .
+
+script:
+ - cd ghc
+ - ./configure
+ - ./shake-build/build.sh
