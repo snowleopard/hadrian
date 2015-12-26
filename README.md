@@ -1,6 +1,8 @@
 Shaking up GHC
 ==============
 
+[![Join the chat at https://gitter.im/snowleopard/shaking-up-ghc](https://badges.gitter.im/snowleopard/shaking-up-ghc.svg)](https://gitter.im/snowleopard/shaking-up-ghc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 As part of my 6-month research secondment to Microsoft Research in Cambridge
 I am taking up the challenge of migrating the current [GHC][ghc] build system
 based on standard `make` into a new and (hopefully) better one based on
