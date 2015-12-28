@@ -1,12 +1,34 @@
-{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Oracles.PackageData (
     PackageData (..), PackageDataList (..),
     pkgData, pkgDataList, packageDataOracle
     ) where
 
+import GHC.Generics
+
 import Development.Shake.Config
+import Development.Shake.Rule
+
 import Base
-import qualified Data.HashMap.Strict as Map
+import Stage
+import qualified Package
+import Oracles.PackageData.Internals
+
+import Distribution.Package
+import Distribution.ModuleName as ModuleName
+
+extract :: PackageDataField a -> PackageData -> a
+extract Package          = pdPackage
+extract BuildGhciLib     = pdWithGHCiLib
+extract CcArgs           = pdCcArgs
+extract CSources         = pdCSources
 
 -- For each (PackageData path) the file 'path/package-data.mk' contains
 -- a line of the form 'path_VERSION = 1.2.3.4'.
@@ -16,80 +38,53 @@ import qualified Data.HashMap.Strict as Map
 -- PackageDataList is used for multiple string options separated by spaces,
 -- such as 'path_MODULES = Data.Array Data.Array.Base ...'.
 -- pkgListData Modules therefore returns ["Data.Array", "Data.Array.Base", ...]
-data PackageData = BuildGhciLib FilePath
-                 | ComponentId  FilePath
-                 | Synopsis     FilePath
-                 | Version      FilePath
+data PackageDataField a where
+    Package          :: PackageDataField PackageIdentifier
+    CcArgs           :: PackageDataField [String]
+    CSources         :: PackageDataField [FilePath]
+    CppArgs          :: PackageDataField [String]
+    DepCcArgs        :: PackageDataField [String]
+    DepExtraLibs     :: PackageDataField [FilePath]
+    Dependencies     :: PackageDataField [PackageIdentifier]
+    DepIncludeDirs   :: PackageDataField [FilePath]
+    DepLdArgs        :: PackageDataField [String]
+    DepLibDirs       :: PackageDataField [String]
+    HiddenModules    :: PackageDataField [ModuleName]
+    HsArgs           :: PackageDataField [String]
+    IncludeDirs      :: PackageDataField [FilePath]
+    LdArgs           :: PackageDataField [String]
+    Modules          :: PackageDataField [ModuleName]
+    SrcDirs          :: PackageDataField [FilePath]
+    TransitiveDeps   :: PackageDataField [PackageIdentifier]
+    BuildGhciLib     :: PackageDataField Bool
+    deriving (Typeable)
 
-data PackageDataList = CcArgs             FilePath
-                     | CSrcs              FilePath
-                     | CppArgs            FilePath
-                     | DepCcArgs          FilePath
-                     | DepExtraLibs       FilePath
-                     | DepIds             FilePath
-                     | DepIncludeDirs     FilePath
-                     | DepLdArgs          FilePath
-                     | DepLibDirs         FilePath
-                     | DepNames           FilePath
-                     | Deps               FilePath
-                     | HiddenModules      FilePath
-                     | HsArgs             FilePath
-                     | IncludeDirs        FilePath
-                     | LdArgs             FilePath
-                     | Modules            FilePath
-                     | SrcDirs            FilePath
-                     | TransitiveDepNames FilePath
+deriving instance Show (PackageDataField a)
+deriving instance Eq (PackageDataField a)
+deriving instance Hashable (PackageDataField a)
+deriving instance Binary (PackageDataField a)
+instance NFData (PackageDataField a) where
+    rnf x = x `seq` ()
 
-newtype PackageDataKey = PackageDataKey (FilePath, String)
+data PackageDataKey a = PackageDataKey Stage Package.Package (PackageDataField a)
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 
-askPackageData :: FilePath -> String -> Action String
-askPackageData path key = do
-    let fullKey = replaceSeparators '_' $ path ++ "_" ++ key
-        file    = path -/- "package-data.mk"
-    maybeValue <- askOracle $ PackageDataKey (file, fullKey)
-    case maybeValue of
-        Nothing    -> return ""
-        Just value -> return value
-        -- Nothing    -> putError $ "No key '" ++ key ++ "' in " ++ file ++ "."
+instance (ShakeValue a) => Rule (PackageDataKey a) a where
+  storedValue _ _ = return Nothing
 
-pkgData :: PackageData -> Action String
-pkgData packageData = case packageData of
-    BuildGhciLib path -> askPackageData path "BUILD_GHCI_LIB"
-    ComponentId  path -> askPackageData path "COMPONENT_ID"
-    Synopsis     path -> askPackageData path "SYNOPSIS"
-    Version      path -> askPackageData path "VERSION"
-
-pkgDataList :: PackageDataList -> Action [String]
-pkgDataList packageData = fmap (map unquote . words) $ case packageData of
-    CcArgs             path -> askPackageData path "CC_OPTS"
-    CSrcs              path -> askPackageData path "C_SRCS"
-    CppArgs            path -> askPackageData path "CPP_OPTS"
-    DepCcArgs          path -> askPackageData path "DEP_CC_OPTS"
-    DepExtraLibs       path -> askPackageData path "DEP_EXTRA_LIBS"
-    DepIds             path -> askPackageData path "DEP_IPIDS"
-    DepIncludeDirs     path -> askPackageData path "DEP_INCLUDE_DIRS_SINGLE_QUOTED"
-    DepLibDirs         path -> askPackageData path "DEP_LIB_DIRS_SINGLE_QUOTED"
-    DepLdArgs          path -> askPackageData path "DEP_LD_OPTS"
-    DepNames           path -> askPackageData path "DEP_NAMES"
-    Deps               path -> askPackageData path "DEPS"
-    HiddenModules      path -> askPackageData path "HIDDEN_MODULES"
-    HsArgs             path -> askPackageData path "HC_OPTS"
-    IncludeDirs        path -> askPackageData path "INCLUDE_DIRS"
-    LdArgs             path -> askPackageData path "LD_OPTS"
-    Modules            path -> askPackageData path "MODULES"
-    SrcDirs            path -> askPackageData path "HS_SRC_DIRS"
-    TransitiveDepNames path -> askPackageData path "TRANSITIVE_DEP_NAMES"
+declarePackageData :: Rules ()
+declarePackageData = rule f
   where
-    unquote = dropWhile (== '\'') . dropWhileEnd (== '\'')
+    f :: (ShakeValue a, Typeable a) => PackageDataKey a -> Maybe (Action a)
+    f (PackageDataKey stage pkg fld) = Just $ do
+      pd <- askAllPackageData stage pkg
+      pure $ extract fld pd
+
+askAllPackageData :: Stage -> Package.Package -> Action PackageData
+askAllPackageData stage pkg = askOracle $ PackageDataKey stage pkg
 
 -- Oracle for 'package-data.mk' files
 packageDataOracle :: Rules ()
 packageDataOracle = do
-    pkgDataContents <- newCache $ \file -> do
-        need [file]
-        putOracle $ "Reading " ++ file ++ "..."
-        liftIO $ readConfigFile file
-    _ <- addOracle $ \(PackageDataKey (file, key)) ->
-        Map.lookup key <$> pkgDataContents file
+    _ <- addOracle $ \(PackageDataKey stage pkg) -> getPackageData stage pkg
     return ()
