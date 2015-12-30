@@ -21,6 +21,22 @@ buildProgram _ target @ (PartialTarget stage pkg) = do
         match file = case programPath stage pkg of
             Nothing      -> False
             Just prgPath -> ("//" ++ prgPath) ?== file
+        matchWrapper file = case defaultWrapperPath stage pkg of
+            Nothing      -> False
+            Just wrpPath -> ("//" ++ wrpPath) ?== file
+    matchWrapper ?> \bin -> do
+        let Just wrappedProgram = programPath stage pkg
+        need $ [wrappedProgram]
+        let wrapper = unlines [ "#!/bin/bash"
+                              , "exec " ++ wrappedProgram ++ " ${1+\"$@\"}"
+                              ]
+        writeFileChanged bin wrapper
+        () <- cmd "chmod +x " [bin]
+        putSuccess $ renderBox
+            [ "Successfully created wrapper '"
+              ++ pkgNameString pkg ++ "' (" ++ show stage ++ ")."
+            , "Executable: " ++ bin
+            ]
 
     match ?> \bin -> do
         cSrcs <- cSources target -- TODO: remove code duplication (Library.hs)
