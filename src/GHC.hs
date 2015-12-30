@@ -7,7 +7,7 @@ module GHC (
     integerSimple, iservBin, mkUserGuidePart, parallel, pretty, primitive, process,
     runGhc, stm, templateHaskell, terminfo, time, transformers, unix, win32, xhtml,
 
-    defaultKnownPackages, defaultTargetDirectory, defaultProgramPath
+    defaultKnownPackages, defaultTargetDirectory, defaultProgramPath, defaultWrapperPath
     ) where
 
 import Base
@@ -52,7 +52,7 @@ dllSplit        = utility  "dll-split"
 filepath        = library  "filepath"
 genapply        = utility  "genapply"
 genprimopcode   = utility  "genprimopcode"
-ghc             = topLevel "ghc-bin"        `setPath` "ghc"   `setType` Program
+ghc             = topLevel "ghc-bin"        `setPath` "ghc"   `setType` Program `setWrapper` "dummy"
 ghcBoot         = library  "ghc-boot"
 ghcCabal        = utility  "ghc-cabal"
 ghci            = library  "ghci"
@@ -99,10 +99,20 @@ xhtml           = library  "xhtml"
 defaultTargetDirectory :: Stage -> Package -> FilePath
 defaultTargetDirectory stage _ = stageString stage
 
+type ProgramNameModifier = String -> String
 -- TODO: simplify
 -- | Returns a relative path to the program executable
 defaultProgramPath :: Stage -> Package -> Maybe FilePath
 defaultProgramPath stage pkg
+   | isWrapped pkg = defaultProgramPath' (\n -> "lib" -/- "bin" -/- n) stage pkg
+   | otherwise = defaultProgramPath' id stage pkg
+
+defaultWrapperPath :: Stage -> Package -> Maybe FilePath
+defaultWrapperPath _ (Package {pkgWrapper=Nothing}) = Nothing
+defaultWrapperPath stage pkg = defaultProgramPath' id stage pkg
+
+defaultProgramPath' :: ProgramNameModifier -> Stage -> Package -> Maybe FilePath
+defaultProgramPath' modifier stage pkg
     | pkg == ghc = Just . inplaceProgram $ "ghc-stage" ++ show (fromEnum stage + 1)
     | pkg == haddock || pkg == ghcTags = case stage of
         Stage2 -> Just . inplaceProgram $ pkgNameString pkg
@@ -112,6 +122,6 @@ defaultProgramPath stage pkg
         _      -> Just . installProgram $ pkgNameString pkg
     | otherwise = Nothing
   where
-    inplaceProgram name = programInplacePath -/- name <.> exe
+    inplaceProgram name = programInplacePath -/- (modifier name) <.> exe
     installProgram name = pkgPath pkg -/- defaultTargetDirectory stage pkg
-                                      -/- "build/tmp" -/- name <.> exe
+                                      -/- "build/tmp" -/- (modifier name) <.> exe

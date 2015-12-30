@@ -7,7 +7,8 @@ module Package (
     pkgCabalFile,
     matchPackageNames,
     -- * Helpers for constructing and using 'Package's
-    setPath, topLevel, library, utility, setType, isLibrary, isProgram
+    setPath, topLevel, library, utility, setType, setWrapper, isLibrary,
+    isProgram, isWrapped
     ) where
 
 import Base
@@ -26,12 +27,15 @@ instance Show PackageName where
 -- for now.
 data PackageType = Program | Library deriving Generic
 
+type PackageWrapper = String
+
 data Package = Package
      {
          pkgName :: PackageName, -- ^ Examples: "ghc", "Cabal"
          pkgPath :: FilePath,    -- ^ pkgPath is the path to the source code relative to the root.
                                  -- e.g. "compiler", "libraries/Cabal/Cabal"
-         pkgType :: PackageType
+         pkgType :: PackageType,
+         pkgWrapper :: Maybe PackageWrapper
      }
      deriving Generic
 
@@ -43,19 +47,22 @@ pkgCabalFile :: Package -> FilePath
 pkgCabalFile pkg = pkgPath pkg -/- getPackageName (pkgName pkg) <.> "cabal"
 
 topLevel :: PackageName -> Package
-topLevel name = Package name (getPackageName name) Library
+topLevel name = Package name (getPackageName name) Library Nothing
 
 library :: PackageName -> Package
-library name = Package name ("libraries" -/- getPackageName name) Library
+library name = Package name ("libraries" -/- getPackageName name) Library Nothing
 
 utility :: PackageName -> Package
-utility name = Package name ("utils" -/- getPackageName name) Program
+utility name = Package name ("utils" -/- getPackageName name) Program Nothing
 
 setPath :: Package -> FilePath -> Package
 setPath pkg path = pkg { pkgPath = path }
 
 setType :: Package -> PackageType -> Package
 setType pkg ty = pkg { pkgType = ty }
+
+setWrapper :: Package -> PackageWrapper -> Package
+setWrapper pkg wrapper = pkg { pkgWrapper = Just wrapper }
 
 isLibrary :: Package -> Bool
 isLibrary (Package {pkgType=Library}) = True
@@ -64,6 +71,10 @@ isLibrary _ = False
 isProgram :: Package -> Bool
 isProgram (Package {pkgType=Program}) = True
 isProgram _ = False
+
+isWrapped :: Package -> Bool
+isWrapped (Package {pkgWrapper=Nothing}) = False
+isWrapped _ = True
 
 instance Show Package where
     show = show . pkgName
