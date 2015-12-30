@@ -12,6 +12,13 @@ import Rules.Resources
 import Settings
 import Settings.Builders.GhcCabal
 
+wrapperGenerator :: String -> Expr String
+wrapperGenerator program = do
+    top <- getSetting GhcSourcePath
+    return $ unlines [ "#!/bin/bash"
+                     , "exec " ++ (top -/- program) ++ " -B" ++ top ++ " ${1+\"$@\"}"
+                     ]
+
 -- TODO: Get rid of the Paths_hsc2hs.o hack.
 -- TODO: Do we need to consider other ways when building programs?
 buildProgram :: Resources -> PartialTarget -> Rules ()
@@ -27,16 +34,11 @@ buildProgram _ target @ (PartialTarget stage pkg) = do
     matchWrapper ?> \bin -> do
         let Just wrappedProgram = programPath stage pkg
         need $ [wrappedProgram]
-        let wrapper = unlines [ "#!/bin/bash"
-                              , "exec " ++ wrappedProgram ++ " ${1+\"$@\"}"
-                              ]
+
+        wrapper <- interpretPartial target $ wrapperGenerator wrappedProgram
         writeFileChanged bin wrapper
         () <- cmd "chmod +x " [bin]
-        putSuccess $ renderBox
-            [ "Successfully created wrapper '"
-              ++ pkgNameString pkg ++ "' (" ++ show stage ++ ")."
-            , "Executable: " ++ bin
-            ]
+        putSuccess $ "| Successfully created wrapper '" ++ pkgNameString pkg ++ "' (" ++ show stage ++ ")."
 
     match ?> \bin -> do
         cSrcs <- cSources target -- TODO: remove code duplication (Library.hs)
