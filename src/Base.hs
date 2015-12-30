@@ -164,9 +164,9 @@ renderBox ls =
                      , "│ "
                      , "╰──────────"
                      )
-      | otherwise  = ( "/----------"
+      | otherwise  = ( ".----------"
                      , "| "
-                     , "\\----------"
+                     , "'----------"
                      )
     -- FIXME: See Shake #364.
     useUnicode = False
