@@ -16,7 +16,7 @@ wrapperGenerator :: String -> Expr String
 wrapperGenerator program = do
     top <- getSetting GhcSourcePath
     return $ unlines [ "#!/bin/bash"
-                     , "exec " ++ (top -/- program) ++ " -B" ++ top ++ " ${1+\"$@\"}"
+                     , "exec " ++ (top -/- program) ++ " -B" ++ (top -/- "inplace" -/- "lib") ++ " ${1+\"$@\"}"
                      ]
 
 -- TODO: Get rid of the Paths_hsc2hs.o hack.

@@ -104,7 +104,7 @@ type ProgramNameModifier = String -> String
 -- | Returns a relative path to the program executable
 defaultProgramPath :: Stage -> Package -> Maybe FilePath
 defaultProgramPath stage pkg
-   | isWrapped pkg = defaultProgramPath' (++ "_") stage pkg
+   | isWrapped pkg = defaultProgramPath' (\n -> "lib" -/- "bin" -/- n) stage pkg
    | otherwise = defaultProgramPath' id stage pkg
 
 defaultWrapperPath :: Stage -> Package -> Maybe FilePath
