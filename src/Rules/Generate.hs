@@ -17,6 +17,11 @@ import Rules.Actions
 import Rules.Resources (Resources)
 import Settings
 
+import System.FilePath (takeBaseName, takeDirectory)
+
+parent :: FilePath -> String
+parent = takeBaseName . takeDirectory
+
 primopsSource :: FilePath
 primopsSource = "compiler/prelude/primops.txt.pp"
 
@@ -89,7 +94,9 @@ generatePackageCode _ target @ (PartialTarget stage pkg) =
         generated ?> \file -> do
             let pattern = "//" ++ takeBaseName file <.> "*"
             files <- fmap (filter (pattern ?==)) $ moduleFiles stage pkg
-            let gens = [ (f, b) | f <- files, Just b <- [determineBuilder f] ]
+            let gens = case ([ (f, b) | f <- files, Just b <- [determineBuilder f] ]) of
+                    [x] -> [x]
+                    xs  -> [ (f, b) | (f, b) <- xs, parent f == parent file ]
             when (length gens /= 1) . putError $
                 "Exactly one generator expected for " ++ file
                 ++ " (found: " ++ show gens ++ ")."
