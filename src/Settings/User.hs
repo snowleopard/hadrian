@@ -3,16 +3,17 @@ module Settings.User (
     userProgramPath, userKnownPackages, integerLibrary,
     trackBuildSystem, buildHaddock, validating, ghciWithDebugger, ghcProfiled,
     ghcDebugged, dynamicGhcPrograms, laxDependencies, buildSystemConfigFile,
-    verboseCommands, warnAll, warnTabs, turnWarningsIntoErrors, splitObjects
+    verboseCommands, turnWarningsIntoErrors, splitObjects
     ) where
 
 import GHC
 import Expression
+import Predicates (builderGhc)
 
 -- No user-specific settings by default
 -- TODO: rename to userArgs
 userArgs :: Args
-userArgs = mempty
+userArgs = builderGhc ? remove ["-Wall", "-fwarn-tabs"]
 
 -- Control which packages get to be built
 userPackages :: Packages
