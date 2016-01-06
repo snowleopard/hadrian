@@ -24,8 +24,8 @@ ghcBuilderArgs = stagedBuilder Ghc ? do
             , arg "-H32m"
             , stage0    ? arg "-O"
             , notStage0 ? arg "-O2"
-            , arg "-Wall"
-            , arg "-fwarn-tabs"
+            , warnAll ? arg "-Wall"
+            , warnTabs ? arg "-fwarn-tabs"
             , splitObjects ? arg "-split-objs"
             , not buildObj ? arg "-no-auto-link-packages"
             , not buildObj ? append [ "-optl-l" ++ lib | lib <- libs    ]
