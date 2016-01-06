@@ -8,11 +8,12 @@ module Settings.User (
 
 import GHC
 import Expression
+import Predicates (builderGhc)
 
 -- No user-specific settings by default
 -- TODO: rename to userArgs
 userArgs :: Args
-userArgs = mempty
+userArgs = builderGhc ? remove ["-Wall", "-fwarn-tabs"]
 
 -- Control which packages get to be built
 userPackages :: Packages
@@ -60,6 +61,14 @@ validating = False
 -- To switch off split objects change to 'return False'
 splitObjects :: Predicate
 splitObjects = return False -- FIXME: should be defaultSplitObjects, see #84.
+
+-- | switch @-Wall@ on during ghc compilation passes.
+warnAll :: Predicate
+warnAll = return False
+
+-- | switch @-fwarn-tabs@ on during ghc compiliation passes.
+warnTabs :: Predicate
+warnTabs = return False
 
 dynamicGhcPrograms :: Bool
 dynamicGhcPrograms = False
