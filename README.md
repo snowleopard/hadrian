@@ -23,7 +23,7 @@ identical to those for the `make` build system. This means that you don't need
 to adjust anything if you are already familiar with building ghc using the `make`
 build system.
 
-### Getting the source and configuring ghc
+### Getting the source and configuring GHC
 
 ```bash
 git clone --recursive git://git.haskell.org/ghc.git
