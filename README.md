@@ -30,9 +30,8 @@ git clone --recursive git://git.haskell.org/ghc.git
 cd ghc
 git clone git://github.com/snowleopard/shaking-up-ghc shake-build
 ./boot
-./configure
-# or on window
-./configure --enable-tarballs-autodownload
+./configure                                # on linux / os x
+./configure --enable-tarballs-autodownload # on windows
 ```
 
 ### Configuring the build process
@@ -43,8 +42,8 @@ uses `src/Settings/User.hs` for build specification.
 ### Building GHC using `shaking-up-ghc`
 
 ```bash
-./shake-build/build.sh       # linux / osx: to run the script directly. You'll need to have `shake` installed globally.
-./shake-build/build.cabal.sh # linux / osx: to install the build system in a Cabal sandbox and then run it.
+./shake-build/build.sh       # linux / os x: to run the script directly. You'll need to have `shake` installed globally.
+./shake-build/build.cabal.sh # linux / os x: OR to install the build system in a Cabal sandbox and then run it.
 shake-build/build.bat        # windows
 ```
 
