@@ -7,7 +7,9 @@ import Control.Monad.Trans.Reader
 
 import Base
 import GHC.Generics (Generic)
-import Oracles
+import Oracles.Config
+import Oracles.Config.Setting
+import Oracles.WindowsRoot
 import Stage
 
 -- | A 'Builder' is an external command invoked in separate process using 'Shake.cmd'
