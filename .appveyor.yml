@@ -1,19 +1,41 @@
 clone_folder: "C:\\msys64\\home\\ghc\\shake-build"
+environment:
+  global:
+    STACK_ROOT: "c:\\sr"
+
+cache:
+    - "c:\\sr"
 
 install:
+    - cd
     - set MSYSTEM=MINGW64
-    - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\local\bin;C:\msys64\usr\bin;%PATH%
+    - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;C:\msys64;%PATH%
+    - set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\local\bin\;%APPVEYOR_BUILD_FOLDER%
     - curl -ostack.zip -LsS --insecure https://www.stackage.org/stack/windows-x86_64
     - 7z x stack.zip stack.exe
     - bash -lc "curl -LsS http://www.haskell.org/ghc/dist/7.10.3/ghc-7.10.3-x86_64-unknown-mingw32.tar.xz | tar -xJ -C /mingw64 --strip-components=1"
     - stack exec -- pacman -S --noconfirm gcc binutils p7zip git
     - echo "" | stack --no-terminal install alex happy shake ansi-terminal mtl
-    - set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\local\bin\
-    - git clone --recursive git://git.haskell.org/ghc.git C:\msys64\home\ghc\tmp
+
+    - git config --global url."git://github.com/ghc/packages-".insteadOf     git://github.com/ghc/packages/
+    - git config --global url."http://github.com/ghc/packages-".insteadOf    http://github.com/ghc/packages/
+    - git config --global url."https://github.com/ghc/packages-".insteadOf   https://github.com/ghc/packages/
+    - git config --global url."ssh://git@github.com/ghc/packages-".insteadOf ssh://git@github.com/ghc/packages/
+    - git config --global url."git@github.com:/ghc/packages-".insteadOf      git@github.com:/ghc/packages/
+    - git clone https://github.com/ghc/ghc --recurse-submodules --depth 1 C:\msys64\home\ghc\tmp
+
     - bash -lc "mv /home/ghc/tmp/* /home/ghc"
-    - bash -lc "cd /home/ghc && ./mk/get-win32-tarballs.sh download x86_64"
+    - cd C:\msys64\home\ghc
+    - stack exec -- perl boot
+    - bash -lc "cd /home/ghc; mkdir -p ghc-tarballs/mingw-w64/x86_64/"
+    - bash -lc "cd /home/ghc; mkdir -p ghc-tarballs/perl/"
+    - bash -lc "cd /home/ghc; exec 0</dev/null; ./configure --enable-tarballs-autodownload"
+    - ghc   --version
+    - stack --version
+    - alex  --version
+    - happy --version
 
 build_script:
-    - bash -lc "cd /home/ghc && ./boot"
-    - bash -lc "cd /home/ghc && echo \"\" | ./configure"
-    - bash -lc "cd /home/ghc && ./shake-build/build.bat -j --no-progress"
+    - cd C:\msys64\home\ghc\shake-build
+    - echo "" | stack --no-terminal exec -- build.bat selftest
+    - echo "" | stack --no-terminal exec -- build.bat -j --no-progress inplace/bin/ghc-stage1.exe

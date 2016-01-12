@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Rules.Actions (
     build, buildWithResources, copyFile, createDirectory, moveDirectory,
-    fixFile, runConfigure, runMake, runBuilder
+    fixFile, runConfigure, runMake, runBuilder, makeExecutable
     ) where
 
 import qualified System.Directory as IO
@@ -115,6 +115,11 @@ runBuilder builder args = do
     putBuild $ "| Run " ++ show builder ++ note
     quietly $ cmd [path] args
 
+makeExecutable :: FilePath -> Action ()
+makeExecutable file = do
+    putBuild $ "| Make '" ++ file ++ "' executable."
+    quietly $ cmd "chmod +x " [file]
+
 -- Print out key information about the command being executed
 putInfo :: Target.Target -> Action ()
 putInfo (Target.Target {..}) = putBuild $ renderBox
@@ -127,7 +132,6 @@ putInfo (Target.Target {..}) = putBuild $ renderBox
   where
     stageInfo = if isStaged builder then "" else "stage = " ++ show stage ++ ", "
     wayInfo   = if way == vanilla   then "" else ", way = " ++ show way
-    digest list = case list of
-        []  -> "none"
-        [x] -> x
-        xs  -> head xs ++ " (and " ++ show (length xs - 1) ++ " more)"
+    digest [] = "none"
+    digest [x] = x
+    digest (x:xs) = x ++ " (and " ++ show (length xs) ++ " more)"

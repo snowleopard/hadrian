@@ -1,5 +1,5 @@
 module Rules.Generate (
-    generatePackageCode, generateRules,
+    generatePackageCode, generateRules, installTargets, copyRules,
     derivedConstantsPath, generatedDependencies
     ) where
 
@@ -10,15 +10,20 @@ import Rules.Generators.ConfigHs
 import Rules.Generators.GhcAutoconfH
 import Rules.Generators.GhcBootPlatformH
 import Rules.Generators.GhcPlatformH
+import Rules.Generators.GhcSplit
 import Rules.Generators.GhcVersionH
 import Rules.Generators.VersionHs
 import Oracles.ModuleFiles
 import Rules.Actions
-import Rules.IntegerGmp
+import Rules.Gmp
 import Rules.Libffi
 import Rules.Resources (Resources)
 import Settings
-import Settings.Builders.DeriveConstants
+
+installTargets :: [FilePath]
+installTargets = [ "inplace/lib/template-hsc.h"
+                 , "inplace/lib/platformConstants"
+                 , "inplace/lib/settings" ]
 
 primopsSource :: FilePath
 primopsSource = "compiler/prelude/primops.txt.pp"
@@ -29,6 +34,7 @@ primopsTxt stage = targetPath stage compiler -/- "build/primops.txt"
 platformH :: Stage -> FilePath
 platformH stage = targetPath stage compiler -/- "ghc_boot_platform.h"
 
+-- TODO: move generated files to buildRootPath, see #113
 includesDependencies :: [FilePath]
 includesDependencies = ("includes" -/-) <$>
     [ "ghcautoconf.h"
@@ -36,16 +42,21 @@ includesDependencies = ("includes" -/-) <$>
     , "ghcversion.h" ]
 
 defaultDependencies :: [FilePath]
-defaultDependencies =
-    includesDependencies ++ libffiDependencies ++ integerGmpDependencies
+defaultDependencies = concat
+    [ includesDependencies
+    , libffiDependencies
+    , gmpDependencies ]
 
 ghcPrimDependencies :: Stage -> [FilePath]
 ghcPrimDependencies stage = ((targetPath stage ghcPrim -/- "build") -/-) <$>
        [ "GHC/PrimopWrappers.hs"
        , "autogen/GHC/Prim.hs" ]
 
+derivedConstantsPath :: FilePath
+derivedConstantsPath = "includes/dist-derivedconstants/header"
+
 derivedConstantsDependencies :: [FilePath]
-derivedConstantsDependencies = (derivedConstantsPath -/-) <$>
+derivedConstantsDependencies = installTargets ++ fmap (derivedConstantsPath -/-)
     [ "DerivedConstants.h"
     , "GHCConstantsHaskellType.hs"
     , "GHCConstantsHaskellWrappers.hs"
@@ -76,7 +87,8 @@ generatedDependencies :: Stage -> Package -> [FilePath]
 generatedDependencies stage pkg
     | pkg   == compiler = compilerDependencies stage
     | pkg   == ghcPrim  = ghcPrimDependencies stage
-    | pkg   == rts      = includesDependencies ++ derivedConstantsDependencies
+    | pkg   == rts      = libffiDependencies ++ includesDependencies
+                       ++ derivedConstantsDependencies
     | stage == Stage0   = defaultDependencies
     | otherwise         = []
 
@@ -118,7 +130,7 @@ generatePackageCode _ target @ (PartialTarget stage pkg) =
             build $ fullTarget target builder [src] [file]
             let srcBoot = src -<.> "hs-boot"
             whenM (doesFileExist srcBoot) $
-                copyFileChanged srcBoot $ file -<.> "hs-boot"
+                copyFile srcBoot $ file -<.> "hs-boot"
 
         -- TODO: needing platformH is ugly and fragile
         when (pkg == compiler) $ primopsTxt stage %> \file -> do
@@ -150,15 +162,28 @@ generatePackageCode _ target @ (PartialTarget stage pkg) =
                 copyFileChanged (pkgPath pkg -/- "runghc.hs") file
                 putSuccess $ "| Successfully generated '" ++ file ++ "'."
 
+copyRules :: Rules ()
+copyRules = do
+    "inplace/lib/template-hsc.h"    <~ pkgPath hsc2hs
+    "inplace/lib/platformConstants" <~ derivedConstantsPath
+    "inplace/lib/settings"          <~ "."
+  where
+    file <~ dir = file %> \_ -> copyFile (dir -/- takeFileName file) file
+
 generateRules :: Rules ()
 generateRules = do
     "includes/ghcautoconf.h" <~ generateGhcAutoconfH
     "includes/ghcplatform.h" <~ generateGhcPlatformH
     "includes/ghcversion.h"  <~ generateGhcVersionH
 
-    -- TODO: simplify
+    ghcSplit %> \_ -> do
+        generate ghcSplit emptyTarget generateGhcSplit
+        makeExecutable ghcSplit
+
+    -- TODO: simplify, get rid of fake rts target
     derivedConstantsPath ++ "//*" %> \file -> do
-        build $ fullTarget (PartialTarget Stage1 rts) DeriveConstants [] [file]
+        withTempDir $ \dir -> build $
+            fullTarget (PartialTarget Stage1 rts) DeriveConstants [] [file, dir]
 
   where
     file <~ gen = file %> \out -> generate out emptyTarget gen

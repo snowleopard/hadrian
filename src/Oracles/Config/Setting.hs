@@ -1,9 +1,9 @@
 module Oracles.Config.Setting (
     Setting (..), SettingList (..),
     setting, settingList, getSetting, getSettingList,
-    anyTargetPlatform, anyTargetOs, anyTargetArch, anyHostOs, windowsHost,
+    anyTargetPlatform, anyTargetOs, anyTargetArch, anyHostOs,
     ghcWithInterpreter, ghcEnableTablesNextToCode, useLibFFIForAdjustors,
-    ghcCanonVersion, cmdLineLengthLimit
+    ghcCanonVersion, cmdLineLengthLimit, iosHost, osxHost, windowsHost
     ) where
 
 import Control.Monad.Trans.Reader
@@ -122,6 +122,12 @@ anyTargetArch = matchSetting TargetArch
 anyHostOs :: [String] -> Action Bool
 anyHostOs = matchSetting HostOs
 
+iosHost :: Action Bool
+iosHost = anyHostOs ["ios"]
+
+osxHost :: Action Bool
+osxHost = anyHostOs ["darwin"]
+
 windowsHost :: Action Bool
 windowsHost = anyHostOs ["mingw32", "cygwin32"]
 
@@ -156,6 +162,13 @@ ghcCanonVersion = do
 cmdLineLengthLimit :: Action Int
 cmdLineLengthLimit = do
     windows <- windowsHost
-    return $ if windows
-             then 31000
-             else 4194304 -- Cabal needs a bit more than 2MB!
+    osx     <- osxHost
+    return $ case (windows, osx) of
+        -- windows
+        (True, False) -> 31000
+        -- osx 262144 is ARG_MAX
+        -- yet when using `xargs` on osx this is reduced by over 20 000.
+        -- 200 000 seems like a sensible limit.
+        (False, True) -> 200000
+        -- On all other systems, we try this:
+        _             -> 4194304 -- Cabal needs a bit more than 2MB!

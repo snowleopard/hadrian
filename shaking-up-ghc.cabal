@@ -39,22 +39,24 @@ executable ghc-shake
                        , Rules.Cabal
                        , Rules.Compile
                        , Rules.Config
-                       , Rules.Copy
                        , Rules.Data
                        , Rules.Dependencies
                        , Rules.Documentation
                        , Rules.Generate
+                       , Rules.Generators.Common
                        , Rules.Generators.ConfigHs
                        , Rules.Generators.GhcAutoconfH
                        , Rules.Generators.GhcBootPlatformH
                        , Rules.Generators.GhcPlatformH
+                       , Rules.Generators.GhcSplit
                        , Rules.Generators.GhcVersionH
                        , Rules.Generators.VersionHs
-                       , Rules.IntegerGmp
+                       , Rules.Gmp
                        , Rules.Libffi
                        , Rules.Library
                        , Rules.Oracles
                        , Rules.Package
+                       , Rules.Perl
                        , Rules.Program
                        , Rules.Resources
                        , Rules.Wrappers.Ghc
@@ -91,11 +93,14 @@ executable ghc-shake
                        , Settings.Packages.IservBin
                        , Settings.Packages.Rts
                        , Settings.Packages.RunGhc
-                       , Settings.TargetDirectory
+                       , Settings.Packages.Touchy
+                       , Settings.Packages.Unlit
+                       , Settings.Paths
                        , Settings.User
                        , Settings.Ways
                        , Stage
                        , Target
+                       , Test
                        , Way
 
     default-extensions:  BangPatterns
@@ -107,6 +112,7 @@ executable ghc-shake
                        , FlexibleInstances
                        , OverloadedStrings
                        , RecordWildCards
+                       , ScopedTypeVariables
     build-depends:       base
                        , ansi-terminal >= 0.6
                        , Cabal >= 1.22
@@ -114,8 +120,9 @@ executable ghc-shake
                        , directory >= 1.2
                        , extra >= 1.4
                        , mtl >= 2.2
+                       , QuickCheck >= 2.6
                        , shake >= 0.15
                        , transformers >= 0.4
                        , unordered-containers >= 0.2
     default-language:    Haskell2010
-    ghc-options:         -Wall -rtsopts -with-rtsopts=-I0 -j
+    ghc-options:         -Wall -fno-warn-name-shadowing -rtsopts -with-rtsopts=-I0 -j

@@ -3,7 +3,7 @@ sudo: false
 matrix:
     include:
         - os: linux
-          env: CABALVER=1.22 GHCVER=7.10.3
+          env: CABALVER=1.22 GHCVER=7.10.3 TARGET=
           addons:
               apt:
                   packages:
@@ -21,6 +21,7 @@ matrix:
               - cabal update
 
         - os: osx
+          env: TARGET=inplace/bin/ghc-stage1
           before_install:
               - brew update
               - brew install ghc cabal-install
@@ -38,7 +39,12 @@ install:
     - alex --version
     - happy --version
 
-    - travis_retry git clone git://git.haskell.org/ghc --recurse-submodules
+    - git config --global url."git://github.com/ghc/packages-".insteadOf     git://github.com/ghc/packages/
+    - git config --global url."http://github.com/ghc/packages-".insteadOf    http://github.com/ghc/packages/
+    - git config --global url."https://github.com/ghc/packages-".insteadOf   https://github.com/ghc/packages/
+    - git config --global url."ssh://git@github.com/ghc/packages-".insteadOf ssh://git@github.com/ghc/packages/
+    - git config --global url."git@github.com:/ghc/packages-".insteadOf      git@github.com:/ghc/packages/
+    - travis_retry git clone https://github.com/ghc/ghc --recurse-submodules --depth 1
 
     # Travis clones the project into ".", but we need it as a child directory
     # of "ghc/". For this reason, we - rather hackily - move the GHC-Shake
@@ -49,12 +55,15 @@ install:
     - ( cd ghc/shake-build && git reset --hard HEAD )
 
     - ( cd ghc/shake-build && cabal install --only-dependencies )
+    - ( cd ghc/shake-build && cabal configure )
 
     - ( cd ghc && ./boot )
     - ( cd ghc && ./configure )
 
 script:
-    - ./ghc/shake-build/build.sh -j --no-progress
+    - ( cd ghc/shake-build && cabal haddock --internal )
+    - ./ghc/shake-build/build.sh selftest
+    - ./ghc/shake-build/build.sh -j --no-progress $TARGET
 
 cache:
     directories:
@@ -63,7 +72,7 @@ cache:
 
 notifications:
     irc:
-        on_success: always # always/never/change
+        on_success: change # always/never/change
         on_failure: always
         channels:
             - "chat.freenode.net#shaking-up-ghc"

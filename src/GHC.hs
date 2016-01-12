@@ -3,23 +3,21 @@ module GHC (
     array, base, binary, bytestring, cabal, compiler, containers, compareSizes,
     deepseq, deriveConstants, directory, dllSplit, filepath, genapply,
     genprimopcode, ghc, ghcBoot, ghcCabal, ghci, ghcPkg, ghcPrim, ghcTags,
-    haddock, haskeline, hsc2hs, hoopl, hp2ps, hpc, hpcBin, integerGmp,
+    ghcSplit, haddock, haskeline, hsc2hs, hoopl, hp2ps, hpc, hpcBin, integerGmp,
     integerSimple, iservBin, libffi, mkUserGuidePart, parallel, pretty,
     primitive, process, rts, runGhc, stm, templateHaskell, terminfo, time,
-    touchy, transformers, unix, win32, xhtml,
+    touchy, transformers, unlit, unix, win32, xhtml,
 
-    defaultKnownPackages, defaultTargetDirectory, defaultProgramPath
+    defaultKnownPackages
     ) where
 
-import Base
 import Package
-import Stage
 
--- These are all GHC packages we know about. Build rules will be generated for
+-- | These are all GHC packages we know about. Build rules will be generated for
 -- all of them. However, not all of these packages will be built. For example,
--- package 'win32' is built only on Windows.
--- Settings/Packages.hs defines default conditions for building each package,
--- which can be overridden in Settings/User.hs.
+-- package /win32/ is built only on Windows.
+-- "Packages" defines default conditions for building each package, which can
+-- be overridden in "User".
 defaultKnownPackages :: [Package]
 defaultKnownPackages =
     [ array, base, binary, bytestring, cabal, compiler, containers, compareSizes
@@ -28,16 +26,16 @@ defaultKnownPackages =
     , ghcTags, haddock, haskeline, hsc2hs, hoopl, hp2ps, hpc, hpcBin, integerGmp
     , integerSimple, iservBin, libffi, mkUserGuidePart, parallel, pretty
     , primitive, process, rts, runGhc, stm, templateHaskell, terminfo, time
-    , touchy, transformers, unix, win32, xhtml ]
+    , touchy, transformers, unlit, unix, win32, xhtml ]
 
--- Package definitions (see Package.hs)
+-- Package definitions (see "Package")
 array, base, binary, bytestring, cabal, compiler, containers, compareSizes,
     deepseq, deriveConstants, directory, dllSplit, filepath, genapply,
     genprimopcode, ghc, ghcBoot, ghcCabal, ghci, ghcPkg, ghcPrim, ghcTags,
     haddock, haskeline, hsc2hs, hoopl, hp2ps, hpc, hpcBin, integerGmp,
     integerSimple, iservBin, libffi, mkUserGuidePart, parallel, pretty,
     primitive, process, rts, runGhc, stm, templateHaskell, terminfo, time,
-    touchy, transformers, unix, win32, xhtml :: Package
+    touchy, transformers, unlit, unix, win32, xhtml :: Package
 
 array           = library  "array"
 base            = library  "base"
@@ -85,40 +83,17 @@ terminfo        = library  "terminfo"
 time            = library  "time"
 touchy          = utility  "touchy"
 transformers    = library  "transformers"
+unlit           = utility  "unlit"
 unix            = library  "unix"
 win32           = library  "Win32"
 xhtml           = library  "xhtml"
 
--- TODO: The following utils are not implemented yet: unlit, driver/ghc-split
+-- | ghc-split is a perl script used by GHC with @-split-objs@ flag. It is
+-- generated in "Rules.Generators.GhcSplit".
+ghcSplit :: FilePath
+ghcSplit = "inplace/lib/bin/ghc-split"
+
 -- TODO: The following utils are not included into the build system because
 -- they seem to be unused or unrelated to the build process: checkUniques,
 -- completion, count_lines, coverity, debugNGC, describe-unexpected, genargs,
 -- lndir, mkdirhier, testremove, vagrant
-
--- GHC build results will be placed into target directories with the following
--- typical structure:
--- * build/          : contains compiled object code
--- * doc/            : produced by haddock
--- * package-data.mk : contains output of ghc-cabal applied to pkgCabal
-defaultTargetDirectory :: Stage -> Package -> FilePath
-defaultTargetDirectory stage _ = stageString stage
-
--- TODO: simplify, add programInplaceLibPath
--- | Returns a relative path to the program executable
-defaultProgramPath :: Stage -> Package -> Maybe FilePath
-defaultProgramPath stage pkg
-    | pkg == ghc = Just . inplaceProgram $ "ghc-stage" ++ show (fromEnum stage + 1)
-    | pkg == haddock || pkg == ghcTags = case stage of
-        Stage2 -> Just . inplaceProgram $ pkgNameString pkg
-        _      -> Nothing
-    | pkg == touchy = case stage of
-        Stage0 -> Just $ "inplace/lib/bin" -/- pkgNameString pkg <.> exe
-        _      -> Nothing
-    | isProgram pkg = case stage of
-        Stage0 -> Just . inplaceProgram $ pkgNameString pkg
-        _      -> Just . installProgram $ pkgNameString pkg
-    | otherwise = Nothing
-  where
-    inplaceProgram name = programInplacePath -/- name <.> exe
-    installProgram name = pkgPath pkg -/- defaultTargetDirectory stage pkg
-                                      -/- "build/tmp" -/- name <.> exe

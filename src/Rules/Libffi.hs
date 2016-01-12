@@ -1,4 +1,4 @@
-module Rules.Libffi (libffiRules, libffiDependencies) where
+module Rules.Libffi (rtsBuildPath, libffiRules, libffiDependencies) where
 
 import Base
 import Expression
@@ -7,17 +7,22 @@ import Oracles
 import Rules.Actions
 import Settings.Builders.Common
 import Settings.Packages.Rts
-import Settings.TargetDirectory
+import Settings.Paths
 import Settings.User
 
+-- TODO: this should be moved elsewhere
 rtsBuildPath :: FilePath
 rtsBuildPath = targetPath Stage1 rts -/- "build"
 
+-- TODO: Why copy these include files in rts? Move to libffi!
 libffiDependencies :: [FilePath]
 libffiDependencies = (rtsBuildPath -/-) <$> [ "ffi.h", "ffitarget.h" ]
 
+libffiTarget :: PartialTarget
+libffiTarget = PartialTarget Stage0 libffi
+
 libffiBuild :: FilePath
-libffiBuild = "libffi/build"
+libffiBuild = buildRootPath -/- "stage0/libffi"
 
 libffiLibrary :: FilePath
 libffiLibrary = libffiBuild -/- "inst/lib/libffi.a"
@@ -32,18 +37,15 @@ fixLibffiMakefile = unlines . map
     . replace "@INSTALL@" "$(subst ../install-sh,C:/msys/home/chEEtah/ghc/install-sh,@INSTALL@)"
     ) . lines
 
-target :: PartialTarget
-target = PartialTarget Stage0 libffi
-
 -- TODO: remove code duplication (see Settings/Builders/GhcCabal.hs)
 configureEnvironment :: Action [CmdOption]
 configureEnvironment = do
-    cFlags  <- interpretPartial target . fromDiffExpr $ mconcat
+    cFlags  <- interpretPartial libffiTarget . fromDiffExpr $ mconcat
                [ cArgs
                , argStagedSettingList ConfCcArgs ]
-    ldFlags <- interpretPartial target $ fromDiffExpr ldArgs
-    sequence [ builderEnv "CC" $ Gcc Stage1
-             , builderEnv "CXX" $ Gcc Stage1
+    ldFlags <- interpretPartial libffiTarget $ fromDiffExpr ldArgs
+    sequence [ builderEnv "CC" $ Gcc Stage0
+             , builderEnv "CXX" $ Gcc Stage0
              , builderEnv "LD" Ld
              , builderEnv "AR" Ar
              , builderEnv "NM" Nm
@@ -60,12 +62,14 @@ configureArguments :: Action [String]
 configureArguments = do
     top            <- topDirectory
     targetPlatform <- setting TargetPlatform
-    return [ "--prefix=" ++ top ++ "/libffi/build/inst"
-           , "--libdir=" ++ top ++ "/libffi/build/inst/lib"
+    return [ "--prefix=" ++ top -/- libffiBuild -/- "inst"
+           , "--libdir=" ++ top -/- libffiBuild -/- "inst/lib"
            , "--enable-static=yes"
            , "--enable-shared=no" -- TODO: add support for yes
            , "--host=" ++ targetPlatform ]
 
+-- TODO: remove code duplication (need sourcePath)
+-- TODO: split into multiple rules
 libffiRules :: Rules ()
 libffiRules = do
     libffiDependencies &%> \_ -> do
@@ -77,10 +81,12 @@ libffiRules = do
                      ++ "(found: " ++ show tarballs ++ ")."
 
         need tarballs
-        build $ fullTarget target Tar tarballs ["libffi-tarballs"]
-
         let libname = dropExtension . dropExtension . takeFileName $ head tarballs
-        moveDirectory ("libffi-tarballs" -/- libname) libffiBuild
+
+        withTempDir $ \tmpDir -> do
+            let unifiedTmpDir = unifyPath tmpDir
+            build $ fullTarget libffiTarget Tar tarballs [unifiedTmpDir]
+            moveDirectory (unifiedTmpDir -/- libname) libffiBuild
 
         fixFile libffiMakefile fixLibffiMakefile
 

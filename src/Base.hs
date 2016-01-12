@@ -1,9 +1,11 @@
+{-# OPTIONS_GHC -fno-warn-dodgy-imports #-} -- for Development.Shake.parallel
+
 module Base (
     -- * General utilities
     module Control.Applicative,
     module Control.Monad.Extra,
     module Data.Function,
-    module Data.List,
+    module Data.List.Extra,
     module Data.Maybe,
     module Data.Monoid,
     MonadTrans(lift),
@@ -16,25 +18,24 @@ module Base (
     -- * Paths
     shakeFilesPath, configPath, sourcePath, programInplacePath,
     bootPackageConstraints, packageDependencies,
-    packageConfiguration, packageConfigurationInitialised,
 
     -- * Output
     putColoured, putOracle, putBuild, putSuccess, putError, renderBox,
 
     -- * Miscellaneous utilities
-    bimap, minusOrd, intersectOrd, replaceEq, replace, quote, chunksOfSize,
-    replaceSeparators, decodeModule, encodeModule, unifyPath, (-/-),
-    versionToInt, removeFileIfExists, removeDirectoryIfExists, wordsWhen
+    bimap, minusOrd, intersectOrd, replaceEq, quote, replaceSeparators,
+    decodeModule, encodeModule, unifyPath, (-/-), versionToInt,
+    removeFileIfExists, removeDirectoryIfExists
     ) where
 
 import Control.Applicative
 import Control.Monad.Extra
 import Control.Monad.Reader
 import Data.Function
-import Data.List
+import Data.List.Extra
 import Data.Maybe
 import Data.Monoid
-import Development.Shake hiding (unit, (*>), parallel)
+import Development.Shake hiding (parallel, unit, (*>))
 import Development.Shake.Classes
 import Development.Shake.FilePath
 import System.Console.ANSI
@@ -42,7 +43,6 @@ import qualified System.Directory as IO
 import System.IO
 
 -- TODO: reexport Stage, etc.?
-import Stage
 
 -- Build system files and paths
 shakePath :: FilePath
@@ -59,6 +59,7 @@ configPath = shakePath -/- "cfg"
 sourcePath :: FilePath
 sourcePath = shakePath -/- "src"
 
+-- TODO: move to buildRootPath, see #113
 programInplacePath :: FilePath
 programInplacePath = "inplace/bin"
 
@@ -68,38 +69,17 @@ bootPackageConstraints = shakeFilesPath -/- "boot-package-constraints"
 packageDependencies :: FilePath
 packageDependencies = shakeFilesPath -/- "package-dependencies"
 
-packageConfiguration :: Stage -> FilePath
-packageConfiguration Stage0 = "libraries/bootstrapping.conf"
-packageConfiguration _      = "inplace/lib/package.conf.d"
-
--- StageN, N > 0, share the same packageConfiguration (see above)
-packageConfigurationInitialised :: Stage -> FilePath
-packageConfigurationInitialised stage =
-    shakeFilesPath -/- "package-configuration-initialised-"
-    ++ stageString (min stage Stage1)
-
 -- Utility functions
 -- | Find and replace all occurrences of a value in a list
 replaceEq :: Eq a => a -> a -> [a] -> [a]
-replaceEq from = replaceIf (== from)
+replaceEq from = replaceWhen (== from)
 
 -- | Find and replace all occurrences of path separators in a String with a Char
 replaceSeparators :: Char -> String -> String
-replaceSeparators = replaceIf isPathSeparator
+replaceSeparators = replaceWhen isPathSeparator
 
-replaceIf :: (a -> Bool) -> a -> [a] -> [a]
-replaceIf p to = map (\from -> if p from then to else from)
-
--- | Find all occurrences of substring 'from' and replace them to 'to' in a
--- given string. Not very efficient, but simple and fast enough for our purposes
-replace :: Eq a => [a] -> [a] -> [a] -> [a]
-replace from to = go
-  where
-    skipFrom = drop $ length from
-    go [] = []
-    go s @ (x : xs)
-        | from `isPrefixOf` s = to ++ go (skipFrom s)
-        | otherwise           = x  :  go xs
+replaceWhen :: (a -> Bool) -> a -> [a] -> [a]
+replaceWhen p to = map (\from -> if p from then to else from)
 
 -- | Add quotes to a String
 quote :: String -> String
@@ -133,19 +113,6 @@ a -/- b = unifyPath $ a </> b
 
 infixr 6 -/-
 
--- | @chunksOfSize size strings@ splits a given list of strings into chunks not
--- exceeding the given @size@.
-chunksOfSize :: Int -> [String] -> [[String]]
-chunksOfSize _    [] = []
-chunksOfSize size strings = reverse chunk : chunksOfSize size rest
-  where
-    (chunk, rest) = go [] 0 strings
-    go res _         []     = (res, [])
-    go res chunkSize (s:ss) =
-        if newSize > size then (res, s:ss) else go (s:res) newSize ss
-      where
-        newSize = chunkSize + length s
-
 -- | A more colourful version of Shake's putNormal
 putColoured :: Color -> String -> Action ()
 putColoured colour msg = do
@@ -172,7 +139,16 @@ putError msg = do
     putColoured Red msg
     error $ "GHC build system error: " ++ msg
 
--- | Render the given set of lines in a nice box of ASCII
+-- | Render the given set of lines in a nice box of ASCII.
+--
+-- The minimum width and whether to use Unicode symbols are hardcoded in the
+-- function's body.
+--
+-- >>> renderBox (words "lorem ipsum")
+-- /----------\
+-- | lorem    |
+-- | ipsum    |
+-- \----------/
 renderBox :: [String] -> String
 renderBox ls = tail $ concatMap ('\n' :) (boxTop : map renderLine ls ++ [boxBot])
   where
@@ -207,11 +183,13 @@ renderBox ls = tail $ concatMap ('\n' :) (boxTop : map renderLine ls ++ [boxBot]
         -- +1 for each non-dash (= corner) char
         dashes = replicate (boxContentWidth + 2) dash
 
--- Depending on Data.Bifunctor only for this function seems an overkill
+-- Explicit definition to avoid dependency on Data.Bifunctor
+-- | Bifunctor bimap.
 bimap :: (a -> b) -> (c -> d) -> (a, c) -> (b, d)
 bimap f g (x, y) = (f x, g y)
 
--- Depending on Data.List.Ordered only for these two functions seems an overkill
+-- Explicit definition to avoid dependency on Data.List.Ordered
+-- | Difference of two ordered lists.
 minusOrd :: Ord a => [a] -> [a] -> [a]
 minusOrd [] _  = []
 minusOrd xs [] = xs
@@ -220,6 +198,8 @@ minusOrd (x:xs) (y:ys) = case compare x y of
     EQ ->     minusOrd xs ys
     GT ->     minusOrd (x:xs) ys
 
+-- Explicit definition to avoid dependency on Data.List.Ordered
+-- | Intersection of two ordered lists by a predicate.
 intersectOrd :: (a -> b -> Ordering) -> [a] -> [b] -> [a]
 intersectOrd cmp = loop
   where
@@ -238,12 +218,3 @@ removeFileIfExists f = liftIO . whenM (IO.doesFileExist f) $ IO.removeFile f
 removeDirectoryIfExists :: FilePath -> Action ()
 removeDirectoryIfExists d =
     liftIO . whenM (IO.doesDirectoryExist d) $ IO.removeDirectoryRecursive d
-
--- | Split function. Splits a string @s@ into chunks
--- when the predicate @p@ holds. See: http://stackoverflow.com/a/4981265
-wordsWhen :: Eq a => (a -> Bool) -> [a] -> [[a]]
-wordsWhen p s =
-    case dropWhile p s of
-        [] -> []
-        s' -> w : wordsWhen p s''
-            where (w, s'') = break p s'
