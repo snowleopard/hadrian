@@ -20,10 +20,8 @@ buildPackageData :: Resources -> PartialTarget -> Rules ()
 buildPackageData rs target @ (PartialTarget stage pkg) = do
     let cabalFile = pkgCabalFile pkg
         configure = pkgPath pkg -/- "configure"
-        dataFile  = pkgDataFile stage pkg
-        oldPath   = pkgPath pkg -/- targetDirectory stage pkg -- TODO: remove, #113
 
-    [dataFile, oldPath -/- "package-data.mk"] &%> \_ -> do
+    [oldPath -/- "package-data.mk"] &%> \_ -> do
         -- The first thing we do with any package is make sure all generated
         -- dependencies are in place before proceeding.
         orderOnly $ generatedDependencies stage pkg
@@ -36,17 +34,12 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
         deps <- packageDeps pkg
         pkgs <- interpretPartial target getPackages
         let depPkgs = matchPackageNames (sort pkgs) deps
-        orderOnly $ map (pkgDataFile stage) depPkgs
-
-        -- TODO: get rid of this, see #113
-        let inTreeMk = oldPath -/- takeFileName dataFile
 
         need [cabalFile]
         buildWithResources [(resGhcCabal rs, 1)] $
             fullTarget target GhcCabal [cabalFile] [inTreeMk]
 
         -- TODO: get rid of this, see #113
-        liftIO $ IO.copyFile inTreeMk dataFile
         autogenFiles <- getDirectoryFiles oldPath ["build/autogen/*"]
         createDirectory $ targetPath stage pkg -/- "build/autogen"
         forM_ autogenFiles $ \file -> do
@@ -69,7 +62,6 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
                 buildWithResources [(resGhcPkg rs, 1)] $
                     fullTarget target (GhcPkg stage) [cabalFile] []
 
-        postProcessPackageData stage pkg dataFile
 
     -- TODO: PROGNAME was $(CrossCompilePrefix)hp2ps
     priority 2.0 $ do
@@ -162,28 +154,3 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
                                . lines
 
                 fixFile rtsConf fixRtsConf
-
--- Prepare a given 'packaga-data.mk' file for parsing by readConfigFile:
--- 1) Drop lines containing '$'
--- For example, get rid of
--- libraries/Win32_dist-install_CMM_SRCS  := $(addprefix cbits/,$(notdir ...
--- Reason: we don't need them and we can't parse them.
--- 2) Replace '/' and '\' with '_' before '='
--- For example libraries/deepseq/dist-install_VERSION = 1.4.0.0
--- is replaced by libraries_deepseq_dist-install_VERSION = 1.4.0.0
--- Reason: Shake's built-in makefile parser doesn't recognise slashes
-postProcessPackageData :: Stage -> Package -> FilePath -> Action ()
-postProcessPackageData stage pkg file = fixFile file fixPackageData
-  where
-    fixPackageData = unlines . map processLine . filter (not . null) . filter ('$' `notElem`) . lines
-    processLine line = fixKey fixedPrefix ++ suffix
-      where
-        (prefix, suffix) = break (== '=') line
-        -- Change pkg/path/targetDir to takeDirectory file
-        -- This is a temporary hack until we get rid of ghc-cabal
-        fixedPrefix = takeDirectory file ++ drop len prefix
-        len         = length (pkgPath pkg -/- targetDirectory stage pkg)
-
--- TODO: remove, see #113
-fixKey :: String -> String
-fixKey = replaceSeparators '_'

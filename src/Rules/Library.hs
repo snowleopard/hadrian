@@ -11,6 +11,7 @@ import Rules.Gmp
 import Rules.Resources
 import Settings
 import qualified System.Directory as IO
+import Distribution.ModuleName (fromString, toFilePath)
 
 buildPackageLibrary :: Resources -> PartialTarget -> Rules ()
 buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
@@ -79,7 +80,7 @@ hSources :: PartialTarget -> Action [FilePath]
 hSources target = do
     modules <- interpretPartial target $ (pdModules <$> getPkgData)
     -- GHC.Prim is special: we do not build it
-    return . map (replaceEq '.' '/') . filter (/= "GHC.Prim") $ modules
+    return . map toFilePath . filter (/= (fromString "GHC.Prim")) $ modules
 
 extraObjects :: PartialTarget -> Action [FilePath]
 extraObjects (PartialTarget _ pkg)

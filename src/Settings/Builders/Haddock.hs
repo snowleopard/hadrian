@@ -9,6 +9,7 @@ import Oracles
 import Predicates hiding (file)
 import Settings
 import Settings.Builders.Ghc
+import Distribution.ModuleName (toFilePath)
 
 haddockBuilderArgs :: Args
 haddockBuilderArgs = builder Haddock ? do
@@ -32,7 +33,7 @@ haddockBuilderArgs = builder Haddock ? do
         , arg $ "--title=" ++ pkgNameString pkg ++ "-" ++ version ++ ": " ++ synopsis
         , arg $ "--prologue=" ++ path -/- "haddock-prologue.txt"
         , arg $ "--optghc=-D__HADDOCK_VERSION__=" ++ show (versionToInt hVersion)
-        , append $ map ("--hide=" ++) hidden
+        , append $ map ("--hide=" ++) (map toFilePath hidden)
         , append $ [ "--read-interface=../" ++ dep
                      ++ ",../" ++ dep ++ "/src/%{MODULE/./-}.html\\#%{NAME},"
                      ++ pkgHaddockFile depPkg

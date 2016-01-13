@@ -13,6 +13,7 @@ import Rules.Wrappers.Ghc
 import Rules.Wrappers.GhcPkg
 import Settings
 import Settings.Builders.GhcCabal
+import Distribution.Package as DP (PackageName(unPackageName), PackageIdentifier(pkgName))
 
 -- TODO: move to buildRootPath, see #113
 -- Directory for wrapped binaries
@@ -83,8 +84,8 @@ buildBinary target @ (PartialTarget stage pkg) bin = do
         libTarget = PartialTarget libStage pkg
     pkgs     <- interpretPartial libTarget getPackages
     ghciFlag <- interpretPartial libTarget $ (pdWithGHCiLib <$> getPkgData)
-    let deps = matchPackageNames (sort pkgs) (map PackageName $ sort depNames)
-        ghci = ghciFlag == "YES" && stage == Stage1
+    let deps = matchPackageNames (sort pkgs) (map (PackageName . DP.unPackageName . DP.pkgName) $ sort depNames)
+        ghci = ghciFlag && stage == Stage1
     libs <- fmap concat . forM deps $ \dep -> do
         let depTarget = PartialTarget libStage dep
         compId <- interpretPartial depTarget (pdComponentId <$> getPkgData)

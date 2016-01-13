@@ -34,7 +34,7 @@ buildPackageDependencies _ target @ (PartialTarget stage pkg) =
 
         -- TODO: don't accumulate *.deps into .dependencies
         (buildPath -/- ".dependencies") %> \out -> do
-            cSrcs <- pkgDataList $ CSrcs path
+            cSrcs <- pdCSources <$> askAllPackageData stage pkg
             let cDepFiles = [ buildPath -/- src <.> "deps" | src <- cSrcs
                             , not ("//AutoApply.cmm" ?== src) ]
                          ++ [ src <.> "deps" | src <- cSrcs, "//AutoApply.cmm" ?== src ]

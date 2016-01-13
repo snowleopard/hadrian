@@ -2,7 +2,6 @@ module Rules.Package (buildPackage) where
 
 import Base
 import Rules.Compile
-import Rules.Data
 import Rules.Dependencies
 import Rules.Documentation
 import Rules.Generate
@@ -13,8 +12,7 @@ import Target
 
 buildPackage :: Resources -> PartialTarget -> Rules ()
 buildPackage = mconcat
-    [ buildPackageData
-    , buildPackageDependencies
+    [ buildPackageDependencies
     , generatePackageCode
     , compilePackage
     , buildPackageLibrary
