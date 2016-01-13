@@ -14,16 +14,10 @@ module Oracles.PackageData (
 
 import GHC.Generics
 
-import Development.Shake.Config
-import Development.Shake.Rule
-
 import Base
 import Stage
 import qualified Package
 import Oracles.PackageData.Internals
-
-import Distribution.Package
-import Distribution.ModuleName as ModuleName
 
 data PackageDataKey = PackageDataKey Stage Package.Package PackageData
     deriving (Show, Typeable, Generic, Eq, Hashable, Binary, NFData)

@@ -49,8 +49,8 @@ hsc2hsBuilderArgs = builder Hsc2Hs ? do
 getCFlags :: Expr [String]
 getCFlags = fromDiffExpr $ do
     path      <- getTargetPath
-    cppArgs   <- getPkgDataList CppArgs
-    depCcArgs <- getPkgDataList DepCcArgs
+    cppArgs   <- pdCppArgs <$> getPkgData
+    depCcArgs <- pdDepCcArgs <$> getPkgData
     mconcat [ cArgs
             , argStagedSettingList ConfCcArgs
             , remove ["-O"]
@@ -63,10 +63,10 @@ getCFlags = fromDiffExpr $ do
 
 getLFlags :: Expr [String]
 getLFlags = fromDiffExpr $ do
-    pkgLdArgs <- getPkgDataList LdArgs
-    libDirs   <- getPkgDataList DepLibDirs
-    extraLibs <- getPkgDataList DepExtraLibs
-    depLdArgs <- getPkgDataList DepLdArgs
+    pkgLdArgs <- pdLdArgs <$> getPkgData
+    libDirs   <- pdDepLibDirs <$> getPkgData
+    extraLibs <- pdDepExtraLibs <$> getPkgData
+    depLdArgs <- pdDepLdArgs <$> getPkgData
     mconcat [ argStagedSettingList ConfGccLinkerArgs
             , ldArgs
             , append pkgLdArgs

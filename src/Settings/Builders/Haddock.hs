@@ -15,12 +15,12 @@ haddockBuilderArgs = builder Haddock ? do
     output   <- getOutput
     pkg      <- getPackage
     path     <- getTargetPath
-    version  <- getPkgData Version
-    synopsis <- getPkgData Synopsis
-    hidden   <- getPkgDataList HiddenModules
-    deps     <- getPkgDataList Deps
-    depNames <- getPkgDataList DepNames
-    hVersion <- lift . pkgData . Version $ targetPath Stage2 haddock
+    version  <- pdVersion <$> getPkgData
+    synopsis <- pdSynopsis <$> getPkgData
+    hidden   <- pdHiddenModules <$> getPkgData
+    deps     <- pdDeps <$> getPkgData
+    depNames <- pdDepNames <$> getPkgData
+    hVersion <- pdVersion <$> getPkgData' Stage2 haddock
     ghcOpts  <- fromDiffExpr commonGhcArgs
     mconcat
         [ arg $ "--odir=" ++ takeDirectory output

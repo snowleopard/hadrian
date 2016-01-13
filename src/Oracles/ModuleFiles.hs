@@ -7,31 +7,37 @@ import Package
 import Stage
 import Settings.Paths
 
-newtype ModuleFilesKey = ModuleFilesKey ([String], [FilePath])
+import Distribution.ModuleName as ModuleName
+
+newtype ModuleFilesKey = ModuleFilesKey ([ModuleName], [FilePath])
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 
+-- used in generatePackageCode (Generate.hs)
 moduleFiles :: Stage -> Package -> Action [FilePath]
 moduleFiles stage pkg = do
-    let path = targetPath stage pkg
-    srcDirs <- fmap sort . pkgDataList $ SrcDirs path
-    modules <- fmap sort . pkgDataList $ Modules path
+    allPkgData <- askAllPackageData stage pkg
+    let srcDirs = sort . pdHsSourceDirs $ allPkgData
+        modules = sort . pdModules      $ allPkgData -- Do we need pdHiddenModules here as well?
     let dirs = [ pkgPath pkg -/- dir | dir <- srcDirs ]
     found :: [(String, FilePath)] <- askOracle $ ModuleFilesKey (modules, dirs)
     return $ map snd found
 
+-- used in getPackageSources (Settings.hs)
 haskellModuleFiles :: Stage -> Package -> Action ([FilePath], [String])
 haskellModuleFiles stage pkg = do
-    let path        = targetPath stage pkg
-        autogen     = path -/- "build/autogen"
+    let autogen     = targetPath stage pkg -/- "build/autogen"
         dropPkgPath = drop $ length (pkgPath pkg) + 1
-    srcDirs <- fmap sort . pkgDataList $ SrcDirs path
-    modules <- fmap sort . pkgDataList $ Modules path
+
+    allPkgData <- askAllPackageData stage pkg
+    let srcDirs = sort . pdHsSourceDirs $ allPkgData
+        modules = sort . pdModules      $ allPkgData -- Do we need pdHiddenModules here as well?    let dirs = [ pkgPath pkg -/- dir | dir <- srcDirs ]
     let dirs = [ pkgPath pkg -/- dir | dir <- srcDirs ]
+
     foundSrcDirs <- askOracle $ ModuleFilesKey (modules, dirs     )
     foundAutogen <- askOracle $ ModuleFilesKey (modules, [autogen])
 
     let found          = foundSrcDirs ++ foundAutogen
-        missingMods    = modules `minusOrd` (sort $ map fst found)
+        missingMods    = (map toFilePath modules) `minusOrd` (sort $ map fst found)
         otherFileToMod = replaceEq '/' '.' . dropExtension . dropPkgPath
         (haskellFiles, otherFiles) = partition ("//*hs" ?==) (map snd found)
 
@@ -40,7 +46,7 @@ haskellModuleFiles stage pkg = do
 moduleFilesOracle :: Rules ()
 moduleFilesOracle = do
     answer <- newCache $ \(modules, dirs) -> do
-        let decodedPairs = map decodeModule modules
+        let decodedPairs = map (decodeModule . toFilePath) modules
             modDirFiles  = map (bimap head sort . unzip)
                          . groupBy ((==) `on` fst) $ decodedPairs
 

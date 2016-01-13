@@ -51,7 +51,7 @@ buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
         then build $ fullTarget target Ar [] [a] -- TODO: scan for dlls
         else build $ fullTarget target Ar objs [a]
 
-        synopsis <- interpretPartial target $ getPkgData Synopsis
+        synopsis <- interpretPartial target $ (pdSynopsis <$> getPkgData)
         unless isLib0 . putSuccess $ renderBox
             [ "Successfully built library '"
               ++ pkgNameString pkg
@@ -73,11 +73,11 @@ buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
         build $ fullTarget target Ld (cObjs ++ hObjs) [obj]
 
 cSources :: PartialTarget -> Action [FilePath]
-cSources target = interpretPartial target $ getPkgDataList CSrcs
+cSources target = interpretPartial target $ (pdCSources <$> getPkgData)
 
 hSources :: PartialTarget -> Action [FilePath]
 hSources target = do
-    modules <- interpretPartial target $ getPkgDataList Modules
+    modules <- interpretPartial target $ (pdModules <$> getPkgData)
     -- GHC.Prim is special: we do not build it
     return . map (replaceEq '.' '/') . filter (/= "GHC.Prim") $ modules
 

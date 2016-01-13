@@ -32,10 +32,14 @@ root="$(dirname "$(rl "$0")")"
 
 mkdir -p "$root/.shake"
 
+ghcroot="$root/.."
+cabal="$ghcroot/libraries/Cabal/Cabal"
+
 ghc                           \
     "$root/src/Main.hs"       \
     -Wall                     \
     -i"$root/src"             \
+    -i"$cabal"                \
     -rtsopts                  \
     -with-rtsopts=-I0         \
     -outputdir="$root/.shake" \

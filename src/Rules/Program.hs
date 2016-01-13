@@ -78,16 +78,16 @@ buildBinary target @ (PartialTarget stage pkg) bin = do
              ++ [ buildPath -/- "Paths_haddock.o"     | pkg == haddock ]
         objs  = cObjs ++ hObjs
     ways     <- interpretPartial target getWays
-    depNames <- interpretPartial target $ getPkgDataList TransitiveDepNames
+    depNames <- interpretPartial target $ (pdTransitiveDeps <$> getPkgData)
     let libStage  = min stage Stage1 -- libraries are built only in Stage0/1
         libTarget = PartialTarget libStage pkg
     pkgs     <- interpretPartial libTarget getPackages
-    ghciFlag <- interpretPartial libTarget $ getPkgData BuildGhciLib
+    ghciFlag <- interpretPartial libTarget $ (pdWithGHCiLib <$> getPkgData)
     let deps = matchPackageNames (sort pkgs) (map PackageName $ sort depNames)
         ghci = ghciFlag == "YES" && stage == Stage1
     libs <- fmap concat . forM deps $ \dep -> do
         let depTarget = PartialTarget libStage dep
-        compId <- interpretPartial depTarget $ getPkgData ComponentId
+        compId <- interpretPartial depTarget (pdComponentId <$> getPkgData)
         libFiles <- fmap concat . forM ways $ \way -> do
             libFile  <- pkgLibraryFile libStage dep compId           way
             lib0File <- pkgLibraryFile libStage dep (compId ++ "-0") way
@@ -99,7 +99,7 @@ buildBinary target @ (PartialTarget stage pkg) bin = do
                   else objs
     need $ binDeps ++ libs
     build $ fullTargetWithWay target (Ghc stage) vanilla binDeps [bin]
-    synopsis <- interpretPartial target $ getPkgData Synopsis
+    synopsis <- interpretPartial target $ (pdSynopsis <$> getPkgData)
     putSuccess $ renderBox
         [ "Successfully built program '"
           ++ pkgNameString pkg ++ "' (" ++ show stage ++ ")."

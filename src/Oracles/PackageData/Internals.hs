@@ -21,8 +21,13 @@ import Distribution.Verbosity
 import qualified Distribution.InstalledPackageInfo as Installed
 import qualified Distribution.Simple.PackageIndex as PackageIndex
 
+import Distribution.Text (display)
+
 -- | Various information of interest scaped from Cabal's 'BuildInfo'.
-data PackageData = PackageData { pdPackage        :: PackageIdentifier
+data PackageData = PackageData { pdComponentId    :: String
+                               , pdVersion        :: String
+                               , pdSynopsis       :: String
+                               , pdPackage        :: PackageIdentifier
                                , pdDependencies   :: [PackageIdentifier]
                                , pdTransitiveDeps :: [PackageIdentifier]
                                , pdDepCcArgs      :: [String]
@@ -30,13 +35,17 @@ data PackageData = PackageData { pdPackage        :: PackageIdentifier
                                , pdDepExtraLibs   :: [String]
                                , pdDepIncludeDirs :: [FilePath]
                                , pdDepLibDirs     :: [FilePath]
-
+                               , pdDeps           :: [String]
+                               , pdDepNames       :: [String]
+                               , pdHsSourceDirs   :: [FilePath]
                                , pdHcArgs         :: [String]
+                               , pdHsArgs         :: [String]
                                , pdCcArgs         :: [String]
                                , pdCppArgs        :: [String]
                                , pdLdArgs         :: [String]
                                , pdIncludeDirs    :: [FilePath]
                                , pdIncludes       :: [String]
+                               , pdDepIpIds       :: [String]
                                , pdCSources       :: [FilePath]
                                , pdModules        :: [ModuleName]
                                , pdHiddenModules  :: [ModuleName]
@@ -75,6 +84,16 @@ getPackageData stage pkg
                 return emptyHookedBuildInfo
 
         let pd = updatePackageDescription hooked_bi pd0
+            dep_ids  = map snd (externalPackageDeps lbi)
+            deps     = map display dep_ids
+            dep_direct = map (fromMaybe (error "ghc-cabal: dep_keys failed")
+                             . PackageIndex.lookupComponentId
+                                              (installedPkgs lbi)
+                             . fst)
+                         . externalPackageDeps
+                         $ lbi
+            dep_ipids = map (display . Installed.installedComponentId) dep_direct
+            depNames = map (display . packageName) dep_ids
 
         let libBiModules lib = (libBuildInfo lib, libModules lib)
             exeBiModules exe = (buildInfo exe, ModuleName.main : exeModules exe)
@@ -98,7 +117,10 @@ getPackageData stage pkg
                    ++ extensionsToFlags (compiler lbi) (usedExtensions bi)
                    ++ programOverrideArgs ghcProg
 
-        pure PackageData { pdPackage         = packageId pd
+        pure PackageData { pdComponentId     = display (localCompatPackageKey lbi)
+                         , pdVersion         = display (pkgVersion (package pd))
+                         , pdSynopsis        = (unwords $ lines $ synopsis pd)
+                         , pdPackage         = packageId pd
                          , pdDependencies    = map snd $ externalPackageDeps lbi
                          , pdTransitiveDeps  = transitive_dep_ids
                          , pdDepCcArgs       = forDeps Installed.ccOptions
@@ -106,12 +128,21 @@ getPackageData stage pkg
                          , pdDepLibDirs      = forDeps Installed.libraryDirs
                          , pdDepIncludeDirs  = forDeps Installed.includeDirs
                          , pdDepExtraLibs    = forDeps Installed.extraLibraries
+                         , pdDeps            = deps
+                         , pdDepNames        = depNames
+                         , pdHsSourceDirs    = hsSourceDirs bi
                          , pdHcArgs          = hc_args
+                         , pdHsArgs          = programDefaultArgs ghcProg
+                                               ++ hcOptions GHC bi
+                                               ++ languageToFlags (compiler lbi) (defaultLanguage bi)
+                                               ++ extensionsToFlags (compiler lbi) (usedExtensions bi)
+                                               ++ programOverrideArgs ghcProg
                          , pdCcArgs          = ccOptions bi
                          , pdCppArgs         = cppOptions bi
                          , pdLdArgs          = ldOptions bi
                          , pdIncludeDirs     = includeDirs bi
                          , pdIncludes        = includes bi
+                         , pdDepIpIds        = dep_ipids
                          , pdCSources        = cSources bi
                          , pdModules         = modules
                          , pdHiddenModules   = otherModules bi

@@ -20,8 +20,8 @@ cIncludeArgs :: Args
 cIncludeArgs = do
     stage   <- getStage
     pkg     <- getPackage
-    incDirs <- getPkgDataList IncludeDirs
-    depDirs <- getPkgDataList DepIncludeDirs
+    incDirs <- (pdIncludeDirs <$> getPkgData)
+    depDirs <- (pdDepIncludeDirs <$> getPkgData)
     let buildPath = targetPath stage pkg -/- "build"
     mconcat [ arg $ "-I" ++ buildPath
             , arg $ "-I" ++ buildPath -/- "autogen"
