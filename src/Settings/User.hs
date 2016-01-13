@@ -3,7 +3,7 @@ module Settings.User (
     userArgs, userPackages, userLibWays, userRtsWays, userKnownPackages,
     integerLibrary, buildHaddock, validating, ghciWithDebugger, ghcProfiled,
     ghcDebugged, dynamicGhcPrograms, laxDependencies, buildSystemConfigFile,
-    verboseCommands, turnWarningsIntoErrors, splitObjects
+    verboseCommands, turnWarningsIntoErrors, splitObjects, makeCommand
     ) where
 
 import GHC
@@ -62,9 +62,9 @@ trackBuildSystem = True
 validating :: Bool
 validating = False
 
--- To switch off split objects change to 'return False'
+-- To switch on split objects use 'splitObjects = defaultSplitObjects', see #153
 splitObjects :: Predicate
-splitObjects = defaultSplitObjects
+splitObjects = return False
 
 dynamicGhcPrograms :: Bool
 dynamicGhcPrograms = False
@@ -101,3 +101,8 @@ verboseCommands = return False
 -- | To enable -Werror in Stage2 set turnWarningsIntoErrors = stage2.
 turnWarningsIntoErrors :: Predicate
 turnWarningsIntoErrors = return False
+
+-- | Specify which @make@ command to use, for example set to "gmake" for
+-- @GNU make@.
+makeCommand :: FilePath
+makeCommand = "make"
