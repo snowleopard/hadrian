@@ -9,7 +9,7 @@ import GHC.Generics
 import Settings.Paths
 
 import Distribution.ModuleName as ModuleName
-import Distribution.Package
+import Distribution.Package as P
 import Distribution.PackageDescription as PD
 import Distribution.PackageDescription.Parse
 import Distribution.Simple (defaultHookedPackageDesc)
@@ -52,6 +52,35 @@ data PackageData = PackageData { pdComponentId    :: String
                                , pdWithGHCiLib    :: Bool
                                }
                                deriving (Show, Generic, Eq)
+
+emptyPackageData :: PackageData
+emptyPackageData = PackageData { pdComponentId     = ""
+                               , pdVersion         = ""
+                               , pdSynopsis        = ""
+                               , pdPackage         = PackageIdentifier { P.pkgName = P.PackageName { unPackageName = "" }
+                                                                       , pkgVersion = (read "0.0.0") }
+                               , pdDependencies    = []
+                               , pdTransitiveDeps  = []
+                               , pdDepCcArgs       = []
+                               , pdDepLdArgs       = []
+                               , pdDepLibDirs      = []
+                               , pdDepIncludeDirs  = []
+                               , pdDepExtraLibs    = []
+                               , pdDeps            = []
+                               , pdDepNames        = []
+                               , pdHsSourceDirs    = []
+                               , pdHcArgs          = []
+                               , pdHsArgs          = []
+                               , pdCcArgs          = []
+                               , pdCppArgs         = []
+                               , pdLdArgs          = []
+                               , pdIncludeDirs     = []
+                               , pdIncludes        = []
+                               , pdDepIpIds        = []
+                               , pdCSources        = []
+                               , pdModules         = []
+                               , pdHiddenModules   = []
+                               , pdWithGHCiLib     = False }
 
 instance Hashable ModuleName where
     hashWithSalt salt = hashWithSalt salt . show
