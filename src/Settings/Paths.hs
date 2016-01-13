@@ -1,5 +1,5 @@
 module Settings.Paths (
-    targetDirectory, targetPath, pkgDataFile, pkgHaddockFile, pkgLibraryFile,
+    targetDirectory, targetPath, pkgHaddockFile, pkgLibraryFile,
     pkgGhciLibraryFile, packageConfiguration, packageConfigurationInitialised
     ) where
 
@@ -14,9 +14,6 @@ targetDirectory = userTargetDirectory
 -- Path to the target directory from GHC source root
 targetPath :: Stage -> Package -> FilePath
 targetPath stage pkg = buildRootPath -/- targetDirectory stage pkg -/- pkgPath pkg
-
-pkgDataFile :: Stage -> Package -> FilePath
-pkgDataFile stage pkg = targetPath stage pkg -/- "package-data.mk"
 
 -- Relative path to a package haddock file, e.g.:
 -- "libraries/array/dist-install/doc/html/array/array.haddock"

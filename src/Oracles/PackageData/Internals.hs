@@ -1,9 +1,11 @@
+{-# LANGUAGE DeriveGeneric, StandaloneDeriving, DeriveAnyClass #-}
 module Oracles.PackageData.Internals where
 
 import Base
 import Package
 import Stage
 import GHC hiding (compiler)
+import GHC.Generics
 import Settings.Paths
 
 import Distribution.ModuleName as ModuleName
@@ -40,6 +42,17 @@ data PackageData = PackageData { pdPackage        :: PackageIdentifier
                                , pdHiddenModules  :: [ModuleName]
                                , pdWithGHCiLib    :: Bool
                                }
+                               deriving (Show, Generic, Eq)
+
+instance Hashable ModuleName where
+    hashWithSalt salt = hashWithSalt salt . show
+instance NFData ModuleName where
+    rnf = rnf . show
+instance Hashable PackageIdentifier where
+    hashWithSalt salt = hashWithSalt salt . show
+deriving instance Hashable PackageData
+deriving instance Binary PackageData
+deriving instance NFData PackageData
 
 getPackageData :: Stage -> Package.Package -> Action PackageData
 getPackageData stage pkg
