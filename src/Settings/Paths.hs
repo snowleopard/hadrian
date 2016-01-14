@@ -1,6 +1,7 @@
 module Settings.Paths (
     targetDirectory, targetPath, pkgHaddockFile, pkgLibraryFile,
-    pkgGhciLibraryFile, packageConfiguration, packageConfigurationInitialised
+    pkgGhciLibraryFile, packageConfiguration, packageConfigurationInitialised,
+    includes, includesArgs
     ) where
 
 import Base
@@ -47,3 +48,9 @@ packageConfigurationInitialised :: Stage -> FilePath
 packageConfigurationInitialised stage =
     shakeFilesPath -/- "package-configuration-initialised-"
     ++ stageString (min stage Stage1)
+
+includes :: [FilePath]
+includes = [ "includes", "includes/dist-derivedconstants/header" ]
+
+includesArgs :: Args
+includesArgs = append $ map ("-I" ++) includes
