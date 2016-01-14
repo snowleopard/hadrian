@@ -12,8 +12,9 @@ import Settings.Paths hiding (includes)
 import Distribution.ModuleName as ModuleName
 import Distribution.Package as P
 import Distribution.PackageDescription as PD
+import Distribution.PackageDescription.Configuration
 import Distribution.PackageDescription.Parse
-import Distribution.Simple (defaultHookedPackageDesc)
+import Distribution.Simple (defaultHookedPackageDesc, defaultMain, defaultMainWithHooks, autoconfUserHooks)
 import Distribution.Simple.Build (writeAutogenFiles)
 import Distribution.Simple.Compiler
 import Distribution.Simple.Configure (getPersistBuildConfig)
@@ -28,9 +29,19 @@ import qualified Distribution.Simple.PackageIndex as PackageIndex
 
 import qualified Data.ByteString.Lazy.Char8 as BS
 
-import System.Directory (setCurrentDirectory, getCurrentDirectory, doesFileExist)
-
+import Control.Exception ( bracket )
+import System.Directory (setCurrentDirectory, getCurrentDirectory) -- , doesFileExist)
+import qualified System.Directory as IO
+import System.Environment (withArgs)
 import Distribution.Text (display)
+
+withCurrentDirectory :: FilePath  -- ^ Directory to execute in
+                     -> IO a      -- ^ Action to be executed
+                     -> IO a
+withCurrentDirectory dir action =
+  bracket getCurrentDirectory setCurrentDirectory $ \ _ -> do
+    setCurrentDirectory dir
+    action
 
 -- | Various information of interest scaped from Cabal's 'BuildInfo'.
 data PackageData = PackageData { pdComponentId    :: String
@@ -101,6 +112,24 @@ deriving instance Hashable PackageData
 deriving instance Binary PackageData
 deriving instance NFData PackageData
 
+runDefaultMain :: IO ()
+runDefaultMain
+ = do let verbosity = normal
+      gpdFile <- defaultPackageDesc verbosity
+      gpd <- readPackageDescription verbosity gpdFile
+      case buildType (flattenPackageDescription gpd) of
+          Just Configure -> defaultMainWithHooks autoconfUserHooks
+          -- time has a "Custom" Setup.hs, but it's actually Configure
+          -- plus a "./Setup test" hook. However, Cabal is also
+          -- "Custom", but doesn't have a configure script.
+          Just Custom ->
+              do configureExists <- IO.doesFileExist "configure"
+                 if configureExists
+                     then defaultMainWithHooks autoconfUserHooks
+                     else defaultMain
+          -- not quite right, but good enough for us:
+          _ -> defaultMain
+
 getPackageData :: Stage -> Package.Package -> Action PackageData
 getPackageData stage pkg
     | pkg == hp2ps = do
@@ -139,6 +168,13 @@ getPackageData stage pkg
             directory = targetPath stage pkg
             distdir   = stageString stage
         need [pkgCabalFile pkg]
+        -- XXX We shouldn't just configure with the default flags
+        -- XXX And this, and thus the "getPersistBuildConfig distdir" below,
+        -- aren't going to work when the deps aren't built yet
+        liftIO $ withCurrentDirectory (pkgPath pkg)
+            (withArgs (["configure", "--distdir", distdir, "--ipid", "$pkg-$version"]) -- ++ config_args)
+                runDefaultMain)
+
         lbi <- liftIO $ getPersistBuildConfig distdir
         let pd0 = localPkgDescr lbi
         hooked_bi <-
