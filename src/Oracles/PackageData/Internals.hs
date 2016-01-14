@@ -2,11 +2,11 @@
 module Oracles.PackageData.Internals where
 
 import Base
-import Package
-import Stage
+import Expression
 import GHC hiding (compiler)
 import GHC.Generics
-import Settings.Paths
+import Package
+import Settings.Paths hiding (includes)
 
 import Distribution.ModuleName as ModuleName
 import Distribution.Package as P
@@ -94,7 +94,17 @@ deriving instance NFData PackageData
 
 getPackageData :: Stage -> Package.Package -> Action PackageData
 getPackageData stage pkg
-    | pkg == hp2ps = error "TODO"
+    | pkg == hp2ps = do
+            let target = PartialTarget stage pkg
+            includes <- interpretPartial target $ fromDiffExpr includesArgs
+            let cSrcs  = [ "AreaBelow.c", "Curves.c", "Error.c", "Main.c"
+                         , "Reorder.c", "TopTwenty.c", "AuxFile.c"
+                         , "Deviation.c", "HpFile.c", "Marks.c", "Scale.c"
+                         , "TraceElement.c", "Axes.c", "Dimensions.c", "Key.c"
+                         , "PsFile.c", "Shade.c", "Utilities.c" ]
+            return $ emptyPackageData { pdCSources     = cSrcs
+                                      , pdDepExtraLibs = ["m"]
+                                      , pdCcArgs       = includes }
     | otherwise    = do
         -- Largely stolen from utils/ghc-cabal/Main.hs
         let verbosity = silent

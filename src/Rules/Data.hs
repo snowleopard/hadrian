@@ -65,22 +65,6 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
 
     -- TODO: PROGNAME was $(CrossCompilePrefix)hp2ps
     priority 2.0 $ do
-        when (pkg == hp2ps) $ dataFile %> \mk -> do
-            includes <- interpretPartial target $ fromDiffExpr includesArgs
-            let prefix = fixKey (targetPath stage pkg) ++ "_"
-                cSrcs  = [ "AreaBelow.c", "Curves.c", "Error.c", "Main.c"
-                         , "Reorder.c", "TopTwenty.c", "AuxFile.c"
-                         , "Deviation.c", "HpFile.c", "Marks.c", "Scale.c"
-                         , "TraceElement.c", "Axes.c", "Dimensions.c", "Key.c"
-                         , "PsFile.c", "Shade.c", "Utilities.c" ]
-                contents = unlines $ map (prefix++)
-                    [ "PROGNAME = hp2ps"
-                    , "C_SRCS = " ++ unwords cSrcs
-                    , "DEP_EXTRA_LIBS = m"
-                    , "CC_OPTS = " ++ unwords includes ]
-            writeFileChanged mk contents
-            putSuccess $ "| Successfully generated '" ++ mk ++ "'."
-
         when (pkg == unlit) $ dataFile %> \mk -> do
             let prefix   = fixKey (targetPath stage pkg) ++ "_"
                 contents = unlines $ map (prefix++)
@@ -95,19 +79,6 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
                 contents = unlines $ map (prefix++)
                     [ "PROGNAME = touchy"
                     , "C_SRCS = touchy.c" ]
-            writeFileChanged mk contents
-            putSuccess $ "| Successfully generated '" ++ mk ++ "'."
-
-        -- Bootstrapping `ghcCabal`: although `ghcCabal` is a proper cabal
-        -- package, we cannot generate the corresponding `package-data.mk` file
-        -- by running by running `ghcCabal`, because it has not yet been built.
-        when (pkg == ghcCabal && stage == Stage0) $ dataFile %> \mk -> do
-            let prefix   = fixKey (targetPath stage pkg) ++ "_"
-                contents = unlines $ map (prefix++)
-                    [ "PROGNAME = ghc-cabal"
-                    , "MODULES = Main"
-                    , "SYNOPSIS = Bootstrapped ghc-cabal utility."
-                    , "HS_SRC_DIRS = ." ]
             writeFileChanged mk contents
             putSuccess $ "| Successfully generated '" ++ mk ++ "'."
 
