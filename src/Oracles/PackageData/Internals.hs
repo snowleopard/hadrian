@@ -3,7 +3,7 @@ module Oracles.PackageData.Internals where
 
 import Base
 import Expression
-import GHC hiding (compiler)
+import GHC hiding (compiler, directory)
 import GHC.Generics
 import Oracles.Config.Setting
 import Package
@@ -14,13 +14,21 @@ import Distribution.Package as P
 import Distribution.PackageDescription as PD
 import Distribution.PackageDescription.Parse
 import Distribution.Simple (defaultHookedPackageDesc)
-import Distribution.Simple.LocalBuildInfo as LBI
-import Distribution.Simple.Program
+import Distribution.Simple.Build (writeAutogenFiles)
 import Distribution.Simple.Compiler
 import Distribution.Simple.Configure (getPersistBuildConfig)
+import Distribution.Simple.LocalBuildInfo as LBI
+import Distribution.Simple.Program
+import Distribution.Simple.Register
+import Distribution.Simple.Utils (defaultPackageDesc, writeFileAtomic, toUTF8)
+import Distribution.System
 import Distribution.Verbosity
 import qualified Distribution.InstalledPackageInfo as Installed
 import qualified Distribution.Simple.PackageIndex as PackageIndex
+
+import qualified Data.ByteString.Lazy.Char8 as BS
+
+import System.Directory (setCurrentDirectory, getCurrentDirectory, doesFileExist)
 
 import Distribution.Text (display)
 
@@ -128,7 +136,8 @@ getPackageData stage pkg
     | otherwise    = do
         -- Largely stolen from utils/ghc-cabal/Main.hs
         let verbosity = silent
-        let distdir = targetPath stage pkg
+            directory = targetPath stage pkg
+            distdir   = stageString stage
         need [pkgCabalFile pkg]
         lbi <- liftIO $ getPersistBuildConfig distdir
         let pd0 = localPkgDescr lbi
@@ -143,7 +152,26 @@ getPackageData stage pkg
                 return emptyHookedBuildInfo
 
         let pd = updatePackageDescription hooked_bi pd0
-            dep_ids  = map snd (externalPackageDeps lbi)
+
+        -- generate Paths_<pkg>.hs and cabal-macros.h
+        liftIO $ writeAutogenFiles verbosity pd lbi
+
+        -- generate inplace-pkg-config
+        liftIO $ withLibLBI pd lbi $ \lib clbi ->
+            do cwd <- getCurrentDirectory
+               let ipid = ComponentId (display (packageId pd))
+               let installedPkgInfo = inplaceInstalledPackageInfo cwd distdir
+                                          pd (Installed.AbiHash "") lib lbi clbi
+                   final_ipi = mangleIPI directory distdir lbi $ installedPkgInfo {
+                                   Installed.installedComponentId = ipid,
+                                   Installed.compatPackageKey = ipid,
+                                   Installed.haddockHTMLs = []
+                               }
+                   content = Installed.showInstalledPackageInfo final_ipi ++ "\n"
+               writeFileAtomic (distdir </> "inplace-pkg-config") (BS.pack $ toUTF8 content)
+
+
+        let dep_ids  = map snd (externalPackageDeps lbi)
             deps     = map display dep_ids
             dep_direct = map (fromMaybe (error "ghc-cabal: dep_keys failed")
                              . PackageIndex.lookupComponentId
@@ -207,3 +235,23 @@ getPackageData stage pkg
                          , pdHiddenModules   = otherModules bi
                          , pdWithGHCiLib     = withGHCiLib lbi
                          }
+
+-- On Windows we need to split the ghc package into 2 pieces, or the
+-- DLL that it makes contains too many symbols (#5987). There are
+-- therefore 2 libraries, not just the 1 that Cabal assumes.
+mangleIPI :: FilePath -> FilePath -> LocalBuildInfo
+          -> Installed.InstalledPackageInfo -> Installed.InstalledPackageInfo
+mangleIPI "compiler" "stage2" lbi ipi
+ | isWindows =
+    -- Cabal currently only ever installs ONE Haskell library, c.f.
+    -- the code in Cabal.Distribution.Simple.Register.  If it
+    -- ever starts installing more we'll have to find the
+    -- library that's too big and split that.
+    let [old_hslib] = Installed.hsLibraries ipi
+    in ipi {
+        Installed.hsLibraries = [old_hslib, old_hslib ++ "-0"]
+    }
+    where isWindows = case hostPlatform lbi of
+                      Platform _ Windows -> True
+                      _                  -> False
+mangleIPI _ _ _ ipi = ipi
