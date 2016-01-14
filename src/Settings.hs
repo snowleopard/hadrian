@@ -11,7 +11,6 @@ import Base
 import Expression
 import Oracles
 import Oracles.ModuleFiles
-import Oracles.PackageData
 import Settings.Packages
 import Settings.Paths
 import Settings.User

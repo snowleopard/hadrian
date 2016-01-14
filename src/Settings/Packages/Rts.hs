@@ -9,7 +9,6 @@ import Oracles.Config.Flag
 import Oracles.Config.Setting
 import Predicates (builder, builderGcc, builderGhc, package, file)
 import Settings
-import Settings.Builders.Common
 
 rtsConfIn :: FilePath
 rtsConfIn = pkgPath rts -/- "package.conf.in"

@@ -9,7 +9,6 @@ import Oracles.Config.Flag
 import Oracles.Config.Setting
 import Oracles.PackageData
 import Settings
-import Settings.Paths
 
 cIncludeArgs :: Args
 cIncludeArgs = do
