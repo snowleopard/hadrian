@@ -7,6 +7,7 @@ import Rules.Actions
 import Rules.Resources
 import Settings
 import Development.Shake.Util (parseMakefile)
+import Rules.Generate
 
 -- TODO: simplify handling of AutoApply.cmm
 buildPackageDependencies :: Resources -> PartialTarget -> Rules ()
@@ -34,6 +35,12 @@ buildPackageDependencies _ target @ (PartialTarget stage pkg) =
 
         -- TODO: don't accumulate *.deps into .dependencies
         (buildPath -/- ".dependencies") %> \out -> do
+            -- The first thing we do with any package is make sure all generated
+            -- dependencies are in place before proceeding.
+            -- TODO: This would be even better embedded directly in
+            --       @askAllPackageData@. Yet this will lead to import cycles.
+            orderOnly $ generatedDependencies stage pkg
+
             cSrcs <- pdCSources <$> askAllPackageData stage pkg
             let cDepFiles = [ buildPath -/- src <.> "deps" | src <- cSrcs
                             , not ("//AutoApply.cmm" ?== src) ]
