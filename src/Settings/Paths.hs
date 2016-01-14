@@ -1,11 +1,12 @@
 module Settings.Paths (
     targetDirectory, targetPath, pkgHaddockFile, pkgLibraryFile,
     pkgGhciLibraryFile, packageConfiguration, packageConfigurationInitialised,
-    includes, includesArgs
+    includes, includesArgs, rtsBuildPath, rtsConfIn, rtsConf
     ) where
 
 import Base
 import Expression
+import GHC (rts)
 import Settings.User
 
 -- User can override the default target directory settings given below
@@ -54,3 +55,13 @@ includes = [ "includes", "includes/dist-derivedconstants/header" ]
 
 includesArgs :: Args
 includesArgs = append $ map ("-I" ++) includes
+
+rtsBuildPath :: FilePath
+rtsBuildPath = targetPath Stage1 rts -/- "build"
+
+rtsConfIn :: FilePath
+rtsConfIn = pkgPath rts -/- "package.conf.in"
+
+-- TODO: move to buildRootPath, see #113
+rtsConf :: FilePath
+rtsConf = pkgPath rts -/- targetDirectory Stage1 rts -/- "package.conf.inplace"

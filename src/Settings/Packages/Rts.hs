@@ -1,5 +1,5 @@
 module Settings.Packages.Rts (
-    rtsPackageArgs, rtsConfIn, rtsConf, rtsLibffiLibraryName
+    rtsPackageArgs, rtsLibffiLibraryName
     ) where
 
 import Base
@@ -9,13 +9,6 @@ import Oracles.Config.Flag
 import Oracles.Config.Setting
 import Predicates (builder, builderGcc, builderGhc, package, file)
 import Settings
-
-rtsConfIn :: FilePath
-rtsConfIn = pkgPath rts -/- "package.conf.in"
-
--- TODO: move to buildRootPath, see #113
-rtsConf :: FilePath
-rtsConf = pkgPath rts -/- targetDirectory Stage1 rts -/- "package.conf.inplace"
 
 rtsLibffiLibraryName :: Action FilePath
 rtsLibffiLibraryName = do

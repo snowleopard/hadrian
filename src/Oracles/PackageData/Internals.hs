@@ -5,6 +5,7 @@ import Base
 import Expression
 import GHC hiding (compiler)
 import GHC.Generics
+import Oracles.Config.Setting
 import Package
 import Settings.Paths hiding (includes)
 
@@ -95,16 +96,35 @@ deriving instance NFData PackageData
 getPackageData :: Stage -> Package.Package -> Action PackageData
 getPackageData stage pkg
     | pkg == hp2ps = do
-            let target = PartialTarget stage pkg
-            includes <- interpretPartial target $ fromDiffExpr includesArgs
-            let cSrcs  = [ "AreaBelow.c", "Curves.c", "Error.c", "Main.c"
-                         , "Reorder.c", "TopTwenty.c", "AuxFile.c"
-                         , "Deviation.c", "HpFile.c", "Marks.c", "Scale.c"
-                         , "TraceElement.c", "Axes.c", "Dimensions.c", "Key.c"
-                         , "PsFile.c", "Shade.c", "Utilities.c" ]
-            return $ emptyPackageData { pdCSources     = cSrcs
-                                      , pdDepExtraLibs = ["m"]
-                                      , pdCcArgs       = includes }
+        let target = PartialTarget stage pkg
+        includes <- interpretPartial target $ fromDiffExpr includesArgs
+        let cSrcs  = [ "AreaBelow.c", "Curves.c", "Error.c", "Main.c"
+                     , "Reorder.c", "TopTwenty.c", "AuxFile.c"
+                     , "Deviation.c", "HpFile.c", "Marks.c", "Scale.c"
+                     , "TraceElement.c", "Axes.c", "Dimensions.c", "Key.c"
+                     , "PsFile.c", "Shade.c", "Utilities.c" ]
+        return $ emptyPackageData { pdCSources     = cSrcs
+                                  , pdDepExtraLibs = ["m"]
+                                  , pdCcArgs       = includes }
+    | pkg == rts   = do
+        windows <- windowsHost
+        let target = PartialTarget stage pkg
+            dirs   = [ ".", "hooks", "sm", "eventlog" ]
+                  ++ [ "posix" | not windows          ]
+                  ++ [ "win32" |     windows          ]
+        -- TODO: rts/dist/build/sm/Evac_thr.c, rts/dist/build/sm/Scav_thr.c
+        -- TODO: adding cmm/S sources to C_SRCS is a hack; rethink after #18
+        cSrcs    <- getDirectoryFiles (pkgPath pkg) (map (-/- "*.c") dirs)
+        cmmSrcs  <- getDirectoryFiles (pkgPath pkg) ["*.cmm"]
+        buildAdjustor   <- anyTargetArch ["i386", "powerpc", "powerpc64"]
+        buildStgCRunAsm <- anyTargetArch ["powerpc64le"]
+        let sSrcs     = [ "AdjustorAsm.S" | buildAdjustor   ]
+                     ++ [ "StgCRunAsm.S"  | buildStgCRunAsm ]
+            extraSrcs = [ rtsBuildPath -/- "AutoApply.cmm" ]
+        includes <- interpretPartial target $ fromDiffExpr includesArgs
+        return $ emptyPackageData { pdCSources     = cSrcs ++ cmmSrcs ++ sSrcs ++ extraSrcs
+                                  , pdCcArgs       = includes
+                                  , pdComponentId  = "rts" }
     | otherwise    = do
         -- Largely stolen from utils/ghc-cabal/Main.hs
         let verbosity = silent
