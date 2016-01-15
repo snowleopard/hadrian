@@ -26,14 +26,39 @@ Run Time System Library (`rtsLib`). See `generateTargets` in `Rules.hs`.
 The build system makes use of three core ideas:
 
 - Oracles
-  TBD
-- Rules
-  TBD
-- Actions
-  TBD
-- Expressions
-  TBD
 
+  Oracles as can be found in the same named folder, provide a facility to
+  provide knowledge about the build system.  Each oracle file therefore contains
+  a rule that generates that oracle.  The advantage of using oracles over
+  looking up the information every time is that oracles are cached.
+
+- Rules
+
+  The basic building blocks of every build system are rules that describe how
+  partial artifacts are constructed.  As some programs, libraries, and utilities
+  need custom some custom rules to be build, these are in their respective files.
+
+  There are two special set of rules, one is `Generators`, which are rules that
+  are used to generate artifacts that are not the result of applying a generic
+  rule to some input.
+
+  The other special set of rules are `Wrappers`. Notably windows does not use
+  wrappers, but on posix systems wrappers are used to inject default arguments
+  or environment variables. As these are usually artifact specific, those
+  are named after the artifact they wrap.
+
+- Actions
+
+  While rules govern the build system, they usually perform actions to turn the
+  input into the output artifact, hence most of the build system are actually
+  actions, that are run as the result of rules.
+
+- Expressions
+
+  As large parts of the build system deal with building a specific target, and
+  carrying the target around explicitly, the shakeing-up-ghc build system makes
+  use of Expressions, which represent computations that produce actions, and
+  can enquire about the current target that is being build.
 
 ## Stages
 
