@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Rules.Actions (
-    build, buildWithResources, copyFile, createDirectory, moveDirectory,
-    fixFile, runConfigure, runMake, runBuilder, makeExecutable
+    build, buildWithResources, copyFile, createDirectory, removeDirectory, moveDirectory,
+    fixFile, runConfigure, runMake, applyPatch, runBuilder, makeExecutable
     ) where
 
 import qualified System.Directory as IO
@@ -64,9 +64,7 @@ captureStdout target path argList = do
 
 copyFile :: FilePath -> FilePath -> Action ()
 copyFile source target = do
-    putBuild $ renderBox [ "Copy file"
-                         , "    input: " ++ source
-                         , "=> output: " ++ target ]
+    putBuild $ renderAction "Copy file" source target
     copyFileChanged source target
 
 createDirectory :: FilePath -> Action ()
@@ -74,12 +72,15 @@ createDirectory dir = do
     putBuild $ "| Create directory " ++ dir
     liftIO $ IO.createDirectoryIfMissing True dir
 
+removeDirectory :: FilePath -> Action ()
+removeDirectory dir = do
+    putBuild $ "| Remove directory " ++ dir
+    removeDirectoryIfExists dir
+
 -- Note, the source directory is untracked
 moveDirectory :: FilePath -> FilePath -> Action ()
 moveDirectory source target = do
-    putBuild $ renderBox [ "Move directory"
-                         , "    input: " ++ source
-                         , "=> output: " ++ target ]
+    putBuild $ renderAction "Move directory" source target
     liftIO $ IO.renameDirectory source target
 
 -- Transform a given file by applying a function to its contents
@@ -105,7 +106,16 @@ runMake dir args = do
     need [dir -/- "Makefile"]
     let note = if null args then "" else " (" ++ intercalate ", " args ++ ")"
     putBuild $ "| Run make" ++ note ++ " in " ++ dir ++ "..."
-    quietly $ cmd Shell (EchoStdout False) "make" ["-C", dir] args
+    quietly $ cmd Shell (EchoStdout False) makeCommand ["-C", dir] args
+
+applyPatch :: FilePath -> FilePath -> Action ()
+applyPatch dir patch = do
+    let file = dir -/- patch
+    need [file]
+    needBuilder False Patch
+    path <- builderPath Patch
+    putBuild $ "| Apply patch " ++ file
+    quietly $ cmd Shell (EchoStdout False) [Cwd dir] [path, "-p0 <", patch]
 
 runBuilder :: Builder -> [String] -> Action ()
 runBuilder builder args = do
@@ -122,13 +132,11 @@ makeExecutable file = do
 
 -- Print out key information about the command being executed
 putInfo :: Target.Target -> Action ()
-putInfo (Target.Target {..}) = putBuild $ renderBox
-    [ "Run " ++ show builder
-      ++ " (" ++ stageInfo
-      ++ "package = " ++ pkgNameString package
-      ++ wayInfo ++ ")"
-    , "    input: " ++ digest inputs
-    , "=> output: " ++ digest outputs ]
+putInfo Target.Target {..} = putBuild $ renderAction
+    ("Run " ++ show builder ++ " (" ++ stageInfo
+    ++ "package = " ++ pkgNameString package ++ wayInfo ++ ")")
+    (digest inputs)
+    (digest outputs)
   where
     stageInfo = if isStaged builder then "" else "stage = " ++ show stage ++ ", "
     wayInfo   = if way == vanilla   then "" else ", way = " ++ show way

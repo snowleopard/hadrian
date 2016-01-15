@@ -27,15 +27,12 @@ libffiBuild = buildRootPath -/- "stage0/libffi"
 libffiLibrary :: FilePath
 libffiLibrary = libffiBuild -/- "inst/lib/libffi.a"
 
-libffiMakefile :: FilePath
-libffiMakefile = libffiBuild -/- "Makefile.in"
-
 fixLibffiMakefile :: String -> String
-fixLibffiMakefile = unlines . map
-    ( replace "-MD" "-MMD"
+fixLibffiMakefile =
+      replace "-MD" "-MMD"
     . replace "@toolexeclibdir@" "$(libdir)"
     . replace "@INSTALL@" "$(subst ../install-sh,C:/msys/home/chEEtah/ghc/install-sh,@INSTALL@)"
-    ) . lines
+
 
 -- TODO: remove code duplication (see Settings/Builders/GhcCabal.hs)
 configureEnvironment :: Action [CmdOption]
@@ -74,7 +71,9 @@ libffiRules :: Rules ()
 libffiRules = do
     libffiDependencies &%> \_ -> do
         when trackBuildSystem $ need [sourcePath -/- "Rules/Libffi.hs"]
-        liftIO $ removeFiles libffiBuild ["//*"]
+        removeDirectory libffiBuild
+        createDirectory $ buildRootPath -/- stageString Stage0
+
         tarballs <- getDirectoryFiles "" ["libffi-tarballs/libffi*.tar.gz"]
         when (length tarballs /= 1) $
             putError $ "libffiRules: exactly one libffi tarball expected"
@@ -83,12 +82,13 @@ libffiRules = do
         need tarballs
         let libname = dropExtension . dropExtension . takeFileName $ head tarballs
 
-        withTempDir $ \tmpDir -> do
-            let unifiedTmpDir = unifyPath tmpDir
-            build $ fullTarget libffiTarget Tar tarballs [unifiedTmpDir]
-            moveDirectory (unifiedTmpDir -/- libname) libffiBuild
+        removeDirectory (buildRootPath -/- libname)
+        actionFinally (do
+            build $ fullTarget libffiTarget Tar tarballs [buildRootPath]
+            moveDirectory (buildRootPath -/- libname) libffiBuild) $
+                removeFiles buildRootPath [libname <//> "*"]
 
-        fixFile libffiMakefile fixLibffiMakefile
+        fixFile (libffiBuild -/- "Makefile.in") fixLibffiMakefile
 
         forM_ ["config.guess", "config.sub"] $ \file ->
             copyFile file (libffiBuild -/- file)

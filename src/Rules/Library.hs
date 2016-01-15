@@ -52,11 +52,10 @@ buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
         else build $ fullTarget target Ar objs [a]
 
         synopsis <- interpretPartial target $ getPkgData Synopsis
-        unless isLib0 . putSuccess $ renderBox
-            [ "Successfully built library '"
-              ++ pkgNameString pkg
-              ++ "' (" ++ show stage ++ ", way "++ show way ++ ")."
-            , "Library synopsis: " ++ dropWhileEnd isPunctuation synopsis ++ "." ]
+        unless isLib0 . putSuccess $ renderLibrary
+            ("'" ++ pkgNameString pkg ++ "' (" ++ show stage ++ ", way "++ show way ++ ").")
+            a
+            (dropWhileEnd isPunctuation synopsis)
 
     -- TODO: simplify handling of AutoApply.cmm
     -- TODO: this looks fragile as haskell objects can match this rule if their
@@ -85,5 +84,9 @@ extraObjects :: PartialTarget -> Action [FilePath]
 extraObjects (PartialTarget _ pkg)
     | pkg == integerGmp = do
         orderOnly [gmpLibraryH] -- TODO: move this dependency elsewhere, #113?
-        getDirectoryFiles "" [gmpObjects -/- "*.o"]
+        -- FIXME: simplify after Shake's getDirectoryFiles bug is fixed, #168
+        exists <- doesDirectoryExist gmpObjects
+        if exists
+        then getDirectoryFiles "" [gmpObjects -/- "*.o"]
+        else return []
     | otherwise         = return []
