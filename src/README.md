@@ -83,11 +83,68 @@ To build a full `stage2` compiler on a different architecture, one can use the
 `stage1` cross compiler as the `bootstrap` compiler.
 
 ## Packages
-TBD
+
+The Glorious Glasgow Haskell Compiler is comprised of a larger set of packages
+that together form the final compiler, runtime and toolchain.
+
 ### Libraries
-TBD
+
+- array
+- base
+- binary
+- bytestring
+- cabal
+- compiler
+- containers
+- deepseq
+- directory
+- filepath
+- ghc-boot
+- ghci
+- ghc-prim
+- haskeline
+- hoopl
+- hpc
+- integer-gmp
+- integer-simple
+- libffi
+- parallel
+- primitive
+- process
+- rts
+- stm
+- template-haskell
+- terminfo
+- time
+- transformers
+- unix
+- win32
+- xhtml
+
 ### Programs
-TBD
+
+- ghc-bin
+- iserv-bin
+
+### Utilities
+
+- compare-sizes
+- deriveConstants
+- dll-split
+- genapply
+- genprimopcode
+- ghc-cabal
+- ghc-pkg
+- ghctags
+- haddock
+- hsc2hs
+- hp2ps
+- hpc-bin
+- mkUserGuidePart
+- runghc
+- touchy
+- unlit
+- ghc-split
 
 ## Builders
 TBD
