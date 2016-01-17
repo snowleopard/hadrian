@@ -2,6 +2,8 @@ module Rules.Gmp (
     gmpRules, gmpBuildPath, gmpObjects, gmpLibraryH, gmpDependencies
     ) where
 
+import qualified System.Directory as IO
+
 import Base
 import Expression
 import GHC
@@ -75,25 +77,30 @@ gmpRules = do
 
         liftIO $ removeFiles gmpBuildPath ["//*"]
 
-        -- TODO: currently we configure integerGmp package twice -- optimise
-        args <- configureIntGmpArguments
         envs <- configureEnvironment
-        runConfigure (pkgPath integerGmp) envs args
+        -- TODO: without the optimisation below we configure integerGmp package
+        -- twice -- think how this can be optimised (shall we solve #18 first?)
+        -- TODO: this is a hacky optimisation: we do not rerun configure of
+        -- integerGmp package if we detect the results of the previous run
+        unlessM (liftIO . IO.doesFileExist $ gmpBase -/- "config.mk") $ do
+            args <- configureIntGmpArguments
+            runConfigure (pkgPath integerGmp) envs args
 
         createDirectory $ takeDirectory gmpLibraryH
         -- We don't use system GMP on Windows. TODO: fix?
+        -- TODO: we do not track "config.mk" and "integer-gmp.buildinfo", see #173
         windows <- windowsHost
         configMk <- liftIO . readFile $ gmpBase -/- "config.mk"
         if not windows && any (`isInfixOf` configMk) [ "HaveFrameworkGMP = YES", "HaveLibGmp = YES" ]
         then do
             putBuild "| GMP library/framework detected and will be used"
             copyFile gmpLibraryFakeH gmpLibraryH
-            buildInfo <- readFileLines $ pkgPath integerGmp -/- "integer-gmp.buildinfo"
+            buildInfo <- liftIO . readFile $ pkgPath integerGmp -/- "integer-gmp.buildinfo"
             let prefix = "extra-libraries: "
                 libs s = case stripPrefix prefix s of
                     Nothing    -> []
                     Just value -> words value
-            writeFileChanged gmpLibNameCache . unlines $ concatMap libs buildInfo
+            writeFileChanged gmpLibNameCache . unlines . concatMap libs $ lines buildInfo
         else do
             putBuild "| No GMP library/framework detected; in tree GMP will be built"
             writeFileChanged gmpLibNameCache ""
@@ -108,7 +115,6 @@ gmpRules = do
                          ++ "(found: " ++ show tarballs ++ ")."
 
             need tarballs
-            createDirectory gmpBuildPath
             build $ fullTarget gmpTarget Tar tarballs [gmpBuildPath]
 
             forM_ gmpPatches $ \src -> do

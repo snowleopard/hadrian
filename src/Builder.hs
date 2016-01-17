@@ -38,6 +38,7 @@ data Builder = Alex
              | HsCpp
              | Hsc2Hs
              | Ld
+             | Make
              | Nm
              | Objdump
              | Patch
@@ -81,6 +82,7 @@ builderKey builder = case builder of
     Hsc2Hs           -> "hsc2hs"
     HsCpp            -> "hs-cpp"
     Ld               -> "ld"
+    Make             -> "make"
     Nm               -> "nm"
     Objdump          -> "objdump"
     Patch            -> "patch"
@@ -93,9 +95,9 @@ builderKey builder = case builder of
 -- TODO: Paths to some builders should be determined using 'defaultProgramPath'
 builderPath :: Builder -> Action FilePath
 builderPath builder = do
-    path <- askConfigWithDefault (builderKey builder) $
-            putError $ "\nCannot find path to '" ++ (builderKey builder)
-                     ++ "' in configuration files."
+    path <- askConfigWithDefault (builderKey builder) . putError $
+        "\nCannot find path to '" ++ (builderKey builder)
+        ++ "' in configuration files. Have you forgot to run configure?"
     windows <- windowsHost
     case (path, windows) of
         ("", _)    -> return path
