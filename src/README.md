@@ -95,16 +95,11 @@ that together form the final compiler, runtime and toolchain.
 - **bytestring** provides `Data.ByteString` module
 - **cabal** provides primarily the `Distribution` module, which contains the cabal library.
 - **compiler** contains the actual Glorious Glasgow Haskell Compiler library
-- containers
-  TBD
-- deepseq
-  TBD
-- directory
-  TBD
-- filepath
-  TBD
-- ghc-boot
-  TBD
+- **containers** contains `Data.Map`, `Data.Set`, `Data.IntMap`, `Data.IntSet`, and some more.
+- **deepseq** contains `Control.DeepSeq` which allows to force full evaluation of data structures.
+- **directory** contains `System.Directory`; file and directory manipulations.
+- **filepath** contains `System.FilePath`; `FilePath` manipulation.
+- **ghc-boot** contains modules in the `GHC` namespace. Is used by GHC, ghc-pkg and other boot libraries.
 - ghci
   TBD
 - ghc-prim
