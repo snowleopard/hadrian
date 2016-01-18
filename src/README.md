@@ -89,18 +89,12 @@ that together form the final compiler, runtime and toolchain.
 
 ### Libraries
 
-- array
-  TBD
-- base
-  TBD
-- binary
-  TBD
-- bytestring
-  TBD
-- cabal
-  TBD
-- compiler
-  TBD
+- **array** provides the `Data.Array` module.
+- **base** contains the supporting libraries for the *Prelude*, also the `GHC` module.
+- **binary** provides `Data.Binay` for serialization of Haskell values into `ByteString`s
+- **bytestring** provides `Data.ByteString` module
+- **cabal** provides primarily the `Distribution` module, which contains the cabal library.
+- **compiler** contains the actual Glorious Glasgow Haskell Compiler library
 - containers
   TBD
 - deepseq
