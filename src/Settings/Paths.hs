@@ -1,5 +1,5 @@
 module Settings.Paths (
-    targetDirectory, targetPath, pkgDataFile, pkgHaddockFile, pkgLibraryFile,
+    targetDirectory, targetPath, pkgHaddockFile, pkgLibraryFile,
     pkgGhciLibraryFile, packageConfiguration, packageConfigurationInitialised,
     gmpBuildPath, gmpLibNameCache
     ) where
