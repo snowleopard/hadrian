@@ -3,7 +3,7 @@ module Settings (
     module Settings.Paths,
     module Settings.User,
     module Settings.Ways,
-    getPkgData, getPkgData', getTopDirectory, programPath, isLibrary,
+    getPkgData, getPkgData', getTopDirectory, isLibrary,
     getPackagePath, getTargetDirectory, getTargetPath, getPackageSources
     ) where
 
@@ -37,9 +37,6 @@ getPkgData = do
 
 getTopDirectory :: Expr FilePath
 getTopDirectory = lift topDirectory
-
-programPath :: Stage -> Package -> Maybe FilePath
-programPath = userProgramPath
 
 -- | Find all Haskell source files for the current target
 getPackageSources :: Expr [FilePath]

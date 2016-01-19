@@ -1,4 +1,6 @@
-module Settings.Builders.Ghc (ghcBuilderArgs, ghcMBuilderArgs, commonGhcArgs) where
+module Settings.Builders.Ghc (
+    ghcBuilderArgs, ghcMBuilderArgs, commonGhcArgs, gmpLibNameCache
+    ) where
 
 import Base
 import Expression
@@ -18,8 +20,11 @@ ghcBuilderArgs :: Args
 ghcBuilderArgs = stagedBuilder Ghc ? do
     output <- getOutput
     way    <- getWay
-    let buildObj = ("//*." ++ osuf way) ?== output || ("//*." ++ obootsuf way) ?== output
+    let buildObj  = ("//*." ++  osuf way) ?== output || ("//*." ++  obootsuf way) ?== output
+        buildHi   = ("//*." ++ hisuf way) ?== output || ("//*." ++ hibootsuf way) ?== output
+        buildProg = not (buildObj || buildHi)
     libs    <- pdDepExtraLibs <$> getPkgData
+    gmpLibs <- lift $ readFileLines gmpLibNameCache
     libDirs <- pdDepLibDirs <$> getPkgData
     mconcat [ commonGhcArgs
             , arg "-H32m"
@@ -28,12 +33,13 @@ ghcBuilderArgs = stagedBuilder Ghc ? do
             , arg "-Wall"
             , arg "-fwarn-tabs"
             , splitObjectsArgs
-            , not buildObj ? arg "-no-auto-link-packages"
-            , not buildObj ? append [ "-optl-l" ++ lib | lib <- libs    ]
-            , not buildObj ? append [ "-optl-L" ++ dir | dir <- libDirs ]
-            , buildObj ? arg "-c"
+            , buildProg ? arg "-no-auto-link-packages"
+            , buildProg ? append [ "-optl-l" ++ lib | lib <- libs ++ gmpLibs ]
+            , buildProg ? append [ "-optl-L" ++ dir | dir <- libDirs ]
+            , not buildProg ? arg "-c"
             , append =<< getInputs
-            , arg "-o", arg =<< getOutput ]
+            , buildHi ? append ["-fno-code", "-fwrite-interface"]
+            , not buildHi ? mconcat [ arg "-o", arg =<< getOutput ] ]
 
 splitObjectsArgs :: Args
 splitObjectsArgs = splitObjects ? do
@@ -42,7 +48,7 @@ splitObjectsArgs = splitObjects ? do
 
 ghcMBuilderArgs :: Args
 ghcMBuilderArgs = stagedBuilder GhcM ? do
-    ways <- getWays
+    ways <- getLibraryWays
     mconcat [ arg "-M"
             , commonGhcArgs
             , arg "-include-pkg-deps"

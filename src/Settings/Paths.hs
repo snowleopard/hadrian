@@ -1,17 +1,13 @@
 module Settings.Paths (
-    targetDirectory, targetPath, pkgHaddockFile, pkgLibraryFile,
+    targetDirectory, targetPath, pkgDataFile, pkgHaddockFile, pkgLibraryFile,
     pkgGhciLibraryFile, packageConfiguration, packageConfigurationInitialised,
-    includes, includesArgs, rtsBuildPath, rtsConfIn, rtsConf
+    gmpBuildPath, gmpLibNameCache
     ) where
 
 import Base
 import Expression
-import GHC (rts)
+import GHC
 import Settings.User
-
--- User can override the default target directory settings given below
-targetDirectory :: Stage -> Package -> FilePath
-targetDirectory = userTargetDirectory
 
 -- Path to the target directory from GHC source root
 targetPath :: Stage -> Package -> FilePath
@@ -46,22 +42,13 @@ packageConfiguration _      = "inplace/lib/package.conf.d"
 
 -- StageN, N > 0, share the same packageConfiguration (see above)
 packageConfigurationInitialised :: Stage -> FilePath
-packageConfigurationInitialised stage =
-    shakeFilesPath -/- "package-configuration-initialised-"
-    ++ stageString (min stage Stage1)
+packageConfigurationInitialised stage = packageConfiguration stage -/-
+    "package-configuration-initialised-" ++ stageString (min stage Stage1)
 
-includes :: [FilePath]
-includes = [ "includes", "includes/dist-derivedconstants/header" ]
+-- This is the build directory for in-tree GMP library
+gmpBuildPath :: FilePath
+gmpBuildPath = buildRootPath -/- "stage0/gmp"
 
-includesArgs :: Args
-includesArgs = append $ map ("-I" ++) includes
-
-rtsBuildPath :: FilePath
-rtsBuildPath = targetPath Stage1 rts -/- "build"
-
-rtsConfIn :: FilePath
-rtsConfIn = pkgPath rts -/- "package.conf.in"
-
--- TODO: move to buildRootPath, see #113
-rtsConf :: FilePath
-rtsConf = pkgPath rts -/- targetDirectory Stage1 rts -/- "package.conf.inplace"
+-- GMP library names extracted from integer-gmp.buildinfo
+gmpLibNameCache :: FilePath
+gmpLibNameCache = gmpBuildPath -/- "gmp-lib-names"

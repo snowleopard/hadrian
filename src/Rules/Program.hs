@@ -78,7 +78,7 @@ buildBinary target @ (PartialTarget stage pkg) bin = do
              ++ [ buildPath -/- "Paths_hsc2hs.o"      | pkg == hsc2hs  ]
              ++ [ buildPath -/- "Paths_haddock.o"     | pkg == haddock ]
         objs  = cObjs ++ hObjs
-    ways     <- interpretPartial target getWays
+    ways     <- interpretPartial target getLibraryWays
     depNames <- interpretPartial target $ (pdTransitiveDeps <$> getPkgData)
     let libStage  = min stage Stage1 -- libraries are built only in Stage0/1
         libTarget = PartialTarget libStage pkg
