@@ -1,6 +1,7 @@
+{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
 module Settings.Builders.GhcCabal (
-    ghcCabalBuilderArgs, ghcCabalHsColourBuilderArgs,
-    bootPackageDbArgs, cppArgs, needDll0
+    ghcCabalBuilderArgs, ghcCabalHsColourBuilderArgs, bootPackageDbArgs,
+    PackageDbKey (..), cppArgs, needDll0
     ) where
 
 import Base
@@ -78,21 +79,27 @@ configureArgs = do
         , conf "LDFLAGS"  ldFlags
         , conf "CPPFLAGS" cppFlags
         , appendSubD "--gcc-options" $ cFlags <> ldFlags
-        , conf "--with-iconv-includes"    $ argSettingList IconvIncludeDirs
-        , conf "--with-iconv-libraries"   $ argSettingList IconvLibDirs
-        , conf "--with-gmp-includes"      $ argSettingList GmpIncludeDirs
-        , conf "--with-gmp-libraries"     $ argSettingList GmpLibDirs
+        , conf "--with-iconv-includes"    $ argSetting IconvIncludeDir
+        , conf "--with-iconv-libraries"   $ argSetting IconvLibDir
+        , conf "--with-gmp-includes"      $ argSetting GmpIncludeDir
+        , conf "--with-gmp-libraries"     $ argSetting GmpLibDir
         , crossCompiling ? (conf "--host" $ argSetting TargetPlatformFull)
         , conf "--with-cc" $ argStagedBuilderPath Gcc ]
+
+newtype PackageDbKey = PackageDbKey Stage
+    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
+
+initialisePackageDb :: Stage -> Action ()
+initialisePackageDb stage = askOracle $ PackageDbKey stage
 
 bootPackageDbArgs :: Args
 bootPackageDbArgs = do
     stage <- getStage
-    lift $ need [packageConfigurationInitialised stage]
+    lift $ initialisePackageDb stage
     stage0 ? do
         path   <- getTopDirectory
         prefix <- ifM builderGhc (return "-package-db ") (return "--package-db=")
-        arg $ prefix ++ path -/- packageConfiguration Stage0
+        arg $ prefix ++ path -/- packageDbDirectory Stage0
 
 packageConstraints :: Args
 packageConstraints = stage0 ? do
