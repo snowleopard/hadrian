@@ -59,7 +59,7 @@ builderProvenance = \case
     GenPrimopCode    -> Just (Stage0, genprimopcode)
     Ghc stage        -> if stage > Stage0 then Just (pred stage, ghc) else Nothing
     GhcM stage       -> builderProvenance $ Ghc stage
-    GhcCabal         -> Just (Stage0, ghcCabal)
+--    GhcCabal         -> Just (Stage0, ghcCabal)
     GhcCabalHsColour -> builderProvenance $ GhcCabal
     GhcPkg stage     -> if stage > Stage0 then Just (Stage0, ghcPkg) else Nothing
     Haddock          -> Just (Stage2, haddock)
