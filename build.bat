@@ -1,16 +1,17 @@
 @cd %~dp0
 @mkdir .shake 2> nul
 
-@set ghcArgs=--make                   ^
-             -Wall                    ^
-             -fno-warn-name-shadowing ^
-             src/Main.hs              ^
-             -isrc                    ^
-             -rtsopts                 ^
-             -with-rtsopts=-I0        ^
-             -outputdir=.shake        ^
-             -j                       ^
-             -O                       ^
+@set ghcArgs=--make                     ^
+             -Wall                      ^
+             -fno-warn-name-shadowing   ^
+             src/Main.hs                ^
+             -isrc                      ^
+             -i../libraries/Cabal/Cabal ^
+             -rtsopts                   ^
+             -with-rtsopts=-I0          ^
+             -outputdir=.shake          ^
+             -j                         ^
+             -O                         ^
              -o .shake/build
 
 @set shakeArgs=--lint      ^

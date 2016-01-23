@@ -20,10 +20,8 @@ buildPackageData :: Resources -> PartialTarget -> Rules ()
 buildPackageData rs target @ (PartialTarget stage pkg) = do
     let cabalFile = pkgCabalFile pkg
         configure = pkgPath pkg -/- "configure"
-        dataFile  = pkgDataFile stage pkg
-        oldPath   = pkgPath pkg -/- targetDirectory stage pkg -- TODO: remove, #113
 
-    [dataFile, oldPath -/- "package-data.mk"] &%> \_ -> do
+    [oldPath -/- "package-data.mk"] &%> \_ -> do
         -- The first thing we do with any package is make sure all generated
         -- dependencies are in place before proceeding.
         orderOnly $ generatedDependencies stage pkg
@@ -36,17 +34,12 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
         deps <- packageDeps pkg
         pkgs <- interpretPartial target getPackages
         let depPkgs = matchPackageNames (sort pkgs) deps
-        orderOnly $ map (pkgDataFile stage) depPkgs
-
-        -- TODO: get rid of this, see #113
-        let inTreeMk = oldPath -/- takeFileName dataFile
 
         need [cabalFile]
         buildWithResources [(resGhcCabal rs, 1)] $
             fullTarget target GhcCabal [cabalFile] [inTreeMk]
 
         -- TODO: get rid of this, see #113
-        liftIO $ IO.copyFile inTreeMk dataFile
         autogenFiles <- getDirectoryFiles oldPath ["build/autogen/*"]
         createDirectory $ targetPath stage pkg -/- "build/autogen"
         forM_ autogenFiles $ \file -> do
@@ -69,26 +62,9 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
                 buildWithResources [(resGhcPkg rs, 1)] $
                     fullTarget target (GhcPkg stage) [cabalFile] []
 
-        postProcessPackageData stage pkg dataFile
 
     -- TODO: PROGNAME was $(CrossCompilePrefix)hp2ps
     priority 2.0 $ do
-        when (pkg == hp2ps) $ dataFile %> \mk -> do
-            includes <- interpretPartial target $ fromDiffExpr includesArgs
-            let prefix = fixKey (targetPath stage pkg) ++ "_"
-                cSrcs  = [ "AreaBelow.c", "Curves.c", "Error.c", "Main.c"
-                         , "Reorder.c", "TopTwenty.c", "AuxFile.c"
-                         , "Deviation.c", "HpFile.c", "Marks.c", "Scale.c"
-                         , "TraceElement.c", "Axes.c", "Dimensions.c", "Key.c"
-                         , "PsFile.c", "Shade.c", "Utilities.c" ]
-                contents = unlines $ map (prefix++)
-                    [ "PROGNAME = hp2ps"
-                    , "C_SRCS = " ++ unwords cSrcs
-                    , "DEP_EXTRA_LIBS = m"
-                    , "CC_OPTS = " ++ unwords includes ]
-            writeFileChanged mk contents
-            putSuccess $ "| Successfully generated '" ++ mk ++ "'."
-
         when (pkg == unlit) $ dataFile %> \mk -> do
             let prefix   = fixKey (targetPath stage pkg) ++ "_"
                 contents = unlines $ map (prefix++)
@@ -103,19 +79,6 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
                 contents = unlines $ map (prefix++)
                     [ "PROGNAME = touchy"
                     , "C_SRCS = touchy.c" ]
-            writeFileChanged mk contents
-            putSuccess $ "| Successfully generated '" ++ mk ++ "'."
-
-        -- Bootstrapping `ghcCabal`: although `ghcCabal` is a proper cabal
-        -- package, we cannot generate the corresponding `package-data.mk` file
-        -- by running by running `ghcCabal`, because it has not yet been built.
-        when (pkg == ghcCabal && stage == Stage0) $ dataFile %> \mk -> do
-            let prefix   = fixKey (targetPath stage pkg) ++ "_"
-                contents = unlines $ map (prefix++)
-                    [ "PROGNAME = ghc-cabal"
-                    , "MODULES = Main"
-                    , "SYNOPSIS = Bootstrapped ghc-cabal utility."
-                    , "HS_SRC_DIRS = ." ]
             writeFileChanged mk contents
             putSuccess $ "| Successfully generated '" ++ mk ++ "'."
 
@@ -162,28 +125,3 @@ buildPackageData rs target @ (PartialTarget stage pkg) = do
                                . lines
 
                 fixFile rtsConf fixRtsConf
-
--- Prepare a given 'packaga-data.mk' file for parsing by readConfigFile:
--- 1) Drop lines containing '$'
--- For example, get rid of
--- libraries/Win32_dist-install_CMM_SRCS  := $(addprefix cbits/,$(notdir ...
--- Reason: we don't need them and we can't parse them.
--- 2) Replace '/' and '\' with '_' before '='
--- For example libraries/deepseq/dist-install_VERSION = 1.4.0.0
--- is replaced by libraries_deepseq_dist-install_VERSION = 1.4.0.0
--- Reason: Shake's built-in makefile parser doesn't recognise slashes
-postProcessPackageData :: Stage -> Package -> FilePath -> Action ()
-postProcessPackageData stage pkg file = fixFile file fixPackageData
-  where
-    fixPackageData = unlines . map processLine . filter (not . null) . filter ('$' `notElem`) . lines
-    processLine line = fixKey fixedPrefix ++ suffix
-      where
-        (prefix, suffix) = break (== '=') line
-        -- Change pkg/path/targetDir to takeDirectory file
-        -- This is a temporary hack until we get rid of ghc-cabal
-        fixedPrefix = takeDirectory file ++ drop len prefix
-        len         = length (pkgPath pkg -/- targetDirectory stage pkg)
-
--- TODO: remove, see #113
-fixKey :: String -> String
-fixKey = replaceSeparators '_'

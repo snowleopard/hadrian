@@ -42,7 +42,6 @@ executable ghc-shake
                        , Rules.Clean
                        , Rules.Compile
                        , Rules.Config
-                       , Rules.Data
                        , Rules.Dependencies
                        , Rules.Documentation
                        , Rules.Generate
@@ -118,7 +117,7 @@ executable ghc-shake
                        , ScopedTypeVariables
     build-depends:       base
                        , ansi-terminal >= 0.6
-                       , Cabal >= 1.22
+                       , Cabal >= 1.22.6
                        , containers >= 0.5
                        , directory >= 1.2
                        , extra >= 1.4

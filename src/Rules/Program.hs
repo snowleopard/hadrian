@@ -13,6 +13,7 @@ import Rules.Wrappers.Ghc
 import Rules.Wrappers.GhcPkg
 import Settings
 import Settings.Builders.GhcCabal
+import Distribution.Package as DP (PackageName(unPackageName), PackageIdentifier(pkgName))
 
 -- TODO: move to buildRootPath, see #113
 -- Directory for wrapped binaries
@@ -78,28 +79,25 @@ buildBinary target @ (PartialTarget stage pkg) bin = do
              ++ [ buildPath -/- "Paths_haddock.o"     | pkg == haddock ]
         objs  = cObjs ++ hObjs
     ways     <- interpretPartial target getLibraryWays
-    depNames <- interpretPartial target $ getPkgDataList TransitiveDepNames
+    depNames <- interpretPartial target $ (pdTransitiveDeps <$> getPkgData)
     let libStage  = min stage Stage1 -- libraries are built only in Stage0/1
         libTarget = PartialTarget libStage pkg
     pkgs     <- interpretPartial libTarget getPackages
-    ghciFlag <- interpretPartial libTarget $ getPkgData BuildGhciLib
-    let deps = matchPackageNames (sort pkgs) (map PackageName $ sort depNames)
-        ghci = ghciFlag == "YES" && stage == Stage1
+    ghciFlag <- interpretPartial libTarget $ (pdWithGHCiLib <$> getPkgData)
+    let deps = matchPackageNames (sort pkgs) (map (PackageName . DP.unPackageName . DP.pkgName) $ sort depNames)
+        ghci = ghciFlag && stage == Stage1
     libs <- fmap concat . forM deps $ \dep -> do
         let depTarget = PartialTarget libStage dep
-        compId <- interpretPartial depTarget $ getPkgData ComponentId
+        compId <- interpretPartial depTarget (pdComponentId <$> getPkgData)
         libFiles <- fmap concat . forM ways $ \way -> do
             libFile  <- pkgLibraryFile libStage dep compId           way
             lib0File <- pkgLibraryFile libStage dep (compId ++ "-0") way
             dll0     <- needDll0 libStage dep
             return $ libFile : [ lib0File | dll0 ]
         return $ libFiles ++ [ pkgGhciLibraryFile libStage dep compId | ghci ]
-    let binDeps = if pkg == ghcCabal && stage == Stage0
-                  then [ pkgPath pkg -/- src <.> "hs" | src <- hSrcs ]
-                  else objs
-    need $ binDeps ++ libs
-    build $ fullTargetWithWay target (Ghc stage) vanilla binDeps [bin]
-    synopsis <- interpretPartial target $ getPkgData Synopsis
+    need $ objs ++ libs
+    build $ fullTargetWithWay target (Ghc stage) vanilla objs [bin]
+    synopsis <- interpretPartial target $ (pdSynopsis <$> getPkgData)
     putSuccess $ renderProgram
         ("'" ++ pkgNameString pkg ++ "' (" ++ show stage ++ ").")
         bin

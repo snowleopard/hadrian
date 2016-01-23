@@ -22,7 +22,6 @@ import Settings.Packages.Base
 import Settings.Packages.Compiler
 import Settings.Packages.Directory
 import Settings.Packages.Ghc
-import Settings.Packages.GhcCabal
 import Settings.Packages.GhcPrim
 import Settings.Packages.Haddock
 import Settings.Packages.Hp2ps
@@ -31,7 +30,6 @@ import Settings.Packages.IservBin
 import Settings.Packages.Rts
 import Settings.Packages.RunGhc
 import Settings.Packages.Touchy
-import Settings.Packages.Unlit
 import Settings.User
 
 getArgs :: Expr [String]
@@ -70,7 +68,6 @@ defaultPackageArgs = mconcat
     , compilerPackageArgs
     , directoryPackageArgs
     , ghcPackageArgs
-    , ghcCabalPackageArgs
     , ghcPrimPackageArgs
     , haddockPackageArgs
     , hp2psPackageArgs
@@ -78,5 +75,4 @@ defaultPackageArgs = mconcat
     , iservBinPackageArgs
     , rtsPackageArgs
     , runGhcPackageArgs
-    , touchyPackageArgs
-    , unlitPackageArgs ]
+    , touchyPackageArgs ]

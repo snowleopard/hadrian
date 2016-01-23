@@ -23,9 +23,9 @@ ghcBuilderArgs = stagedBuilder Ghc ? do
     let buildObj  = ("//*." ++  osuf way) ?== output || ("//*." ++  obootsuf way) ?== output
         buildHi   = ("//*." ++ hisuf way) ?== output || ("//*." ++ hibootsuf way) ?== output
         buildProg = not (buildObj || buildHi)
-    libs    <- getPkgDataList DepExtraLibs
+    libs    <- pdDepExtraLibs <$> getPkgData
     gmpLibs <- lift $ readFileLines gmpLibNameCache
-    libDirs <- getPkgDataList DepLibDirs
+    libDirs <- pdDepLibDirs <$> getPkgData
     mconcat [ commonGhcArgs
             , arg "-H32m"
             , stage0    ? arg "-O"
@@ -61,8 +61,8 @@ commonGhcArgs :: Args
 commonGhcArgs = do
     way     <- getWay
     path    <- getTargetPath
-    hsArgs  <- getPkgDataList HsArgs
-    cppArgs <- getPkgDataList CppArgs
+    hsArgs  <- pdHsArgs <$> getPkgData
+    cppArgs <- pdCppArgs <$> getPkgData
     let buildPath = path -/- "build"
     mconcat [ arg "-hisuf", arg $ hisuf way
             , arg "-osuf" , arg $  osuf way
@@ -97,8 +97,8 @@ wayGhcArgs = do
 packageGhcArgs :: Args
 packageGhcArgs = do
     pkg       <- getPackage
-    compId    <- getPkgData ComponentId
-    pkgDepIds <- getPkgDataList DepIds
+    compId    <- pdComponentId <$> getPkgData
+    pkgDepIds <- pdDepIpIds <$> getPkgData
     mconcat
         [ arg "-hide-all-packages"
         , arg "-no-user-package-db"
@@ -111,7 +111,7 @@ includeGhcArgs :: Args
 includeGhcArgs = do
     pkg     <- getPackage
     path    <- getTargetPath
-    srcDirs <- getPkgDataList SrcDirs
+    srcDirs <- pdHsSourceDirs <$> getPkgData
     let buildPath   = path -/- "build"
         autogenPath = buildPath -/- "autogen"
     mconcat [ arg "-i"

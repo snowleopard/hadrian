@@ -9,18 +9,19 @@ import Oracles
 import Predicates hiding (file)
 import Settings
 import Settings.Builders.Ghc
+import Distribution.ModuleName (toFilePath)
 
 haddockBuilderArgs :: Args
 haddockBuilderArgs = builder Haddock ? do
     output   <- getOutput
     pkg      <- getPackage
     path     <- getTargetPath
-    version  <- getPkgData Version
-    synopsis <- getPkgData Synopsis
-    hidden   <- getPkgDataList HiddenModules
-    deps     <- getPkgDataList Deps
-    depNames <- getPkgDataList DepNames
-    hVersion <- lift . pkgData . Version $ targetPath Stage2 haddock
+    version  <- pdVersion <$> getPkgData
+    synopsis <- pdSynopsis <$> getPkgData
+    hidden   <- pdHiddenModules <$> getPkgData
+    deps     <- pdDeps <$> getPkgData
+    depNames <- pdDepNames <$> getPkgData
+    hVersion <- pdVersion <$> getPkgData' Stage2 haddock
     ghcOpts  <- fromDiffExpr commonGhcArgs
     mconcat
         [ arg $ "--odir=" ++ takeDirectory output
@@ -32,7 +33,7 @@ haddockBuilderArgs = builder Haddock ? do
         , arg $ "--title=" ++ pkgNameString pkg ++ "-" ++ version ++ ": " ++ synopsis
         , arg $ "--prologue=" ++ path -/- "haddock-prologue.txt"
         , arg $ "--optghc=-D__HADDOCK_VERSION__=" ++ show (versionToInt hVersion)
-        , append $ map ("--hide=" ++) hidden
+        , append $ map ("--hide=" ++) (map toFilePath hidden)
         , append $ [ "--read-interface=../" ++ dep
                      ++ ",../" ++ dep ++ "/src/%{MODULE/./-}.html\\#%{NAME},"
                      ++ pkgHaddockFile depPkg

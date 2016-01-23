@@ -29,5 +29,5 @@ gccMBuilderArgs = stagedBuilder GccM ? do
             , arg =<< getInput ]
 
 commonGccArgs :: Args
-commonGccArgs = mconcat [ append =<< getPkgDataList CcArgs
+commonGccArgs = mconcat [ append =<< (pdCcArgs <$> getPkgData)
                         , cIncludeArgs ]

@@ -11,6 +11,7 @@ import Rules.Gmp
 import Rules.Resources
 import Settings
 import qualified System.Directory as IO
+import Distribution.ModuleName (fromString, toFilePath)
 
 buildPackageLibrary :: Resources -> PartialTarget -> Rules ()
 buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
@@ -51,7 +52,7 @@ buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
         then build $ fullTarget target Ar [] [a] -- TODO: scan for dlls
         else build $ fullTarget target Ar objs [a]
 
-        synopsis <- interpretPartial target $ getPkgData Synopsis
+        synopsis <- interpretPartial target $ (pdSynopsis <$> getPkgData)
         unless isLib0 . putSuccess $ renderLibrary
             ("'" ++ pkgNameString pkg ++ "' (" ++ show stage ++ ", way "++ show way ++ ").")
             a
@@ -72,13 +73,13 @@ buildPackageLibrary _ target @ (PartialTarget stage pkg) = do
         build $ fullTarget target Ld (cObjs ++ hObjs) [obj]
 
 cSources :: PartialTarget -> Action [FilePath]
-cSources target = interpretPartial target $ getPkgDataList CSrcs
+cSources target = interpretPartial target $ (pdCSources <$> getPkgData)
 
 hSources :: PartialTarget -> Action [FilePath]
 hSources target = do
-    modules <- interpretPartial target $ getPkgDataList Modules
+    modules <- interpretPartial target $ (pdModules <$> getPkgData)
     -- GHC.Prim is special: we do not build it
-    return . map (replaceEq '.' '/') . filter (/= "GHC.Prim") $ modules
+    return . map toFilePath . filter (/= (fromString "GHC.Prim")) $ modules
 
 extraObjects :: PartialTarget -> Action [FilePath]
 extraObjects (PartialTarget _ pkg)

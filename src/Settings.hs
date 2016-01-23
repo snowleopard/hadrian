@@ -3,7 +3,7 @@ module Settings (
     module Settings.Paths,
     module Settings.User,
     module Settings.Ways,
-    getPkgData, getPkgDataList, getTopDirectory, isLibrary,
+    getPkgData, getPkgData', getTopDirectory, isLibrary,
     getPackagePath, getTargetDirectory, getTargetPath, getPackageSources
     ) where
 
@@ -25,11 +25,15 @@ getTargetDirectory = targetDirectory <$> getStage <*> getPackage
 getTargetPath :: Expr FilePath
 getTargetPath = targetPath <$> getStage <*> getPackage
 
-getPkgData :: (FilePath -> PackageData) -> Expr String
-getPkgData key = lift . pkgData . key =<< getTargetPath
+getPkgData' :: Stage -> Package -> Expr PackageData
+getPkgData' stage package = do
+    lift $ askAllPackageData stage package
 
-getPkgDataList :: (FilePath -> PackageDataList) -> Expr [String]
-getPkgDataList key = lift . pkgDataList . key =<< getTargetPath
+getPkgData :: Expr PackageData
+getPkgData = do
+    stage <- getStage
+    pkg <- getPackage
+    getPkgData' stage pkg
 
 getTopDirectory :: Expr FilePath
 getTopDirectory = lift topDirectory

@@ -10,10 +10,6 @@ import Settings.Packages.Rts
 import Settings.Paths
 import Settings.User
 
--- TODO: this should be moved elsewhere
-rtsBuildPath :: FilePath
-rtsBuildPath = targetPath Stage1 rts -/- "build"
-
 -- TODO: Why copy these include files in rts? Move to libffi!
 libffiDependencies :: [FilePath]
 libffiDependencies = (rtsBuildPath -/-) <$> [ "ffi.h", "ffitarget.h" ]
