@@ -33,7 +33,7 @@ install:
     - cabal install alex happy ansi-terminal mtl shake quickcheck
 
     # Fetch GHC sources into ./ghc
-    - git clone --recursive git://git.haskell.org/ghc.git --quiet
+    - git clone --depth 1 --recursive git://git.haskell.org/ghc.git --quiet
 
     # Travis has already cloned Hadrian into ./ and we need to move it
     # to ./ghc/hadrian -- one way to do it is to move the .git directory
