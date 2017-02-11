@@ -31,9 +31,7 @@ install:
     # Fetch GHC sources into ./ghc
     - git --version
     - git config --global url."git://github.com/ghc/packages-".insteadOf git://github.com/ghc/packages/
-    - git clone --depth 1 git://github.com/ghc/ghc
-    - cd ghc && git submodule update --init --depth 1 && cd ghc
-    # --shallow-submodules
+    - git clone --depth 1 --recursive --shallow-submodules git://github.com/ghc/ghc
 
     # Install all Hadrian and GHC build dependencies
     - cabal update
