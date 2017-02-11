@@ -28,14 +28,15 @@ install:
     - export PATH
     - env
 
+    # Fetch GHC sources into ./ghc
+    - git --version
+    - git config --global url."git://github.com/ghc/packages-".insteadOf git://github.com/ghc/packages/
+    - git clone --depth 1 --recursive --shallow-submodules git://github.com/ghc/ghc 
+
     # Install all Hadrian and GHC build dependencies
     - cabal update
     - cabal install alex happy ansi-terminal mtl shake quickcheck
 
-    # Fetch GHC sources into ./ghc
-    - git --version
-    - git config --global url."git://github.com/ghc/packages-".insteadOf git://github.com/ghc/packages/
-    - git clone --depth 1 --recursive git://github.com/ghc/ghc
 
     # Travis has already cloned Hadrian into ./ and we need to move it
     # to ./ghc/hadrian -- one way to do it is to move the .git directory
