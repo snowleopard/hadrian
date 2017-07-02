@@ -3,3 +3,6 @@ packages:
 - '.'
 - '../libraries/Cabal/Cabal'
 
+nix:
+  packages:
+  - perl
