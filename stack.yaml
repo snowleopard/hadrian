@@ -3,3 +3,11 @@ packages:
 - '.'
 - '../libraries/Cabal/Cabal'
 
+nix:
+  packages:
+  - autoconf
+  - automake
+  - gcc
+  - git
+  - ncurses
+  - perl
