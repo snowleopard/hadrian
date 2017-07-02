@@ -25,6 +25,9 @@ install:
     - appveyor-retry stack exec -- pacman -S autoconf automake-wrapper make patch tar --noconfirm
 
 build_script:
+    # Workaround https://github.com/commercialhaskell/stack/issues/595
+    stack build alex happy
+
     # Build Hadrian
     - stack build
 
