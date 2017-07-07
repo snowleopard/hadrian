@@ -262,6 +262,13 @@ disableWarningArgsLibs = do
     [ notStage0 ? arg "-Wno-deprecated-flags"
     , stage Stage0 ? arg "-fno-warn-deprecated-flags"]
 
+-- | Perform stage0 build (which uses a monolithic @ghc --make@ invocation)
+-- with @-j@.
+parallelStage0BuildArgs :: Args
+parallelStage0BuildArgs = do
+    threads <- shakeThreads <$> lift getShakeOptions
+    stage Stage0 ? builder Ghc ? arg ("-j"++show threads)
+
 -- TODO: Disable warnings for Windows specifics
 
 -- | All 'Package'-dependent command line arguments.
@@ -279,4 +286,5 @@ defaultPackageArgs = mconcat
     , runGhcPackageArgs
     , disableWarningArgsStage0
     , disableWarningArgsStage1
-    , disableWarningArgsLibs ]
+    , disableWarningArgsLibs
+    , parallelStage0BuildArgs ]
