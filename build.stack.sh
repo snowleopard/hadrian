@@ -31,6 +31,9 @@ function rl {
 absoluteRoot="$(dirname "$(rl "$0")")"
 cd "$absoluteRoot"
 
+# XXX workaround https://github.com/commercialhaskell/stack/issues/595
+stack build alex happy
+
 stack build --no-library-profiling
 
 stack exec hadrian --              \
