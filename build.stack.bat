@@ -1,4 +1,5 @@
 @echo off
+setlocal
 rem Change the current directory to the one containing this script
 cd %~dp0
 

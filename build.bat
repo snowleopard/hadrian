@@ -1,4 +1,5 @@
 @echo off
+setlocal
 cd %~dp0
 mkdir bin 2> nul
 
