@@ -20,7 +20,7 @@ haddockBuilderArgs = withHsPackage $ \cabalFile -> builder Haddock ? do
     path     <- getBuildPath
     version  <- expr $ pkgVersion  cabalFile
     synopsis <- expr $ pkgSynopsis cabalFile
-    deps     <- getPkgDataList Deps
+    deps     <- getPkgDataList DepNames
     haddocks <- expr . haddockDependencies =<< getContext
     hVersion <- expr $ pkgVersion (unsafePkgCabalFile haddock) -- TODO: improve
     ghcOpts  <- haddockGhcArgs
@@ -30,34 +30,18 @@ haddockBuilderArgs = withHsPackage $ \cabalFile -> builder Haddock ? do
         , arg "--no-tmp-comp-dir"
         , arg $ "--dump-interface=" ++ output
         , arg "--html"
+        , arg "--hyperlinked-source"
         , arg "--hoogle"
         , arg $ "--title=" ++ pkgName pkg ++ "-" ++ version ++ ": " ++ synopsis
         , arg $ "--prologue=" ++ path -/- "haddock-prologue.txt"
         , arg $ "--optghc=-D__HADDOCK_VERSION__=" ++ show (versionToInt hVersion)
         , map ("--hide=" ++) <$> getPkgDataList HiddenModules
         , pure [ "--read-interface=../" ++ dep
-                 ++ ",../" ++ dep ++ "/src/%{MODULE/./-}.html\\#%{NAME},"
+                 ++ ",../" ++ dep ++ "/src/%{MODULE}.html#%{NAME},"
                  ++ haddock | (dep, haddock) <- zip deps haddocks ]
         , pure [ "--optghc=" ++ opt | opt <- ghcOpts ]
-        , isSpecified HsColour ?
-          pure [ "--source-module=src/%{MODULE/./-}.html"
-               , "--source-entity=src/%{MODULE/./-}.html\\#%{NAME}" ]
         , getInputs
         , arg "+RTS"
         , arg $ "-t" ++ path -/- "haddock.t"
         , arg "--machine-readable"
         , arg "-RTS" ]
-
--- From ghc.mk:
--- # -----------------------------------------------
--- # Haddock-related bits
-
--- # Build the Haddock contents and index
--- ifeq "$(HADDOCK_DOCS)" "YES"
--- libraries/dist-haddock/index.html: $(haddock_INPLACE) $(ALL_HADDOCK_FILES)
---     cd libraries && sh gen_contents_index --intree
--- ifeq "$(phase)" "final"
--- $(eval $(call all-target,library_doc_index,libraries/dist-haddock/index.html))
--- endif
--- INSTALL_LIBRARY_DOCS += libraries/dist-haddock/*
--- endif

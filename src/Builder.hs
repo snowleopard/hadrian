@@ -1,7 +1,8 @@
 {-# LANGUAGE InstanceSigs #-}
 module Builder (
     -- * Data types
-    ArMode (..), CcMode (..), GhcMode (..), GhcPkgMode (..), Builder (..),
+    ArMode (..), CcMode (..), GhcMode (..), GhcPkgMode (..), SphinxMode (..),
+    TarMode (..), Builder (..),
 
     -- * Builder properties
     builderProvenance, systemBuilderPath, builderPath, isSpecified, needBuilder,
@@ -57,6 +58,23 @@ instance Binary   GhcPkgMode
 instance Hashable GhcPkgMode
 instance NFData   GhcPkgMode
 
+-- | Sphinx can be used in three different modes:
+-- * Convert RST to HTML
+-- * Convert RST to LaTeX
+-- * Convert RST to Man pages
+data SphinxMode = Html | Latex | Man deriving (Eq, Generic, Show)
+
+instance Binary   SphinxMode
+instance Hashable SphinxMode
+instance NFData   SphinxMode
+
+-- | Tar can be used to create an archive or extract from it.
+data TarMode = Create | Extract deriving (Eq, Generic, Show)
+
+instance Binary TarMode
+instance Hashable TarMode
+instance NFData TarMode
+
 -- | A 'Builder' is an external command invoked in a separate process via 'cmd'.
 -- @Ghc Stage0@ is the bootstrapping compiler.
 -- @Ghc StageN@, N > 0, is the one built in stage (N - 1).
@@ -71,12 +89,10 @@ data Builder = Alex
              | GenPrimopCode
              | Ghc GhcMode Stage
              | GhcCabal
-             | GhcCabalHsColour -- synonym for 'GhcCabal hscolour'
              | GhcPkg GhcPkgMode Stage
              | Haddock
              | Happy
              | Hpc
-             | HsColour
              | HsCpp
              | Hsc2Hs
              | Ld
@@ -86,8 +102,10 @@ data Builder = Alex
              | Patch
              | Perl
              | Ranlib
-             | Tar
+             | Sphinx SphinxMode
+             | Tar TarMode
              | Unlit
+             | Xelatex
              deriving (Eq, Generic, Show)
 
 instance Binary   Builder
@@ -105,7 +123,6 @@ builderProvenance = \case
     Ghc _ Stage0     -> Nothing
     Ghc _ stage      -> context (pred stage) ghc
     GhcCabal         -> context Stage0 ghcCabal
-    GhcCabalHsColour -> builderProvenance $ GhcCabal
     GhcPkg _ Stage0  -> Nothing
     GhcPkg _ _       -> context Stage0 ghcPkg
     Haddock          -> context Stage2 haddock
@@ -179,7 +196,6 @@ instance H.Builder Builder where
 -- test this feature.
 isOptional :: Builder -> Bool
 isOptional = \case
-    HsColour -> True
     Objdump  -> True
     _        -> False
 
@@ -196,7 +212,6 @@ systemBuilderPath builder = case builder of
     Ghc _  Stage0   -> fromKey "system-ghc"
     GhcPkg _ Stage0 -> fromKey "system-ghc-pkg"
     Happy           -> fromKey "happy"
-    HsColour        -> fromKey "hscolour"
     HsCpp           -> fromKey "hs-cpp"
     Ld              -> fromKey "ld"
     Make _          -> fromKey "make"
@@ -205,7 +220,9 @@ systemBuilderPath builder = case builder of
     Patch           -> fromKey "patch"
     Perl            -> fromKey "perl"
     Ranlib          -> fromKey "ranlib"
-    Tar             -> fromKey "tar"
+    Sphinx _        -> fromKey "sphinx-build"
+    Tar _           -> fromKey "tar"
+    Xelatex         -> fromKey "xelatex"
     _               -> error $ "No entry for " ++ show builder ++ inCfg
   where
     inCfg = " in " ++ quote configFile ++ " file."
