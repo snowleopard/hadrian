@@ -1,4 +1,10 @@
-module Rules.Documentation (buildPackageDocumentation, documentationRules, haddockDependencies) where
+module Rules.Documentation (
+    -- * Rules
+    buildPackageDocumentation, documentationRules,
+
+    -- * Utilities
+    haddockDependencies
+    ) where
 
 import Base
 import Context
@@ -10,9 +16,6 @@ import Settings
 import Target
 import Utilities
 
-docPackage :: Package
-docPackage = hsLibrary "Documentation" "docs"
-
 -- | Build all documentation
 documentationRules :: Rules ()
 documentationRules = do
@@ -21,10 +24,15 @@ documentationRules = do
     buildDocumentationArchives
     "docs" ~> do
         root <- buildRoot
-        -- Archives `need` the associated html
-        let archives = map pathArchive docPaths
-            pdfs = map pathPdf $ drop 1 docPaths
-        need $ map (root -/-) $ archives ++ pdfs
+        let html = htmlRoot -/- "index.html"
+            archives = map pathArchive docPaths
+            pdfs = map pathPdf $ docPaths \\ [ "libraries" ]
+        need $ map (root -/-) $ [html] ++ archives ++ pdfs
+
+-- TODO: Add support for Documentation Packages so we can
+-- run the builders without this hack.
+docPackage :: Package
+docPackage = hsLibrary "Documentation" "docs"
 
 docPaths :: [FilePath]
 docPaths = [ "libraries", "users_guide", "Haddock" ]
@@ -47,16 +55,15 @@ pathPdf path = pdfRoot -/- path <.> ".pdf"
 pathIndex :: FilePath -> FilePath
 pathIndex path = htmlRoot -/- path -/- "index.html"
 
-pathLibIndex :: FilePath -> FilePath
-pathLibIndex path = htmlRoot -/- "libraries" -/- path -/- "index.html"
-
 pathArchive :: FilePath -> FilePath
 pathArchive path = archiveRoot -/- path <.> "html.tar.xz"
 
+-- TODO: Replace this with pkgPath when support is added
+-- for Documentation Packages.
 pathPath :: FilePath -> FilePath
 pathPath "users_guide" = "docs/users_guide"
 pathPath "Haddock" = "utils/haddock/doc"
-pathPath _ = "lol"
+pathPath _ = ""
 
 ----------------------------------------------------------------------
 -- HTML
@@ -64,9 +71,9 @@ pathPath _ = "lol"
 -- | Build all HTML documentation
 buildHtmlDocumentation :: Rules ()
 buildHtmlDocumentation = do
-    mapM_ buildSphinxHtml $ drop 1 docPaths
+    mapM_ buildSphinxHtml $ docPaths \\ [ "libraries" ]
     buildLibraryDocumentation
-    "//html/index.html" %> \file -> do
+    "//" ++ htmlRoot -/- "index.html" %> \file -> do
         root <- buildRoot
         need $ map ((root -/-) . pathIndex) docPaths
         copyFileUntracked "docs/index.html" file
@@ -85,9 +92,26 @@ buildSphinxHtml path = do
 -----------------------------
 -- Haddock
 
+-- | Build the haddocks for GHC's libraries
+buildLibraryDocumentation :: Rules ()
+buildLibraryDocumentation = do
+    "//" ++ htmlRoot -/- "libraries/index.html" %> \file -> do
+        haddocks <- allHaddocks
+        need haddocks
+        let libDocs = filter (\x -> takeFileName x /= "ghc.haddock") haddocks
+            context = vanillaContext Stage2 docPackage
+        build $ target context (Haddock BuildIndex) libDocs [file]
+
+allHaddocks :: Action [FilePath]
+allHaddocks = do
+    pkgs <- stagePackages Stage1
+    sequence [ pkgHaddockFile $ vanillaContext Stage1 pkg
+             | pkg <- pkgs, isLibrary pkg, isHsPackage pkg ]
+
 haddockHtmlLib :: FilePath
 haddockHtmlLib = "inplace/lib/html/haddock-util.js"
 
+-- | Find the haddock files for the dependencies of the current library
 haddockDependencies :: Context -> Action [FilePath]
 haddockDependencies context = do
     path     <- buildPath context
@@ -117,31 +141,8 @@ buildPackageDocumentation context@Context {..} = when (stage == Stage1) $ do
         -- TODO: pass the correct way from Rules via Context
         dynamicPrograms <- dynamicGhcPrograms <$> flavour
         let haddockWay = if dynamicPrograms then dynamic else vanilla
-        build $ target (context {way = haddockWay}) Haddock srcs [file]
-
--- | Build the haddocks for GHC's libraries
-buildLibraryDocumentation :: Rules ()
-buildLibraryDocumentation = do
-    "//" ++ htmlRoot -/- "libraries/index.html" %> \file -> do
-        haddocks <- allHaddocks
-        need haddocks
-        let libDocs = filter (\x -> takeFileName x /= "ghc.haddock") haddocks
-        let iface haddock = "--read-interface="
-                            ++ (takeFileName . takeDirectory) haddock ++ ","
-                            ++ haddock
-        runBuilder Haddock ([ "--gen-index"
-                            , "--gen-contents"
-                            , "-o", takeDirectory file
-                            , "-t", "Haskell Hierarchical Libraries"
-                            , "-p", "libraries/prologue.txt" ]
-                            ++ map iface libDocs)
-                           [] [file]
-  where
-    allHaddocks = do
-        pkgs <- stagePackages Stage1
-        sequence [ pkgHaddockFile $ vanillaContext Stage1 pkg
-                 | pkg <- pkgs, isLibrary pkg, isHsPackage pkg
-                                             , pkgName pkg /= "Win32" ]
+        build $ target (context {way = haddockWay}) (Haddock BuildPackage)
+                       srcs [file]
 
 ----------------------------------------------------------------------
 -- PDF
@@ -156,21 +157,8 @@ buildSphinxPdf path = do
     "//" ++ path <.> "pdf" %> \file -> do
         let context = vanillaContext Stage0 docPackage
         withTempDir $ \dir -> do
-            -- TODO: Figure out a crutch
             build $ target context (Sphinx Latex) [pathPath path] [dir]
-            --runBuilderWithCmdOptions [Cwd dir] Xelatex ["-halt-on-error"
-            --                                           , name <.> "tex" ] [] []
-            unit $ cmd Shell [Cwd dir] ["xelatex", "-halt-on-error"
-                                                 , path <.> "tex" ]
-            unit $ cmd Shell [Cwd dir] ["xelatex", "-halt-on-error"
-                                                 , path <.> "tex" ]
-            unit $ cmd Shell [Cwd dir] ["xelatex", "-halt-on-error"
-                                                 , path <.> "tex" ]
-            unit $ cmd Shell [Cwd dir] ["makeindex", path <.> "idx"]
-            unit $ cmd Shell [Cwd dir] ["xelatex", "-halt-on-error"
-                                                 , path <.> "tex" ]
-            unit $ cmd Shell [Cwd dir] ["xelatex", "-halt-on-error"
-                                                 , path <.> "tex" ]
+            build $ target context Xelatex [path <.> "tex"] [dir]
             copyFileUntracked (dir -/- path <.> "pdf") file
 
 ----------------------------------------------------------------------

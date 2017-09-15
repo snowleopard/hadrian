@@ -1,8 +1,8 @@
 {-# LANGUAGE InstanceSigs #-}
 module Builder (
     -- * Data types
-    ArMode (..), CcMode (..), GhcMode (..), GhcPkgMode (..), SphinxMode (..),
-    TarMode (..), Builder (..),
+    ArMode (..), CcMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
+    SphinxMode (..), TarMode (..), Builder (..),
 
     -- * Builder properties
     builderProvenance, systemBuilderPath, builderPath, isSpecified, needBuilder,
@@ -58,6 +58,15 @@ instance Binary   GhcPkgMode
 instance Hashable GhcPkgMode
 instance NFData   GhcPkgMode
 
+-- | Haddock can be used in two different modes:
+-- * Generate documentation for a single package
+-- * Generate an index page for a collection of packages
+data HaddockMode = BuildPackage | BuildIndex deriving (Eq, Generic, Show)
+
+instance Binary   HaddockMode
+instance Hashable HaddockMode
+instance NFData   HaddockMode
+
 -- | Sphinx can be used in three different modes:
 -- * Convert RST to HTML
 -- * Convert RST to LaTeX
@@ -90,7 +99,7 @@ data Builder = Alex
              | Ghc GhcMode Stage
              | GhcCabal
              | GhcPkg GhcPkgMode Stage
-             | Haddock
+             | Haddock HaddockMode
              | Happy
              | Hpc
              | HsCpp
@@ -125,7 +134,7 @@ builderProvenance = \case
     GhcCabal         -> context Stage0 ghcCabal
     GhcPkg _ Stage0  -> Nothing
     GhcPkg _ _       -> context Stage0 ghcPkg
-    Haddock          -> context Stage2 haddock
+    Haddock _        -> context Stage2 haddock
     Hpc              -> context Stage1 hpcBin
     Hsc2Hs           -> context Stage0 hsc2hs
     Unlit            -> context Stage0 unlit
@@ -187,6 +196,15 @@ instance H.Builder Builder where
                     writeFileChanged output stdout
 
                 Make dir -> cmd Shell echo path ["-C", dir] buildArgs
+
+                Xelatex -> do
+                    unit $ cmd Shell [Cwd output] [path] buildArgs
+                    unit $ cmd Shell [Cwd output] [path] buildArgs
+                    unit $ cmd Shell [Cwd output] [path] buildArgs
+                    unit $ cmd Shell [Cwd output] ["makeindex"]
+                                     (input -<.> "idx")
+                    unit $ cmd Shell [Cwd output] [path] buildArgs
+                    cmd Shell [Cwd output] [path] buildArgs
 
                 _  -> cmd echo [path] buildArgs
 
