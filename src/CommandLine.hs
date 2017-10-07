@@ -82,8 +82,9 @@ readSplitObjects = Right $ \flags -> flags { splitObjects = True }
 -- | Standard 'OptDescr' descriptions of Hadrian's command line arguments.
 optDescrs :: [OptDescr (Either String (CommandLineArgs -> CommandLineArgs))]
 optDescrs =
-    [ Option [] ["flavour"] (OptArg readFlavour "FLAVOUR")
-      "Build flavour (Default, Devel1, Devel2, Perf, Prof, Quick or Quickest)."
+    [ Option [] ["flavour"] (OptArg readFlavour "FLAVOUR") $
+      "Build flavour (default, devel1, devel2, perf, prof, " ++
+      "quick, quickest, quick-cross or validate)."
     , Option [] ["haddock"] (NoArg readBuildHaddock)
       "Generate Haddock documentation."
     , Option [] ["install-destdir"] (OptArg readInstallDestDir "DESTDIR")
