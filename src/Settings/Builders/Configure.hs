@@ -9,10 +9,10 @@ configureBuilderArgs = do
     gmpPath    <- expr gmpBuildPath
     libffiPath <- expr libffiBuildPath
     mconcat [ builder (Configure gmpPath) ? do
-                hostPlatform  <- getSetting HostPlatform
                 buildPlatform <- getSetting BuildPlatform
+                targetPlatform <- getSetting TargetPlatform
                 pure [ "--enable-shared=no"
-                     , "--host=" ++ hostPlatform
+                     , "--host=" ++ targetPlatform
                      , "--build=" ++ buildPlatform ]
 
             , builder (Configure libffiPath) ? do
