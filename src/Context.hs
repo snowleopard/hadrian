@@ -139,7 +139,7 @@ pkgConfFile Context {..} = do
     root  <- buildRoot
     pid   <- pkgId package
     let dbDir | stage == Stage0 = root -/- stage0PackageDbDir
-              | otherwise       = inplacePackageDbPath
+              | otherwise       = root -/- inplacePackageDbPath stage
     return $ dbDir -/- pid <.> "conf"
 
 -- | Given a 'Context' and a 'FilePath' to a source file, compute the 'FilePath'

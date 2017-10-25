@@ -76,16 +76,16 @@ generatedDir = "generated"
 
 -- | The directory in 'buildRoot' containing the 'Stage0' package database.
 stage0PackageDbDir :: FilePath
-stage0PackageDbDir = "stage0/bootstrapping.conf"
+stage0PackageDbDir = "stage0/lib/bootstrapping.conf"
 
 -- | Path to the inplace package database used in 'Stage1' and later.
-inplacePackageDbPath :: FilePath
-inplacePackageDbPath = "inplace/lib/package.conf.d"
+inplacePackageDbPath :: Stage -> FilePath
+inplacePackageDbPath stage = stageString stage -/- "lib" -/- "package.conf.d"
 
 -- | Path to the package database used in a given 'Stage'.
 packageDbPath :: Stage -> Action FilePath
 packageDbPath Stage0 = buildRoot <&> (-/- stage0PackageDbDir)
-packageDbPath _      = return inplacePackageDbPath
+packageDbPath stage  = buildRoot <&> (-/- inplacePackageDbPath stage)
 
 -- | We use a stamp file to track the existence of a package database.
 packageDbStamp :: FilePath

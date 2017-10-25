@@ -22,10 +22,10 @@ registerPackage rs context@Context {..} = do
             buildStamp rs context
 
     when (stage == Stage1) $ do
-        inplacePackageDbPath -/- pkgName package ++ "*.conf" %%>
+        "//" ++ inplacePackageDbPath stage -/- pkgName package ++ "*.conf" %%>
             buildConf rs context
 
-        when (package == ghc) $ inplacePackageDbPath -/- packageDbStamp %>
+        when (package == ghc) $ "//" ++ inplacePackageDbPath stage -/- packageDbStamp %>
             buildStamp rs context
 
 buildConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
