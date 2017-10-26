@@ -17,23 +17,16 @@ import Utilities
 -- | TODO: Drop code duplication
 buildProgram :: [(Resource, Int)] -> Package -> Rules ()
 buildProgram rs package = do
-    forM_ [Stage0 ..] $ \stage -> do
-        let context = vanillaContext stage package
+    forM_ [Stage1 ..] $ \stage -> do
+        let context = vanillaContext (pred stage) package
 
         -- Rules for programs built in 'buildRoot'
-        "//" ++ contextDir context -/- programName context <.> exe %> \bin ->
-            buildBinaryAndWrapper rs bin =<< programContext stage package
+        "//" ++ stageString stage -/- "bin" -/- programName context <.> exe %> \bin ->
+            buildBinary rs bin =<< programContext (pred stage) package
 
         -- Rules for the GHC package, which is built 'inplace'
-        when (package == ghc) $ do
-            inplaceBinPath -/- programName context <.> exe %> \bin ->
-                buildBinaryAndWrapper rs bin =<< programContext stage package
 
-            inplaceLibBinPath -/- programName context <.> exe %> \bin ->
-                buildBinary rs bin =<< programContext stage package
 
-            inplaceLibBinPath -/- programName context <.> "bin" %> \bin ->
-                buildBinary rs bin =<< programContext stage package
 
     -- Rules for other programs built in inplace directories
     when (package /= ghc) $ do
