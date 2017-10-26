@@ -103,7 +103,7 @@ data Builder = Alex
              | Happy
              | Hpc
              | HsCpp
-             | Hsc2Hs
+             | Hsc2Hs Stage
              | Ld
              | Make FilePath
              | Nm
@@ -136,7 +136,7 @@ builderProvenance = \case
     GhcPkg _ _       -> context Stage1 ghcPkg
     Haddock _        -> context Stage2 haddock
     Hpc              -> context Stage1 hpcBin
-    Hsc2Hs           -> context Stage1 hsc2hs
+    Hsc2Hs stage     -> context stage  hsc2hs
     Unlit            -> context Stage1 unlit
     _                -> Nothing
   where
@@ -153,7 +153,7 @@ instance H.Builder Builder where
         path <- H.builderPath builder
         case builder of
             Configure dir -> need [dir -/- "configure"]
-            Hsc2Hs        -> need [path, templateHscPath]
+            Hsc2Hs stage  -> templateHscPath stage >>= \tmpl -> need [path, tmpl]
             Make dir      -> need [dir -/- "Makefile"]
             _             -> when (isJust $ builderProvenance builder) $ need [path]
 

@@ -21,7 +21,11 @@ buildProgram rs package = do
         let context = vanillaContext (pred stage) package
 
         -- Rules for programs built in 'buildRoot'
-        "//" ++ stageString stage -/- "bin" -/- programName context <.> exe %> \bin ->
+        "//" ++ stageString stage -/- "bin" -/- programName context <.> exe %> \bin -> do
+            when (package == hsc2hs) $ do
+              -- hsc2hs needs the template-hsc.h file
+              tmpl <- templateHscPath stage
+              need [tmpl]
             buildBinary rs bin =<< programContext (pred stage) package
 
         -- Rules for the GHC package, which is built 'inplace'

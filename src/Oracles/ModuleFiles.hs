@@ -26,19 +26,19 @@ haskellExtensions :: [String]
 haskellExtensions = [".hs", ".lhs"]
 
 -- | Non-Haskell source extensions and corresponding builders.
-otherExtensions :: [(String, Builder)]
-otherExtensions = [ (".x"  , Alex  )
-                  , (".y"  , Happy )
-                  , (".ly" , Happy )
-                  , (".hsc", Hsc2Hs) ]
+otherExtensions :: Stage -> [(String, Builder)]
+otherExtensions stage = [ (".x"  , Alex  )
+                        , (".y"  , Happy )
+                        , (".ly" , Happy )
+                        , (".hsc", Hsc2Hs stage) ]
 
 -- | We match the following file patterns when looking for module files.
-moduleFilePatterns :: [FilePattern]
-moduleFilePatterns = map ("*" ++) $ haskellExtensions ++ map fst otherExtensions
+moduleFilePatterns :: Stage -> [FilePattern]
+moduleFilePatterns stage = map ("*" ++) $ haskellExtensions ++ map fst (otherExtensions stage)
 
 -- | Given a FilePath determine the corresponding builder.
-determineBuilder :: FilePath -> Maybe Builder
-determineBuilder file = lookup (takeExtension file) otherExtensions
+determineBuilder :: Stage -> FilePath -> Maybe Builder
+determineBuilder stage file = lookup (takeExtension file) (otherExtensions stage)
 
 -- | Given a module name extract the directory and file name, e.g.:
 --
@@ -71,7 +71,7 @@ findGenerator Context {..} file = do
     maybeSource <- askOracle $ Generator (stage, package, file)
     return $ do
         source  <- maybeSource
-        builder <- determineBuilder source
+        builder <- determineBuilder stage source
         return (source, builder)
 
 -- | Find all Haskell source files for a given 'Context'.
@@ -134,7 +134,7 @@ moduleFilesOracle = void $ do
             todo <- filterM (doesDirectoryExist . (dir -/-) . fst) modDirFiles
             forM todo $ \(mDir, mFiles) -> do
                 let fullDir = unifyPath $ dir -/- mDir
-                files <- getDirectoryFiles fullDir moduleFilePatterns
+                files <- getDirectoryFiles fullDir (moduleFilePatterns stage)
                 let cmp fe f = compare (dropExtension fe) f
                     found    = intersectOrd cmp files mFiles
                 return (map (fullDir -/-) found, mDir)
