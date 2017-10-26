@@ -21,6 +21,7 @@ module Base (
     -- * Paths
     hadrianPath, configPath, configFile, sourcePath, configH, shakeFilesDir,
     generatedDir, inplaceBinPath, inplaceLibBinPath, inplaceLibPath,
+    stageBinPath, stageLibPath,
     inplaceLibCopyTargets, templateHscPath, stage0PackageDbDir,
     inplacePackageDbPath, packageDbPath, packageDbStamp
     ) where
@@ -103,19 +104,25 @@ inplaceLibPath = "inplace/lib"
 inplaceLibBinPath :: FilePath
 inplaceLibBinPath = "inplace/lib/bin"
 
+stageBinPath :: Stage -> Action FilePath
+stageBinPath stage = buildRoot <&> (-/- stageString stage -/- "bin")
+
+stageLibPath :: Stage -> Action FilePath
+stageLibPath stage = buildRoot <&> (-/- stageString stage -/- "lib")
+
 -- ref: ghc/ghc.mk:142
 -- ref: driver/ghc.mk
 -- ref: utils/hsc2hs/ghc.mk:35
 -- | Files that need to be copied over to 'inplaceLibPath'.
-inplaceLibCopyTargets :: [FilePath]
-inplaceLibCopyTargets = map (inplaceLibPath -/-)
-    [ "ghc-usage.txt"
-    , "ghci-usage.txt"
-    , "llvm-targets"
-    , "platformConstants"
-    , "settings"
-    , "template-hsc.h" ]
+inplaceLibCopyTargets :: Stage -> Action [FilePath]
+inplaceLibCopyTargets stage = mapM (\f -> stageLibPath stage <&> (-/- f))
+      [ "ghc-usage.txt"
+      , "ghci-usage.txt"
+      , "llvm-targets"
+      , "platformConstants"
+      , "settings"
+      , "template-hsc.h" ]
 
 -- | Path to hsc2hs template.
-templateHscPath :: FilePath
-templateHscPath = "inplace/lib/template-hsc.h"
+templateHscPath :: Stage -> Action FilePath
+templateHscPath stage = stageLibPath stage <&> (-/- "/template-hsc.h")
