@@ -13,7 +13,8 @@ ghcCabalBuilderArgs = builder GhcCabal ? do
     verbosity <- expr getVerbosity
     top       <- expr topDirectory
     path      <- getBuildPath
-    notStage0 ? expr (need inplaceLibCopyTargets)
+    stage     <- getStage
+    notStage0 ? expr (need =<< inplaceLibCopyTargets stage)
     mconcat [ arg "configure"
             , arg =<< pkgPath <$> getPackage
             , arg $ top -/- path
@@ -104,6 +105,15 @@ withBuilderKey b = case b of
     GhcPkg _ _ -> "--with-ghc-pkg="
     _          -> error $ "withBuilderKey: not supported builder " ++ show b
 
+-- Adds arguments to builders if needed.
+withBuilderArgs :: Builder -> Args
+withBuilderArgs b = case b of
+    GhcPkg _ stage -> do
+      top   <- expr topDirectory
+      pkgDb <- expr $ packageDbPath stage
+      notStage0 ? arg ("--ghc-pkg-option=--global-package-db=" ++ top -/- pkgDb)
+    _          -> return [] -- no arguments
+
 -- Expression 'with Alex' appends "--with-alex=/path/to/alex" and needs Alex.
 with :: Builder -> Args
 with b = do
@@ -112,6 +122,7 @@ with b = do
         top  <- expr topDirectory
         expr $ needBuilder b
         arg $ withBuilderKey b ++ unifyPath (top </> path)
+    withBuilderArgs b
 
 withStaged :: (Stage -> Builder) -> Args
 withStaged sb = with . sb =<< getStage
