@@ -15,6 +15,7 @@ hsc2hsBuilderArgs = builder Hsc2Hs ? do
     version <- if stage == Stage0
                then expr ghcCanonVersion
                else getSetting ProjectVersionInt
+    tmpl    <- (top -/-) <$> expr (templateHscPath Stage0)
     mconcat [ arg $ "--cc=" ++ ccPath
             , arg $ "--ld=" ++ ccPath
             , notM windowsHost ? arg "--cross-safe"
@@ -27,7 +28,7 @@ hsc2hsBuilderArgs = builder Hsc2Hs ? do
             , notStage0 ? arg ("--cflag=-D" ++ tArch ++ "_HOST_ARCH=1")
             , notStage0 ? arg ("--cflag=-D" ++ tOs   ++ "_HOST_OS=1"  )
             , arg $ "--cflag=-D__GLASGOW_HASKELL__=" ++ version
-            , arg $ "--template=" ++ top -/- templateHscPath
+            , arg $ "--template=" ++ tmpl
             , arg $ "-I" ++ top -/- "inplace/lib/include/"
             , arg =<< getInput
             , arg "-o", arg =<< getOutput ]
