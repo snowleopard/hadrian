@@ -26,6 +26,10 @@ buildProgram rs package = do
               -- hsc2hs needs the template-hsc.h file
               tmpl <- templateHscPath stage
               need [tmpl]
+            when (package == ghc) $ do
+              -- ghc depends on settings, platformConstants, llvm-targets
+              --     ghc-usage.txt, ghci-usage.txt
+              need =<< ghcDeps stage
             buildBinary rs bin =<< programContext (pred stage) package
 
         -- Rules for the GHC package, which is built 'inplace'

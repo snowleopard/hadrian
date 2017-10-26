@@ -14,7 +14,6 @@ ghcCabalBuilderArgs = builder GhcCabal ? do
     top       <- expr topDirectory
     path      <- getBuildPath
     stage     <- getStage
-    notStage0 ? expr (need =<< inplaceLibCopyTargets stage)
     mconcat [ arg "configure"
             , arg =<< pkgPath <$> getPackage
             , arg $ top -/- path

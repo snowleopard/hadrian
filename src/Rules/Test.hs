@@ -13,8 +13,6 @@ import Utilities
 testRules :: Rules ()
 testRules = do
     "validate" ~> do
-        need =<< inplaceLibCopyTargets Stage1
-        need =<< inplaceLibCopyTargets Stage2
         needBuilder $ Ghc CompileHs Stage2
         needBuilder $ GhcPkg Update Stage1
         needBuilder Hpc

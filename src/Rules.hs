@@ -37,14 +37,12 @@ topLevelTargets = action $ do
                  libs <- concatForM [Stage0, Stage1] $ \stage ->
                      concatForM libraryPackages $ packageTargets False stage
                  prgs <- concatForM programsStage1Only $ packageTargets False Stage0
-                 cpys <- concatForM [Stage0, Stage1] $ inplaceLibCopyTargets
-                 return $ libs ++ prgs ++ cpys
+                 return $ libs ++ prgs
              else do
                  targets <- concatForM allStages $ \stage ->
                      concatForM (knownPackages \\ [libffi]) $
                         packageTargets False stage
-                 cpys <- concatForM allStages $ inplaceLibCopyTargets
-                 return $ targets ++ cpys
+                 return targets
 
 -- TODO: Get rid of the @includeGhciLib@ hack.
 -- | Return the list of targets associated with a given 'Stage' and 'Package'.
