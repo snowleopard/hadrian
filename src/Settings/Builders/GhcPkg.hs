@@ -10,7 +10,11 @@ ghcPkgBuilderArgs = mconcat
         verbosity <- expr getVerbosity
         context   <- getContext
         config    <- expr $ pkgInplaceConfig context
-        mconcat [ arg "update"
+        stage     <- getStage
+        pkgDb     <- expr $ packageDbPath stage
+        mconcat [ notStage0 ? arg "--global-package-db"
+                , notStage0 ? arg pkgDb
+                , arg "update"
                 , arg "--force"
                 , verbosity < Chatty ? arg "-v0"
                 , bootPackageDatabaseArgs
