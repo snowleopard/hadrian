@@ -126,18 +126,18 @@ instance NFData   Builder
 -- 'Stage' and GHC 'Package').
 builderProvenance :: Builder -> Maybe Context
 builderProvenance = \case
-    DeriveConstants  -> context Stage0 deriveConstants
-    GenApply         -> context Stage0 genapply
-    GenPrimopCode    -> context Stage0 genprimopcode
+    DeriveConstants  -> context Stage1 deriveConstants
+    GenApply         -> context Stage1 genapply
+    GenPrimopCode    -> context Stage1 genprimopcode
     Ghc _ Stage0     -> Nothing
-    Ghc _ stage      -> context (pred stage) ghc
-    GhcCabal         -> context Stage0 ghcCabal
+    Ghc _ stage      -> context stage ghc
+    GhcCabal         -> context Stage1 ghcCabal
     GhcPkg _ Stage0  -> Nothing
-    GhcPkg _ _       -> context Stage0 ghcPkg
+    GhcPkg _ _       -> context Stage1 ghcPkg
     Haddock _        -> context Stage2 haddock
     Hpc              -> context Stage1 hpcBin
-    Hsc2Hs           -> context Stage0 hsc2hs
-    Unlit            -> context Stage0 unlit
+    Hsc2Hs           -> context Stage1 hsc2hs
+    Unlit            -> context Stage1 unlit
     _                -> Nothing
   where
     context s p = Just $ vanillaContext s p
