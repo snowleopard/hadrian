@@ -143,12 +143,14 @@ generatePackageCode context@(Context stage pkg _) =
 
 copyRules :: Rules ()
 copyRules = do
-    (inplaceLibPath -/- "ghc-usage.txt")     <~ return "driver"
-    (inplaceLibPath -/- "ghci-usage.txt"  )  <~ return "driver"
-    (inplaceLibPath -/- "llvm-targets")      <~ return "."
-    (inplaceLibPath -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
-    (inplaceLibPath -/- "settings")          <~ return "."
-    (inplaceLibPath -/- "template-hsc.h")    <~ return (pkgPath hsc2hs)
+    forM_ [Stage0 ..] $ \stage -> do
+      let prefix = ("//" ++ stageString stage ++ "/" ++ "lib")
+      (prefix -/- "ghc-usage.txt")     <~ return "driver"
+      (prefix -/- "ghci-usage.txt"  )  <~ return "driver"
+      (prefix -/- "llvm-targets")      <~ return "."
+      (prefix -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
+      (prefix -/- "settings")          <~ return "."
+      (prefix -/- "template-hsc.h")    <~ return (pkgPath hsc2hs)
     "//c/sm/Evac_thr.c" %> copyFile (pkgPath rts -/- "sm/Evac.c")
     "//c/sm/Scav_thr.c" %> copyFile (pkgPath rts -/- "sm/Scav.c")
   where
