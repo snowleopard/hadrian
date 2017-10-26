@@ -207,7 +207,7 @@ stage2Packages = do
 -- 'Library', the function simply returns its name.
 programName :: Context -> String
 programName Context {..}
-    | package == ghc      = "ghc-stage" ++ show (fromEnum stage + 1)
+    | package == ghc      = "ghc"
     | package == hpcBin   = "hpc"
     | package == runGhc   = "runhaskell"
     | package == iservBin = "ghc-iserv"
@@ -232,19 +232,14 @@ isBuiltInplace :: Context -> Action Bool
 isBuiltInplace Context {..}
     | isLibrary package          = return False
     | not (isGhcPackage package) = return False
-    | package == ghc             = return True
+    | package == ghc             = return False
     | otherwise                  = (Just stage ==) <$> installStage package
 
 -- | The 'FilePath' to a program executable in a given 'Context'.
 programPath :: Context -> Action FilePath
 programPath context@Context {..} = do
-    path    <- buildPath context
-    inplace <- isBuiltInplace context
-    let contextPath = if inplace then inplacePath else path
-    return $ contextPath -/- programName context <.> exe
-  where
-    inplacePath | package `elem` [touchy, unlit, iservBin] = inplaceLibBinPath
-                | otherwise                                = inplaceBinPath
+    path    <- stageBinPath stage
+    return $ path -/- programName context <.> exe
 
 -- | Some contexts are special: their packages do not have @.cabal@ metadata or
 -- we cannot run @ghc-cabal@ on them, e.g. because the latter hasn't been built
