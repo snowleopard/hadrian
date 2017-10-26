@@ -10,7 +10,6 @@ import qualified Environment
 import qualified Rules
 import qualified Rules.Clean
 import qualified Rules.Documentation
-import qualified Rules.Install
 import qualified Rules.SourceDist
 import qualified Rules.Selftest
 import qualified Rules.Test
@@ -45,7 +44,6 @@ main = do
             Rules.buildRules
             Rules.Documentation.documentationRules
             Rules.Clean.cleanRules
-            Rules.Install.installRules
             Rules.oracleRules
             Rules.Selftest.selftestRules
             Rules.SourceDist.sourceDistRules
