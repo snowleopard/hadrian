@@ -83,7 +83,7 @@ buildPackageLibrary context@Context {..} = do
         unless isLib0 . putSuccess $ renderLibrary
             (quote (pkgName package) ++ " (" ++ show stage ++ ", way "
             ++ show way ++ ").") a synopsis
-    let instPrefix = "//" ++ contextInstallDir context -/- "libHS" ++ pkgId
+    let instPrefix = "//" ++ libDir context -/- "libHS" ++ pkgId
         instArchive = instPrefix ++ (waySuffix way <.> "a")
 
     instArchive %%> \a -> do
