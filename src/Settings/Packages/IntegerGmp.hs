@@ -17,7 +17,7 @@ integerGmpPackageArgs = package integerGmp ? do
     gmpLibDir     <- getSetting GmpLibDir
     mconcat [ builder Cc ? arg includeGmp
 
-            , builder GhcCabal ? mconcat
+            , builder (GhcCabal Conf) ? mconcat
               [ (null gmpIncludeDir && null gmpLibDir) ?
                 arg "--configure-option=--with-intree-gmp"
               , arg ("--configure-option=CFLAGS=" ++ includeGmp)

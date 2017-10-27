@@ -9,7 +9,7 @@ import Flavour
 import Settings.Builders.Common
 
 ghcCabalBuilderArgs :: Args
-ghcCabalBuilderArgs = builder GhcCabal ? do
+ghcCabalBuilderArgs = builder (GhcCabal Conf) ? do
     verbosity <- expr getVerbosity
     top       <- expr topDirectory
     path      <- getContextPath

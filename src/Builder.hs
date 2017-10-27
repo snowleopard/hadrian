@@ -1,7 +1,7 @@
 {-# LANGUAGE InstanceSigs #-}
 module Builder (
     -- * Data types
-    ArMode (..), CcMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
+    ArMode (..), CcMode (..), GhcCabalMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
     SphinxMode (..), TarMode (..), Builder (..),
 
     -- * Builder properties
@@ -51,6 +51,14 @@ instance Binary   GhcMode
 instance Hashable GhcMode
 instance NFData   GhcMode
 
+-- | GHC cabal mode. Can configure, copy and register pacakges.
+data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
+    deriving (Eq, Generic, Show)
+
+instance Binary   GhcCabalMode
+instance Hashable GhcCabalMode
+instance NFData   GhcCabalMode
+
 -- | GhcPkg can initialise a package database and register packages in it.
 data GhcPkgMode = Init | Update deriving (Eq, Generic, Show)
 
@@ -97,7 +105,7 @@ data Builder = Alex
              | GenApply
              | GenPrimopCode
              | Ghc GhcMode Stage
-             | GhcCabal
+             | GhcCabal GhcCabalMode Stage
              | GhcPkg GhcPkgMode Stage
              | Haddock HaddockMode
              | Happy
@@ -131,7 +139,7 @@ builderProvenance = \case
     GenPrimopCode    -> context Stage1 genprimopcode
     Ghc _ Stage0     -> Nothing
     Ghc _ stage      -> context stage ghc
-    GhcCabal         -> context Stage1 ghcCabal
+    GhcCabal _ stage -> context stage ghcCabal
     GhcPkg _ Stage0  -> Nothing
     GhcPkg _ _       -> context Stage1 ghcPkg
     Haddock _        -> context Stage2 haddock

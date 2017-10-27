@@ -20,7 +20,7 @@ compilerPackageArgs = package compiler ? do
               , input "//Parser.hs" ?
                 pure ["-O0", "-fno-ignore-interface-pragmas", "-fcmm-sink" ] ]
 
-            , builder GhcCabal ? mconcat
+            , builder (GhcCabal Conf) ? mconcat
               [ arg $ "--ghc-option=-DSTAGE=" ++ show (fromEnum stage + 1)
               , arg "--disable-library-for-ghci"
               , anyTargetOs ["openbsd"] ? arg "--ld-options=-E"

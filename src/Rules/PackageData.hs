@@ -27,7 +27,7 @@ buildPackageData context@Context {..} = do
         need =<< mapM pkgConfFile =<< contextDependencies context
 
         need [cabalFile]
-        build $ target context GhcCabal [cabalFile] [mk, setupConfig]
+        build $ target context (GhcCabal Conf stage) [cabalFile] [mk, setupConfig]
         postProcessPackageData context mk
 
     -- TODO: Get rid of hardcoded file paths.
