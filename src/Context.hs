@@ -7,8 +7,8 @@ module Context (
     withHsPackage,
 
     -- * Paths
-    buildDir, contextPath, getContextPath,
-    contextDir, libDir, buildPath, pkgInplaceConfig, pkgDataFile,
+    stageDir, stagePath, getStagePath, buildDir, contextPath, getContextPath,
+    contextDir, libDir, libPath, buildPath, pkgInplaceConfig, pkgDataFile,
     pkgSetupConfigFile, pkgHaddockFile, pkgLibraryFile, pkgLibraryFile0,
     pkgGhciLibraryFile, pkgConfFile, objectPath, pkgId
     ) where
@@ -66,6 +66,17 @@ withHsPackage expr = do
         Just file -> expr file
         Nothing   -> mempty
 
+-- | The directory to the current stage
+stageDir :: Context -> FilePath
+stageDir Context {..} = stageString stage
+
+-- | The path to the current stage
+stagePath :: Context -> Action FilePath
+stagePath context = buildRoot <&> (-/- stageDir context)
+
+getStagePath :: Expr Context b FilePath
+getStagePath = expr . stagePath =<< getContext
+
 -- | The directory in 'buildRoot' containing build artefacts of a given 'Context'.
 contextDir :: Context -> FilePath
 contextDir Context {..} = stageString stage -/- pkgPath package
@@ -107,7 +118,7 @@ pkgFile :: Context -> String -> String -> Action FilePath
 pkgFile context@Context {..} prefix suffix = do
     path <- libPath context
     pid  <- pkgId package
-    return $ path -/- prefix ++ pid ++ suffix
+    return $ path -/- pid -/- prefix ++ pid ++ suffix
 
 -- | Path to inplace package configuration file of a given 'Context'.
 pkgInplaceConfig :: Context -> Action FilePath
