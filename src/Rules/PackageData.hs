@@ -35,8 +35,7 @@ buildPackageData context@Context {..} = do
         path     <- contextPath context
         dataFile <- pkgDataFile context
         need [dataFile] -- ghc-cabal builds inplace package configuration file
-        if package == rts
-        then do
+        when (package == rts) $ do
             genPath <- buildRoot <&> (-/- generatedDir)
             rtsPath <- rtsBuildPath
             need [rtsConfIn]
@@ -47,8 +46,6 @@ buildPackageData context@Context {..} = do
                          . replace "rts/dist/build" rtsPath
                          . replace "includes/dist-derivedconstants/header" genPath )
                          . lines
-        else
-            fixFile conf $ unlines . map (replace (path </> "build") path) . lines
 
     priority 2.0 $ when (nonCabalContext context) $ dir -/- "package-data.mk" %>
         generatePackageData context

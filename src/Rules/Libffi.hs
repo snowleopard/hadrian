@@ -46,7 +46,7 @@ configureEnvironment = do
 
 libffiRules :: Rules ()
 libffiRules = do
-    fmap ("//rts" -/-) libffiDependencies &%> \_ -> do
+    fmap ("//rts/build" -/-) libffiDependencies &%> \_ -> do
         libffiPath <- libffiBuildPath
         need [libffiPath -/- libffiLibrary]
 
@@ -75,7 +75,7 @@ libffiRules = do
 
             putSuccess $ "| Successfully built custom library 'libffi'"
 
-    "//libffi/Makefile.in" %> \mkIn -> do
+    "//libffi/build/Makefile.in" %> \mkIn -> do
         libffiPath <- libffiBuildPath
         removeDirectory libffiPath
         tarball <- unifyPath . fromSingleton "Exactly one LibFFI tarball is expected"
@@ -97,7 +97,7 @@ libffiRules = do
         fixFile mkIn (fixLibffiMakefile top)
 
     -- TODO: Get rid of hard-coded @libffi@.
-    "//libffi/Makefile" %> \mk -> do
+    "//libffi/build/Makefile" %> \mk -> do
         need [mk <.> "in"]
         libffiPath <- libffiBuildPath
         forM_ ["config.guess", "config.sub"] $ \file ->
