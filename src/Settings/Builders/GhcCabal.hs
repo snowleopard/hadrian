@@ -9,7 +9,8 @@ import Flavour
 import Settings.Builders.Common
 
 ghcCabalBuilderArgs :: Args
-ghcCabalBuilderArgs = builder (GhcCabal Conf) ? do
+ghcCabalBuilderArgs = mconcat
+  [ builder (GhcCabal Conf) ? do
     verbosity <- expr getVerbosity
     top       <- expr topDirectory
     path      <- getContextPath
@@ -30,6 +31,16 @@ ghcCabalBuilderArgs = builder (GhcCabal Conf) ? do
             , with Happy
             , verbosity < Chatty ? pure [ "-v0", "--configure-option=--quiet"
                 , "--configure-option=--disable-option-checking"  ] ]
+  , builder (GhcCabal Copy) ? do
+      verbosity <- expr getVerbosity
+      mconcat [ arg "copy"
+              , getInputs
+              ]
+  , builder (GhcCabal Reg) ? do
+      mconcat [ arg "register"
+              , getInputs
+              ]
+  ]
 
 -- TODO: Isn't vanilla always built? If yes, some conditions are redundant.
 -- TODO: Need compiler_stage1_CONFIGURE_OPTS += --disable-library-for-ghci?
