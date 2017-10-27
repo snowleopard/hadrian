@@ -18,6 +18,66 @@ import Settings
 import Target
 import Utilities
 
+archive :: Way -> String -> String
+archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")
+
+pkgObject :: Way -> String -> String
+pkgObject way pkgId = "HS" ++ pkgId ++ (waySuffix way <.> "o")
+
+-- | Building a library consist of building
+-- the artefacts, and copying it somewhere
+-- with cabal, and finally registering it
+-- with the compiler via cabal in the
+-- package database.
+--
+-- So we'll assume rules to build all the
+-- package artifacts, and provide rules for
+-- the any of the lirbary artifacts.
+library :: Context -> Rules ()
+library context@Context{..} = do
+    pkgId <- case pkgCabalFile package of
+      Just file -> do
+        cabal <- liftIO $ parseCabal file
+        return $ if (null $ version cabal)
+          then Cabal.name cabal
+          else Cabal.name cabal ++ "-" ++ version cabal
+      Nothing   -> return (pkgName package)
+
+    "//" ++ libDir context -/- pkgId -/- archive way pkgId %> \a -> do
+      -- ghc-cabal copy libraries/terminfo $PWD/_build/stage0/libraries/terminfo : $PWD/_build/stage1 "" "lib" "share" "v"
+      -- ghc-cabal register libraries/terminfo $PWD/_build/stage0/libraries/terminfo ghc ghc-pkg $PWD/_build/stage1/lib $PWD/_build_stage1 "" "lib" "share" YES
+      _a <- buildPath context <&> (-/- archive way pkgId)
+      _o <- buildPath context <&> (-/- pkgObject way pkgId)
+
+      need [_a, _o]
+
+      -- might need some package-db resource to limit read/write,
+      -- see packageRules
+      top     <- topDirectory
+      ctxPath <- (top -/-) <$> contextPath context
+      stgPath <- (top -/-) <$> stagePath context
+      libPath <- (top -/-) <$> libPath context
+      build $ target context (GhcCabal Copy stage) [ "libraries" -/- (pkgName package) -- <directory>
+                                                   , ctxPath -- <distdir>
+                                                   , ":" -- no strip. ':' special marker
+                                                   , stgPath -- <destdir>
+                                                   , ""      -- <prefix>
+                                                   , "lib"   -- <libdir>
+                                                   , "share" -- <docdir>
+                                                   , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
+                                                   ] []
+      build $ target context (GhcCabal Reg stage)  [ "libraries" -/- (pkgName package)
+                                                   , ctxPath
+                                                   , "ghc"     -- TODO: path to staged ghc.
+                                                   , "ghc-pkg" -- TODO: path to staged ghc-pkg.
+                                                   , libPath
+                                                   , stgPath
+                                                   , ""
+                                                   , "lib"
+                                                   , "share"
+                                                   , "YES"   -- <relocatable>
+                                                   ] [a]
+
 libraryObjects :: Context -> Action [FilePath]
 libraryObjects context@Context{..} = do
     hsObjs   <- hsObjects    context
@@ -82,13 +142,8 @@ buildPackageLibrary context@Context {..} = do
         unless isLib0 . putSuccess $ renderLibrary
             (quote (pkgName package) ++ " (" ++ show stage ++ ", way "
             ++ show way ++ ").") a synopsis
-    let instPrefix = "//" ++ libDir context -/- "libHS" ++ pkgId
-        instArchive = instPrefix ++ (waySuffix way <.> "a")
 
-    instArchive %%> \a -> do
-      archive <- buildRoot <&> (-/- (buildDir context -/- "libHS" ++ pkgId ++ (waySuffix way <.> "a")))
-      need [archive]
-      -- TODO: ghc-cabal copy; register
+    library context
 
 buildPackageGhciLibrary :: Context -> Rules ()
 buildPackageGhciLibrary context@Context {..} = priority 2 $ do
