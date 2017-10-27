@@ -45,8 +45,7 @@ buildDynamicLib context@Context{..} = do
           else Cabal.name cabal ++ "-" ++ version cabal
       Nothing   -> return (pkgName package)
 
-    -- let libPrefix = "//" ++ contextInstallDir context -/- "libHS" ++ pkgId
-    let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgName package
+    let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgId
     -- OS X
     libPrefix ++ "*.dylib" %> buildDynamicLibUnix
     -- Linux
@@ -93,7 +92,15 @@ buildPackageLibrary context@Context {..} = do
 
 buildPackageGhciLibrary :: Context -> Rules ()
 buildPackageGhciLibrary context@Context {..} = priority 2 $ do
-    let libPrefix = "//" ++ contextDir context -/- "HS" ++ pkgName package
+    pkgId <- case pkgCabalFile package of
+      Just file -> do
+        cabal <- liftIO $ parseCabal file
+        return $ if (null $ version cabal)
+          then Cabal.name cabal
+          else Cabal.name cabal ++ "-" ++ version cabal
+      Nothing   -> return (pkgName package)
+
+    let libPrefix = "//" ++ buildDir context -/- "HS" ++ pkgId
         o = libPrefix ++ "*" ++ (waySuffix way <.> "o")
     o %> \obj -> do
         objs <- allObjects context
