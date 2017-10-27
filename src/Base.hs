@@ -77,7 +77,7 @@ generatedDir = "generated"
 
 -- | The directory in 'buildRoot' containing the 'Stage0' package database.
 stage0PackageDbDir :: FilePath
-stage0PackageDbDir = "stage0/lib/bootstrapping.conf"
+stage0PackageDbDir = "stage0/lib/package.conf.d"
 
 -- | Path to the inplace package database used in 'Stage1' and later.
 inplacePackageDbPath :: Stage -> FilePath
