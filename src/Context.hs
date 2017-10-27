@@ -69,9 +69,13 @@ withHsPackage expr = do
 contextDir :: Context -> FilePath
 contextDir Context {..} = stageString stage -/- pkgPath package
 
+-- | Path to the context directory, containing the "build folder"
+contextPath :: Context -> Action FilePath
+contextPath context = buildRoot <&> (-/- contextDir context)
+
 -- | Path to the directory containing build artefacts of a given 'Context'.
 buildPath :: Context -> Action FilePath
-buildPath context = buildRoot <&> (-/- contextDir context)
+buildPath context = buildRoot <&> (-/- (buildDir context))
 
 -- | Get the build path of the current 'Context'.
 getBuildPath :: Expr Context b FilePath
@@ -91,19 +95,19 @@ pkgFile context@Context {..} prefix suffix = do
 -- | Path to inplace package configuration file of a given 'Context'.
 pkgInplaceConfig :: Context -> Action FilePath
 pkgInplaceConfig context = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- "inplace-pkg-config"
 
 -- | Path to the @package-data.mk@ of a given 'Context'.
 pkgDataFile :: Context -> Action FilePath
 pkgDataFile context = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- "package-data.mk"
 
 -- | Path to the @setup-config@ of a given 'Context'.
 pkgSetupConfigFile :: Context -> Action FilePath
 pkgSetupConfigFile context = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- "setup-config"
 
 -- | Path to the haddock file of a given 'Context', e.g.:
