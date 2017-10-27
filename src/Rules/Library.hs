@@ -3,6 +3,7 @@ module Rules.Library (
     ) where
 
 import Hadrian.Haskell.Cabal
+import Hadrian.Haskell.Cabal.Parse as Cabal
 import qualified System.Directory as IO
 
 import Base
@@ -36,7 +37,16 @@ libraryObjects context@Context{..} = do
 
 buildDynamicLib :: Context -> Rules ()
 buildDynamicLib context@Context{..} = do
-    let libPrefix = "//" ++ contextDir context -/- "libHS" ++ pkgName package
+    pkgId <- case pkgCabalFile package of
+      Just file -> do
+        cabal <- liftIO $ parseCabal file
+        return $ if (null $ version cabal)
+          then Cabal.name cabal
+          else Cabal.name cabal ++ "-" ++ version cabal
+      Nothing   -> return (pkgName package)
+
+    -- let libPrefix = "//" ++ contextInstallDir context -/- "libHS" ++ pkgId
+    let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgName package
     -- OS X
     libPrefix ++ "*.dylib" %> buildDynamicLibUnix
     -- Linux
@@ -51,8 +61,17 @@ buildDynamicLib context@Context{..} = do
 
 buildPackageLibrary :: Context -> Rules ()
 buildPackageLibrary context@Context {..} = do
-    let libPrefix = "//" ++ contextDir context -/- "libHS" ++ pkgName package
-    libPrefix ++ "*" ++ (waySuffix way <.> "a") %%> \a -> do
+    pkgId <- case pkgCabalFile package of
+      Just file -> do
+        cabal <- liftIO $ parseCabal file
+        return $ if (null $ version cabal)
+          then Cabal.name cabal
+          else Cabal.name cabal ++ "-" ++ version cabal
+      Nothing   -> return (pkgName package)
+
+    let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgId
+        archive = libPrefix ++ (waySuffix way <.> "a")
+    archive %%> \a -> do
         objs <- libraryObjects context
         asuf <- libsuf way
         let isLib0 = ("//*-0" ++ asuf) ?== a
@@ -64,11 +83,19 @@ buildPackageLibrary context@Context {..} = do
         unless isLib0 . putSuccess $ renderLibrary
             (quote (pkgName package) ++ " (" ++ show stage ++ ", way "
             ++ show way ++ ").") a synopsis
+    let instPrefix = "//" ++ contextInstallDir context -/- "libHS" ++ pkgId
+        instArchive = instPrefix ++ (waySuffix way <.> "a")
+
+    instArchive %%> \a -> do
+      archive <- buildRoot <&> (-/- (buildDir context -/- "libHS" ++ pkgId ++ (waySuffix way <.> "a")))
+      need [archive]
+      -- TODO: ghc-cabal copy; register
 
 buildPackageGhciLibrary :: Context -> Rules ()
 buildPackageGhciLibrary context@Context {..} = priority 2 $ do
     let libPrefix = "//" ++ contextDir context -/- "HS" ++ pkgName package
-    libPrefix ++ "*" ++ (waySuffix way <.> "o") %> \obj -> do
+        o = libPrefix ++ "*" ++ (waySuffix way <.> "o")
+    o %> \obj -> do
         objs <- allObjects context
         need objs
         build $ target context Ld objs [obj]
