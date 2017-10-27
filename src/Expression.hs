@@ -45,11 +45,11 @@ type Ways      = Expr [Way]
 
 -- | Get a value from the @package-data.mk@ file of the current context.
 getPkgData :: (FilePath -> PackageData) -> Expr String
-getPkgData key = expr . pkgData . key =<< getBuildPath
+getPkgData key = expr . pkgData . key =<< getContextPath
 
 -- | Get a list of values from the @package-data.mk@ file of the current context.
 getPkgDataList :: (FilePath -> PackageDataList) -> Expr [String]
-getPkgDataList key = expr . pkgDataList . key =<< getBuildPath
+getPkgDataList key = expr . pkgDataList . key =<< getContextPath
 
 -- | Is the build currently in the provided stage?
 stage :: Stage -> Predicate

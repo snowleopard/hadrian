@@ -78,7 +78,7 @@ allObjects context = (++) <$> nonHsObjects context <*> hsObjects context
 
 nonHsObjects :: Context -> Action [FilePath]
 nonHsObjects context = do
-    path    <- buildPath context
+    path    <- contextPath context
     cObjs   <- cObjects context
     cmmSrcs <- pkgDataList (CmmSrcs path)
     cmmObjs <- mapM (objectPath context) cmmSrcs
@@ -87,7 +87,7 @@ nonHsObjects context = do
 
 cObjects :: Context -> Action [FilePath]
 cObjects context = do
-    path <- buildPath context
+    path <- contextPath context
     srcs <- pkgDataList (CSrcs path)
     objs <- mapM (objectPath context) srcs
     return $ if way context == threaded

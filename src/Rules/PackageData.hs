@@ -32,7 +32,7 @@ buildPackageData context@Context {..} = do
 
     -- TODO: Get rid of hardcoded file paths.
     dir -/- "inplace-pkg-config" %> \conf -> do
-        path     <- buildPath context
+        path     <- contextPath context
         dataFile <- pkgDataFile context
         need [dataFile] -- ghc-cabal builds inplace package configuration file
         if package == rts
@@ -112,7 +112,7 @@ postProcessPackageData :: Context -> FilePath -> Action ()
 postProcessPackageData context@Context {..} file = do
     top     <- topDirectory
     cmmSrcs <- getDirectoryFiles (pkgPath package) ["cbits/*.cmm"]
-    path    <- buildPath context
+    path    <- contextPath context
     let len = length (pkgPath package) + length (top -/- path) + 2
     fixFile file $ unlines
                  . (++ ["CMM_SRCS = " ++ unwords (map unifyPath cmmSrcs) ])

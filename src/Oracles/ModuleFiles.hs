@@ -88,7 +88,7 @@ hsSources context = do
 -- the build directory regardless of whether they are generated or not.
 hsObjects :: Context -> Action [FilePath]
 hsObjects context = do
-    path    <- buildPath context
+    path    <- contextPath context
     modules <- pkgDataList (Modules path)
     -- GHC.Prim module is only for documentation, we do not actually build it.
     mapM (objectPath context . moduleSource) (filter (/= "GHC.Prim") modules)
@@ -96,7 +96,7 @@ hsObjects context = do
 -- | Generated module files live in the 'Context' specific build directory.
 generatedFile :: Context -> String -> Action FilePath
 generatedFile context moduleName = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- moduleSource moduleName
 
 moduleSource :: String -> FilePath
@@ -105,7 +105,7 @@ moduleSource moduleName = replaceEq '.' '/' moduleName <.> "hs"
 -- | Module files for a given 'Context'.
 contextFiles :: Context -> Action [(String, Maybe FilePath)]
 contextFiles context@Context {..} = do
-    path    <- buildPath context
+    path    <- contextPath context
     modules <- fmap sort . pkgDataList $ Modules path
     zip modules <$> askOracle (ModuleFiles (stage, package))
 
@@ -124,7 +124,7 @@ moduleFilesOracle :: Rules ()
 moduleFilesOracle = void $ do
     void . addOracle $ \(ModuleFiles (stage, package)) -> do
         let context = vanillaContext stage package
-        path    <- buildPath context
+        path    <- contextPath context
         srcDirs <-             pkgDataList $ SrcDirs path
         modules <- fmap sort . pkgDataList $ Modules path
         autogen <- autogenPath context

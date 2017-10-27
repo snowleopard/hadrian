@@ -12,7 +12,7 @@ ghcCabalBuilderArgs :: Args
 ghcCabalBuilderArgs = builder GhcCabal ? do
     verbosity <- expr getVerbosity
     top       <- expr topDirectory
-    path      <- getBuildPath
+    path      <- getContextPath
     stage     <- getStage
     mconcat [ arg "configure"
             , arg =<< pkgPath <$> getPackage

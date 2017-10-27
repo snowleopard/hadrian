@@ -261,7 +261,7 @@ autogenPath context@Context {..}
     | package == iservBin = autogen "build/iserv"
     | otherwise           = autogen $ "build" -/- pkgName package
   where
-    autogen dir = buildPath context <&> (-/- dir -/- "autogen")
+    autogen dir = contextPath context <&> (-/- dir -/- "autogen")
 
 -- | @ghc-split@ is a Perl script used by GHC with @-split-objs@ flag. It is
 -- generated in "Rules.Generators.GhcSplit".

@@ -27,7 +27,7 @@ primopsTxt :: Stage -> FilePath
 primopsTxt stage = contextDir (vanillaContext stage compiler) -/- "primops.txt"
 
 platformH :: Stage -> FilePath
-platformH stage = contextDir (vanillaContext stage compiler) -/- "ghc_boot_platform.h"
+platformH stage = buildDir (vanillaContext stage compiler) -/- "ghc_boot_platform.h"
 
 isGeneratedCFile :: FilePath -> Bool
 isGeneratedCFile file = takeBaseName file `elem` ["Evac_thr", "Scav_thr"]
@@ -44,7 +44,7 @@ includesDependencies = fmap (generatedDir -/-)
 ghcPrimDependencies :: Expr [FilePath]
 ghcPrimDependencies = do
     stage <- getStage
-    path  <- expr $ buildPath (vanillaContext stage ghcPrim)
+    path  <- expr $ contextPath (vanillaContext stage ghcPrim)
     return [path -/- "GHC/Prim.hs", path -/- "GHC/PrimopWrappers.hs"]
 
 derivedConstantsDependencies :: [FilePath]
@@ -59,7 +59,7 @@ compilerDependencies = do
     root    <- getBuildRoot
     stage   <- getStage
     intLib  <- expr (integerLibrary =<< flavour)
-    ghcPath <- expr $ buildPath (vanillaContext stage compiler)
+    ghcPath <- expr $ contextPath (vanillaContext stage compiler)
     gmpPath <- expr gmpBuildPath
     rtsPath <- expr rtsBuildPath
     mconcat [ return [root -/- platformH stage]

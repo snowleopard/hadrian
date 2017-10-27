@@ -7,9 +7,10 @@ module Context (
     withHsPackage,
 
     -- * Paths
-    contextDir, buildPath, pkgInplaceConfig, pkgDataFile, pkgSetupConfigFile,
-    pkgHaddockFile, pkgLibraryFile, pkgLibraryFile0, pkgGhciLibraryFile,
-    pkgConfFile, objectPath
+    buildDir, contextPath, getContextPath,
+    contextDir, contextInstallDir, buildPath, pkgInplaceConfig, pkgDataFile,
+    pkgSetupConfigFile, pkgHaddockFile, pkgLibraryFile, pkgLibraryFile0,
+    pkgGhciLibraryFile, pkgConfFile, objectPath, pkgId
     ) where
 
 import GHC.Generics
@@ -73,6 +74,13 @@ contextDir Context {..} = stageString stage -/- pkgPath package
 contextPath :: Context -> Action FilePath
 contextPath context = buildRoot <&> (-/- contextDir context)
 
+getContextPath :: Expr Context b FilePath
+getContextPath = expr . contextPath =<< getContext
+
+-- | The directory in 'buildRoot' containing the object artefacts.
+buildDir :: Context -> FilePath
+buildDir context = contextDir context -/- "build"
+
 -- | Path to the directory containing build artefacts of a given 'Context'.
 buildPath :: Context -> Action FilePath
 buildPath context = buildRoot <&> (-/- (buildDir context))
@@ -86,9 +94,18 @@ pkgId package = case pkgCabalFile package of
     Just file -> pkgIdentifier file
     Nothing   -> return (pkgName package) -- Non-Haskell packages, e.g. rts
 
+-- | The directroy in 'buildRoot' that will hold the final install artifact for a given 'Context'.
+contextInstallDir :: Context -> FilePath
+contextInstallDir Context {..} = stageString stage -/- "lib"
+
+-- | Path to the directory containg the final artifact in a given 'Context'
+installPath :: Context -> Action FilePath
+installPath context = buildRoot <&> (-/- contextInstallDir context)
+
+
 pkgFile :: Context -> String -> String -> Action FilePath
 pkgFile context@Context {..} prefix suffix = do
-    path <- buildPath context
+    path <- installPath context
     pid  <- pkgId package
     return $ path -/- prefix ++ pid ++ suffix
 
