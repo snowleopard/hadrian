@@ -24,8 +24,9 @@ import UserSettings (stage1Only)
 import Target
 import Utilities
 
+
 allStages :: [Stage]
-allStages = [minBound ..]
+allStages = [minBound .. (pred maxBound)]
 
 -- | This rule calls 'need' on all top-level build targets, respecting the
 -- 'Stage1Only' flag.
@@ -71,7 +72,7 @@ packageTargets includeGhciLib stage pkg = do
                   ++ [ haddock | pkg /= rts && docs && stage == Stage1 ]
                   ++ libs ++ more
         else do -- The only target of a program package is the executable.
-            prgContext <- programContext stage pkg
+            prgContext <- programContext (succ stage) pkg
             prgPath    <- programPath prgContext
             return [prgPath]
 
