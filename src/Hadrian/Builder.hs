@@ -93,12 +93,15 @@ askWithResources rs = askWith rs []
 buildWithCmdOptions :: (Builder b, ShakeValue c) => [CmdOption] -> Target c b -> Args c b -> Action ()
 buildWithCmdOptions = buildWith []
 
-doWith :: (Builder b, ShakeValue c) => (b -> BuildInfo -> Action a) -> [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action a
-doWith f rs opts target args = do
+doWith :: (Builder b, ShakeValue c)
+       => (b -> BuildInfo -> Action a)
+       -> (Target c b -> Action ())
+       -> [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action a
+doWith f info rs opts target args = do
     needBuilder (builder target)
     argList <- interpret target args
     trackArgsHash target -- Rerun the rule if the hash of argList has changed.
-    putInfo target
+    info target
     verbose <- interpret target verboseCommand
     let quietlyUnlessVerbose = if verbose then withVerbosity Loud else quietly
     quietlyUnlessVerbose $ do
@@ -110,17 +113,26 @@ doWith f rs opts target args = do
             , buildResources = rs }
 
 buildWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action ()
-buildWith = doWith runBuilderWith
+buildWith = doWith runBuilderWith runInfo
 
 askWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action [String]
-askWith = doWith askBuilderWith
+askWith = doWith askBuilderWith askInfo
 
 -- | Print out information about the command being executed.
-putInfo :: Show b => Target c b -> Action ()
-putInfo t = putProgressInfo =<< renderAction
+runInfo :: Show b => Target c b -> Action ()
+runInfo t = putProgressInfo =<< renderAction
     ("Run " ++ show (builder t)) -- TODO: Bring back contextInfo.
     (digest $ inputs  t)
     (digest $ outputs t)
+  where
+    digest [] = "none"
+    digest [x] = x
+    digest (x:xs) = x ++ " (and " ++ show (length xs) ++ " more)"
+
+askInfo :: Show b => Target c b -> Action ()
+askInfo t = putProgressInfo =<< renderActionNoOutput
+    ("Run " ++ show (builder t)) -- TODO: Bring back contextInfo.
+    (digest $ inputs  t)
   where
     digest [] = "none"
     digest [x] = x
