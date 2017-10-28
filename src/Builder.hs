@@ -60,7 +60,7 @@ instance Hashable GhcCabalMode
 instance NFData   GhcCabalMode
 
 -- | GhcPkg can initialise a package database and register packages in it.
-data GhcPkgMode = Init | Update deriving (Eq, Generic, Show)
+data GhcPkgMode = Init | Update | Clone deriving (Eq, Generic, Show)
 
 instance Binary   GhcPkgMode
 instance Hashable GhcPkgMode
@@ -212,6 +212,11 @@ instance H.Builder Builder where
                     unit $ cmd [Cwd output] ["makeindex"] (input -<.> "idx")
                     unit $ cmd [Cwd output] [path]        buildArgs
                     unit $ cmd [Cwd output] [path]        buildArgs
+
+                GhcPkg Clone _ -> do
+                    -- input is "virtual" here. it's essentially a package name
+                    Stdout pkgDesc <- cmd [path] ["--expand-pkgroot", "--no-user-package-db", "describe", input ]
+                    cmd (Stdin pkgDesc) [path] (buildArgs ++ ["-"])
 
                 _  -> cmd echo [path] buildArgs
 
