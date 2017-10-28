@@ -87,11 +87,6 @@ commonGhcArgs :: Args
 commonGhcArgs = do
     way     <- getWay
     path    <- getBuildPath
-    pkg     <- getPackage
-    when (isLibrary pkg) $ do
-        context <- getContext
-        conf <- expr $ pkgConfFile context
-        expr $ need [conf]
     mconcat [ arg "-hisuf", arg $ hisuf way
             , arg "-osuf" , arg $  osuf way
             , arg "-hcsuf", arg $ hcsuf way

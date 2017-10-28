@@ -22,7 +22,6 @@ compilePackage rs context@Context {..} = do
             path <- contextPath context
             (src, deps) <- lookupDependencies (path -/- ".dependencies") obj
             need $ src : deps
-            when (isLibrary package) $ need =<< return <$> pkgConfFile context
             needLibrary =<< contextDependencies context
             buildWithResources rs $ target context (Ghc CompileHs stage) [src] [obj]
 
