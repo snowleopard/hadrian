@@ -78,6 +78,6 @@ obj2src extension isGenerated context@Context {..} obj
   where
     src    = obj -<.> extension
     suffix = do
-        path <- contextPath context
+        path <- buildPath context
         return $ fromMaybe ("Cannot determine source for " ++ obj)
                $ stripPrefix (path -/- extension) src
