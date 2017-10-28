@@ -14,7 +14,7 @@
 module Hadrian.Builder (
     Builder (..), BuildInfo (..), runBuilder, runBuilderWithCmdOptions,
     build, buildWithResources, buildWithCmdOptions, getBuilderPath,
-    builderEnvironment
+    builderEnvironment, askWithResources
     ) where
 
 import Data.List
@@ -41,6 +41,9 @@ data BuildInfo = BuildInfo {
 class ShakeValue b => Builder b where
     -- | The path to a builder.
     builderPath :: b -> Action FilePath
+
+    -- | Ask the builder for something
+    askBuilderWith :: b -> BuildInfo -> Action [String] -- TODO: this better be `a`, and the builder decides?
 
     -- | Make sure a builder exists and rebuild it if out of date.
     needBuilder :: b -> Action ()
@@ -83,12 +86,15 @@ build = buildWith [] []
 buildWithResources :: (Builder b, ShakeValue c) => [(Resource, Int)] -> Target c b -> Args c b -> Action ()
 buildWithResources rs = buildWith rs []
 
+askWithResources :: (Builder b, ShakeValue c) => [(Resource, Int)] -> Target c b -> Args c b -> Action [String]
+askWithResources rs = askWith rs []
+
 -- | Like 'build' but passes given options to Shake's 'cmd'.
 buildWithCmdOptions :: (Builder b, ShakeValue c) => [CmdOption] -> Target c b -> Args c b -> Action ()
 buildWithCmdOptions = buildWith []
 
-buildWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action ()
-buildWith rs opts target args = do
+doWith :: (Builder b, ShakeValue c) => (b -> BuildInfo -> Action a) -> [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action a
+doWith f rs opts target args = do
     needBuilder (builder target)
     argList <- interpret target args
     trackArgsHash target -- Rerun the rule if the hash of argList has changed.
@@ -96,12 +102,18 @@ buildWith rs opts target args = do
     verbose <- interpret target verboseCommand
     let quietlyUnlessVerbose = if verbose then withVerbosity Loud else quietly
     quietlyUnlessVerbose $ do
-        runBuilderWith (builder target) $ BuildInfo
+        f (builder target) $ BuildInfo
             { buildArgs      = argList
             , buildInputs    = inputs target
             , buildOutputs   = outputs target
             , buildOptions   = opts
             , buildResources = rs }
+
+buildWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action ()
+buildWith = doWith runBuilderWith
+
+askWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action [String]
+askWith = doWith askBuilderWith
 
 -- | Print out information about the command being executed.
 putInfo :: Show b => Target c b -> Action ()

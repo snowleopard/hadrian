@@ -60,7 +60,7 @@ instance Hashable GhcCabalMode
 instance NFData   GhcCabalMode
 
 -- | GhcPkg can initialise a package database and register packages in it.
-data GhcPkgMode = Init | Update | Clone deriving (Eq, Generic, Show)
+data GhcPkgMode = Init | Update | Clone | Dependencies deriving (Eq, Generic, Show)
 
 instance Binary   GhcPkgMode
 instance Hashable GhcPkgMode
@@ -164,6 +164,18 @@ instance H.Builder Builder where
             Hsc2Hs stage  -> templateHscPath stage >>= \tmpl -> need [path, tmpl]
             Make dir      -> need [dir -/- "Makefile"]
             _             -> when (isJust $ builderProvenance builder) $ need [path]
+
+    askBuilderWith :: Builder -> BuildInfo -> Action [String]
+    askBuilderWith builder BuildInfo {..} = case builder of
+        GhcPkg Dependencies _ -> do
+            let input  = fromSingleton msgIn buildInputs
+                msgIn  = "[askBuilder] Exactly one input file expected."
+            needBuilder builder
+            path <- H.builderPath builder
+            need [path]
+            Stdout stdout <- cmd [path] ["--no-user-package-db", "field", input, "depends"]
+            -- this is a hack.
+            return $ drop 1 $ concatMap words (lines stdout)
 
     runBuilderWith :: Builder -> BuildInfo -> Action ()
     runBuilderWith builder BuildInfo {..} = do
