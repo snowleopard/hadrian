@@ -87,12 +87,22 @@ commonGhcArgs :: Args
 commonGhcArgs = do
     way     <- getWay
     path    <- getBuildPath
+    pkg     <- getPackage
+    ghcVersion <- expr $ ghcVersionH
     mconcat [ arg "-hisuf", arg $ hisuf way
             , arg "-osuf" , arg $  osuf way
             , arg "-hcsuf", arg $ hcsuf way
             , wayGhcArgs
             , packageGhcArgs
             , includeGhcArgs
+            -- when compiling the rts for stage1 or stage2
+            -- we do not have the rts in the package db at
+            -- the time of builind it.  As such we need to
+            -- explicity supply the path to the ghc-version
+            -- file, to prevent ghc from trying to open the
+            -- rts package from the package db, and failing
+            -- over while doing so.
+            , (pkg == rts) ? arg ("-ghc-version=" ++ ghcVersion)
             , map ("-optc" ++) <$> getStagedSettingList ConfCcArgs
             , map ("-optP" ++) <$> getStagedSettingList ConfCppArgs
             , map ("-optP" ++) <$> getPkgDataList CppArgs
