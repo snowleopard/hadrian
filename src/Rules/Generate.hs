@@ -65,7 +65,7 @@ ghcPrimDependencies :: Expr [FilePath]
 ghcPrimDependencies = do
     stage <- getStage
     path  <- expr $ buildPath (vanillaContext stage ghcPrim)
-    return $ traceShowId [path -/- "GHC/Prim.hs", path -/- "GHC/PrimopWrappers.hs"]
+    return [path -/- "GHC/Prim.hs", path -/- "GHC/PrimopWrappers.hs"]
 
 derivedConstantsDependencies :: [FilePath]
 derivedConstantsDependencies = fmap (generatedDir -/-)
