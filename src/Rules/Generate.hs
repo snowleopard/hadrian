@@ -136,7 +136,10 @@ generatePackageCode context@(Context stage pkg _) =
             whenM (doesFileExist boot) . copyFile boot $ file -<.> "hs-boot"
 
         priority 2.0 $ do
-            when (pkg == compiler) $ "//" -/- dir -/- "Config.hs" %> go generateConfigHs
+            when (pkg == compiler) $ do "//" -/- dir -/- "Config.hs" %> go generateConfigHs
+                                        "//" ++ dir -/- "*.hs-incl" %> genPrimopCode context
+            when (pkg == ghcPrim) $ do ("//" ++ dir -/- "GHC/Prim.hs") %> genPrimopCode context
+                                       ("//" ++ dir -/- "GHC/PrimopWrappers.hs") %> genPrimopCode context
             when (pkg == ghcPkg) $ "//" -/- dir -/- "Version.hs" %> go generateVersionHs
 
         -- TODO: needing platformH is ugly and fragile
@@ -153,18 +156,14 @@ generatePackageCode context@(Context stage pkg _) =
               "//compiler/ghc_boot_platform.h" %> go generateGhcBootPlatformH
             "//" ++ platformH stage %> go generateGhcBootPlatformH
 
-        -- TODO: why different folders for generated files?
-        when (pkg == ghcPrim) $ do
-          priority 2.0 $ fmap (("//" ++ dir) -/-)
-            [ "GHC/Prim.hs"
-            , "GHC/PrimopWrappers.hs"
-            , "*.hs-incl" ] |%> \file -> do
-                root <- buildRoot
-                need [root -/- primopsTxt stage]
-                build $ target context GenPrimopCode [root -/- primopsTxt stage] [file]
-
         when (pkg == rts) $ "//" ++ dir -/- "cmm/AutoApply.cmm" %> \file ->
             build $ target context GenApply [] [file]
+
+genPrimopCode :: Context -> FilePath -> Action ()
+genPrimopCode context@(Context stage _pkg _) file = do
+    root <- buildRoot
+    need [root -/- primopsTxt stage]
+    build $ target context GenPrimopCode [root -/- primopsTxt stage] [file]
 
 copyRules :: Rules ()
 copyRules = do
