@@ -22,7 +22,11 @@ parseCabalName = readPToMaybe parse
 -- boot packages db from the installed compiler.
 copyBootPackages :: [(Resource, Int)] -> Context -> Rules ()
 copyBootPackages rs context@Context {..} = do
-    "//" ++ stage0PackageDbDir -/- "*.conf" %> copyConf rs context
+    "//" ++ stage0PackageDbDir -/- "*.conf" %> \conf -> do
+      settings <- libPath context <&> (-/- "settings")
+      platformConstants <- libPath context <&> (-/- "platformConstants")
+      need [settings, platformConstants]
+      copyConf rs context conf
 
 -- TODO: Simplify.
 -- | Build rules for registering packages and initialising package databases
