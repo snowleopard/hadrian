@@ -107,7 +107,11 @@ buildConf rs context@Context {..} conf = do
 
     depPkgIds <- cabalDependencies context
     confIn <- pkgInplaceConfig context
-    need [confIn]
+    -- setup-config, triggers `ghc-cabal configure`
+    -- everything of a package should depend on that
+    -- in the first place.
+    setupConfig <- (contextPath context) <&> (-/- "setup-config")
+    need [confIn, setupConfig]
 
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
 
