@@ -129,7 +129,8 @@ generatePackageCode context@(Context stage pkg _) =
             "//" ++ platformH stage %> go generateGhcBootPlatformH
 
         -- TODO: why different folders for generated files?
-        priority 2.0 $ fmap (("//" ++ dir) -/-)
+        when (pkg == ghcPrim) $ do
+          priority 2.0 $ fmap (("//" ++ dir) -/-)
             [ "GHC/Prim.hs"
             , "GHC/PrimopWrappers.hs"
             , "*.hs-incl" ] |%> \file -> do
