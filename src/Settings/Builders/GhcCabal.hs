@@ -20,6 +20,7 @@ ghcCabalBuilderArgs = mconcat
             , arg $ top -/- path
             , withStaged $ Ghc CompileHs
             , withStaged (GhcPkg Update)
+            , withBuilderArgs (GhcPkg Update stage)
             , bootPackageDatabaseArgs
             , libraryArgs
             , configureArgs
@@ -140,7 +141,6 @@ with b = do
         top  <- expr topDirectory
         expr $ needBuilder b
         arg $ withBuilderKey b ++ unifyPath (top </> path)
-    withBuilderArgs b
 
 withStaged :: (Stage -> Builder) -> Args
 withStaged sb = with . sb =<< getStage
