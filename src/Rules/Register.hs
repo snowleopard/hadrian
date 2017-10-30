@@ -75,11 +75,15 @@ copyConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 copyConf rs context@Context {..} conf = do
     let Just pkgName | takeBaseName conf == "rts" = Just "rts"
                      | otherwise = fst <$> parseCabalName (takeBaseName conf)
-    depPkgIds <- askWithResources rs $
+    depPkgIds <- fmap stdOutToPkgIds . askWithResources rs $
       target context (GhcPkg Dependencies stage) [pkgName] []
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
     buildWithResources rs $ do
       target context (GhcPkg Clone stage) [pkgName] [conf]
+
+  where
+    stdOutToPkgIds :: String -> [String]
+    stdOutToPkgIds = drop 1 . concatMap words . lines
 
 archive :: Way -> String -> String
 archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")

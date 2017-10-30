@@ -56,7 +56,7 @@ data SourceArgs = SourceArgs
 sourceArgs :: SourceArgs -> Args
 sourceArgs SourceArgs {..} = builder Ghc ? mconcat
     [ hsDefault
-    , getPkgDataList HsArgs
+    , (not <$> builder (Ghc Settings)) ? getPkgDataList HsArgs
     , libraryPackage   ? hsLibrary
     , package compiler ? hsCompiler
     , package ghc      ? hsGhc ]

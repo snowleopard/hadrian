@@ -14,7 +14,7 @@
 module Hadrian.Builder (
     Builder (..), BuildInfo (..), runBuilder, runBuilderWithCmdOptions,
     build, buildWithResources, buildWithCmdOptions, getBuilderPath,
-    builderEnvironment, askWithResources
+    builderEnvironment, ask, askWithResources
     ) where
 
 import Data.List
@@ -43,7 +43,7 @@ class ShakeValue b => Builder b where
     builderPath :: b -> Action FilePath
 
     -- | Ask the builder for something
-    askBuilderWith :: b -> BuildInfo -> Action [String] -- TODO: this better be `a`, and the builder decides?
+    askBuilderWith :: b -> BuildInfo -> Action String
 
     -- | Make sure a builder exists and rebuild it if out of date.
     needBuilder :: b -> Action ()
@@ -82,11 +82,14 @@ runBuilderWithCmdOptions opts builder args inputs outputs =
 build :: (Builder b, ShakeValue c) => Target c b -> Args c b -> Action ()
 build = buildWith [] []
 
+ask :: (Builder b, ShakeValue c) => Target c b -> Args c b -> Action String
+ask = askWith [] []
+
 -- | Like 'build' but acquires necessary resources.
 buildWithResources :: (Builder b, ShakeValue c) => [(Resource, Int)] -> Target c b -> Args c b -> Action ()
 buildWithResources rs = buildWith rs []
 
-askWithResources :: (Builder b, ShakeValue c) => [(Resource, Int)] -> Target c b -> Args c b -> Action [String]
+askWithResources :: (Builder b, ShakeValue c) => [(Resource, Int)] -> Target c b -> Args c b -> Action String
 askWithResources rs = askWith rs []
 
 -- | Like 'build' but passes given options to Shake's 'cmd'.
@@ -115,7 +118,7 @@ doWith f info rs opts target args = do
 buildWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action ()
 buildWith = doWith runBuilderWith runInfo
 
-askWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action [String]
+askWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action String
 askWith = doWith askBuilderWith askInfo
 
 -- | Print out information about the command being executed.

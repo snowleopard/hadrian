@@ -44,7 +44,7 @@ instance NFData   CcMode
 -- * Compile a C source file.
 -- * Extract source dependencies by passing @-M@ command line argument.
 -- * Link object files & static libraries into an executable.
-data GhcMode = CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
+data GhcMode = Settings | CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
     deriving (Eq, Generic, Show)
 
 instance Binary   GhcMode
@@ -165,8 +165,23 @@ instance H.Builder Builder where
             Make dir      -> need [dir -/- "Makefile"]
             _             -> when (isJust $ builderProvenance builder) $ need [path]
 
-    askBuilderWith :: Builder -> BuildInfo -> Action [String]
+    -- TODO: We would need to encode that asking a builder,
+    --       depending on the "ask" mode, has different return types.
+    --       For now it's the stdout string.
+    --
+    --       This however means that the string -> datatype logic
+    --       needs to reside at the callsite.
+    askBuilderWith :: Builder -> BuildInfo -> Action String
     askBuilderWith builder BuildInfo {..} = case builder of
+        Ghc Settings _ -> do
+            let input  = fromSingleton msgIn buildInputs
+                msgIn  = "[askBuilder] Exactly one input file expected."
+            needBuilder builder
+            path <- H.builderPath builder
+            need [path]
+            Stdout stdout <- cmd [path] ["--info"]
+            return stdout
+
         GhcPkg Dependencies _ -> do
             let input  = fromSingleton msgIn buildInputs
                 msgIn  = "[askBuilder] Exactly one input file expected."
@@ -174,8 +189,7 @@ instance H.Builder Builder where
             path <- H.builderPath builder
             need [path]
             Stdout stdout <- cmd [path] ["--no-user-package-db", "field", input, "depends"]
-            -- this is a hack.
-            return $ drop 1 $ concatMap words (lines stdout)
+            return stdout
 
     runBuilderWith :: Builder -> BuildInfo -> Action ()
     runBuilderWith builder BuildInfo {..} = do

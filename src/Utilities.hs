@@ -1,7 +1,7 @@
 module Utilities (
     build, buildWithResources, buildWithCmdOptions, runBuilder, runBuilderWith,
     needLibrary, contextDependencies, stage1Dependencies, libraryTargets,
-    topsortPackages, askWithResources, cabalDependencies
+    topsortPackages, ask, askWithResources, cabalDependencies
     ) where
 
 import qualified Hadrian.Builder as H
@@ -24,8 +24,11 @@ buildWithResources rs target = H.buildWithResources rs target getArgs
 buildWithCmdOptions :: [CmdOption] -> Target -> Action ()
 buildWithCmdOptions opts target = H.buildWithCmdOptions opts target getArgs
 
-askWithResources :: [(Resource, Int)] -> Target -> Action [String]
+askWithResources :: [(Resource, Int)] -> Target -> Action String
 askWithResources rs target = H.askWithResources rs target getArgs
+
+ask :: Target -> Action String
+ask target = H.ask target getArgs
 
 -- | Given a 'Context' this 'Action' look up the package dependencies and wrap
 -- the results in appropriate contexts. The only subtlety here is that we never
