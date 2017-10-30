@@ -58,7 +58,6 @@ stage1Dependencies =
 -- 'packageTargets' for the explanation of the @includeGhciLib@ parameter.
 libraryTargets :: Bool -> Context -> Action [FilePath]
 libraryTargets includeGhciLib context = do
-    confFile <- pkgConfFile        context
     libFile  <- pkgLibraryFile     context
     lib0File <- pkgLibraryFile0    context
     lib0     <- buildDll0          context
@@ -66,12 +65,13 @@ libraryTargets includeGhciLib context = do
     ghciFlag <- if includeGhciLib
                 then interpretInContext context $ getPkgData BuildGhciLib
                 else return "NO"
-    let ghci = ghciFlag == "YES" && (stage context == Stage1 || stage1Only)
-    return $ [ confFile, libFile ] ++ [ lib0File | lib0 ] ++ [ ghciLib | ghci ]
+    let ghci = ghciFlag == "YES"
+    liftIO $ putStrLn $ "GHCI: " ++ show ghciFlag
+    return $ [ libFile ] ++ [ lib0File | lib0 ] ++ [ ghciLib | ghci ]
 
 -- | Coarse-grain 'need': make sure all given libraries are fully built.
 needLibrary :: [Context] -> Action ()
-needLibrary cs = need =<< concatMapM (libraryTargets True) cs
+needLibrary cs = need =<< mapM pkgConfFile cs
 
 -- HACK (izgzhen), see https://github.com/snowleopard/hadrian/issues/344.
 -- | Topological sort of packages according to their dependencies.
