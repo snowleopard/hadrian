@@ -99,6 +99,8 @@ packageRules = do
     forM_ (filter isProgram knownPackages) $
         Rules.Program.buildProgram readPackageDb
 
+    Rules.Register.copyBootPackages writePackageDb (Context Stage0 base vanilla) -- base is only a dummy here.
+
     forM_ vanillaContexts $ mconcat
         [ Rules.PackageData.buildPackageData
         , Rules.Dependencies.buildPackageDependencies readPackageDb
