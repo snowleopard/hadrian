@@ -96,7 +96,8 @@ configureArgs = do
         , conf "--with-gmp-libraries"     $ arg =<< getSetting GmpLibDir
         , conf "--with-curses-libraries"  $ arg =<< getSetting CursesLibDir
         , crossCompiling ? (conf "--host" $ arg =<< getSetting TargetPlatformFull)
-        , conf "--with-cc" $ arg =<< getBuilderPath . (Cc CompileC) =<< getStage ]
+        , conf "--with-cc" $ arg =<< getBuilderPath . (Cc CompileC) =<< getStage
+        , notStage0 ? (arg =<< ("--ghc-option=-ghc-version=" ++) <$> expr ((-/-) <$> topDirectory <*> ghcVersionH))]
 
 bootPackageConstraints :: Args
 bootPackageConstraints = stage0 ? do
