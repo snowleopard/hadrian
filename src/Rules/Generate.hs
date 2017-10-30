@@ -172,8 +172,12 @@ copyRules = do
       (prefix -/- "ghc-usage.txt")     <~ return "driver"
       (prefix -/- "ghci-usage.txt"  )  <~ return "driver"
       (prefix -/- "llvm-targets")      <~ return "."
-      (prefix -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
-      (prefix -/- "settings")          <~ return "."
+      if stage == Stage0
+        then (prefix -/- "platformConstants") <~ askLibDir stage
+        else (prefix -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
+      if stage == Stage0
+        then (prefix -/- "settings")   <~ askLibDir stage
+        else (prefix -/- "settings")   <~ return "."
       (prefix -/- "template-hsc.h")    <~ return (pkgPath hsc2hs)
     "//c/sm/Evac_thr.c" %> copyFile (pkgPath rts -/- "sm/Evac.c")
     "//c/sm/Scav_thr.c" %> copyFile (pkgPath rts -/- "sm/Scav.c")
@@ -181,6 +185,12 @@ copyRules = do
     pattern <~ mdir = pattern %> \file -> do
         dir <- mdir
         copyFile (dir -/- takeFileName file) file
+    askLibDir :: Stage -> Action FilePath
+    askLibDir stage = do
+      info <- read <$> ask (target (vanillaContext stage ghc) (Ghc Settings stage) [] [])
+      case lookup "LibDir" info of
+        Just libdir -> return libdir
+        Nothing     -> error $ "unable to get libdir from ghc"
 
 generateRules :: Rules ()
 generateRules = do
