@@ -96,7 +96,7 @@ hsObjects context = do
 -- | Generated module files live in the 'Context' specific build directory.
 generatedFile :: Context -> String -> Action FilePath
 generatedFile context moduleName = do
-    path <- contextPath context
+    path <- buildPath context
     return $ path -/- moduleSource moduleName
 
 moduleSource :: String -> FilePath

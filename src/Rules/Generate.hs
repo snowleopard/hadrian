@@ -24,8 +24,7 @@ primopsSource :: FilePath
 primopsSource = "compiler/prelude/primops.txt.pp"
 
 primopsTxt :: Stage -> FilePath
-primopsTxt stage = contextDir (vanillaContext stage compiler) -/- "primops.txt"
-
+primopsTxt stage = buildDir (vanillaContext stage compiler) -/- "primops.txt"
 platformH :: Stage -> FilePath
 platformH stage = buildDir (vanillaContext stage compiler) -/- "ghc_boot_platform.h"
 
@@ -44,8 +43,8 @@ includesDependencies = fmap (generatedDir -/-)
 ghcPrimDependencies :: Expr [FilePath]
 ghcPrimDependencies = do
     stage <- getStage
-    path  <- expr $ contextPath (vanillaContext stage ghcPrim)
-    return [path -/- "GHC/Prim.hs", path -/- "GHC/PrimopWrappers.hs"]
+    path  <- expr $ buildPath (vanillaContext stage ghcPrim)
+    return $ traceShowId [path -/- "GHC/Prim.hs", path -/- "GHC/PrimopWrappers.hs"]
 
 derivedConstantsDependencies :: [FilePath]
 derivedConstantsDependencies = fmap (generatedDir -/-)
@@ -59,7 +58,7 @@ compilerDependencies = do
     root    <- getBuildRoot
     stage   <- getStage
     intLib  <- expr (integerLibrary =<< flavour)
-    ghcPath <- expr $ contextPath (vanillaContext stage compiler)
+    ghcPath <- expr $ buildPath (vanillaContext stage compiler)
     gmpPath <- expr gmpBuildPath
     rtsPath <- expr rtsBuildPath
     mconcat [ return [root -/- platformH stage]
@@ -103,7 +102,7 @@ generate file context expr = do
 
 generatePackageCode :: Context -> Rules ()
 generatePackageCode context@(Context stage pkg _) =
-    let dir         = contextDir context
+    let dir         = buildDir context
         generated f = ("//" ++ dir ++ "//*.hs") ?== f && not ("//autogen/*" ?== f)
         go gen file = generate file context gen
     in do
