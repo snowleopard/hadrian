@@ -25,6 +25,27 @@ primopsSource = "compiler/prelude/primops.txt.pp"
 
 primopsTxt :: Stage -> FilePath
 primopsTxt stage = buildDir (vanillaContext stage compiler) -/- "primops.txt"
+
+-- TODO: FIXME: Add 'headers' to the ghc.cabal's include-dirs
+-- and palce ghc_boot_platform.h and HsVersions.h into 'headers'.
+-- But "HsVersion.h" lives in compiler/ right now
+--
+-- Why do we need to hardcode the path into the source?
+-- The reason is that ghc-cabal, is pointed to `compiler`, and reads
+-- the ghc.cabal file there.  It then tries to resolve files relative
+-- to the include-dirs, which are again relative to `compiler`, not
+-- the _build/stageN/compiler directory.
+--
+-- However, ghc-cabal, looks for interfaces relative to the build directory.
+-- As such I would argue, it should also look for headers and others relative
+-- to the build directory. This might incure the need to copy over the HsVersion.h
+-- into the build directory.
+--
+-- TODO: Also ensure that the includes in the source files match. E.g. provide
+--       the relevant -I flags to the invocation.
+--
+-- NOTE: We *hardcode* the inplace path, at the same point where we generate the
+--       staged ones.
 platformH :: Stage -> FilePath
 platformH stage = buildDir (vanillaContext stage compiler) -/- "ghc_boot_platform.h"
 
@@ -126,6 +147,10 @@ generatePackageCode context@(Context stage pkg _) =
                     ++ fmap (root -/-) includesDependencies
                 build $ target context HsCpp [primopsSource] [file]
 
+            -- only generate this once! Until we have the include logic fixed.
+            -- See the note on `platformH`
+            when (stage == Stage0) $ do
+              "//compiler/ghc_boot_platform.h" %> go generateGhcBootPlatformH
             "//" ++ platformH stage %> go generateGhcBootPlatformH
 
         -- TODO: why different folders for generated files?
