@@ -245,7 +245,10 @@ programPath context@Context {..} = do
 -- we cannot run @ghc-cabal@ on them, e.g. because the latter hasn't been built
 -- yet (this is the case with the 'ghcCabal' package in 'Stage0').
 nonCabalContext :: Context -> Bool
-nonCabalContext Context {..} = (package `elem` [hp2ps, rts, touchy, unlit])
+nonCabalContext Context {..} = (package `elem` [ hp2ps
+                                               , touchy
+                                               , unlit
+                                               ])
     || package == ghcCabal && stage == Stage0
 
 -- | Some program packages should not be linked with Haskell main function.

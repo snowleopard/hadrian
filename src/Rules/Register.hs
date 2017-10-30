@@ -7,6 +7,8 @@ import GHC
 import Target
 import Utilities
 import Oracles.Setting
+import Hadrian.Expression
+import Settings
 
 import Distribution.ParseUtils
 import qualified Distribution.Compat.ReadP as Parse
@@ -117,10 +119,12 @@ buildConf rs context@Context {..} conf = do
 
     -- ghc-cabal copy libraries/terminfo $PWD/_build/stage0/libraries/terminfo : $PWD/_build/stage1 "" "lib" "share" "v"
     -- ghc-cabal register libraries/terminfo $PWD/_build/stage0/libraries/terminfo ghc ghc-pkg $PWD/_build/stage1/lib $PWD/_build_stage1 "" "lib" "share" YES
-    _a <- buildPath context <&> (-/- archive way pkgId)
-    _o <- buildPath context <&> (-/- pkgObject way pkgId)
 
-    need [_a, _o]
+    ways <- interpretInContext context (getLibraryWays <> if package == rts then getRtsWays else mempty)
+
+    liftIO . putStrLn . show =<< concatMapM (libraryTargets True) [ context { way = w } | w <- ways ]
+
+    need =<< concatMapM (libraryTargets True) [ context { way = w } | w <- ways ]
 
     -- might need some package-db resource to limit read/write,
     -- see packageRules
