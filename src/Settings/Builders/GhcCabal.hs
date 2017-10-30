@@ -37,10 +37,17 @@ ghcCabalBuilderArgs = mconcat
               , getInputs
               ]
   , builder (GhcCabal Reg) ? do
+      top       <- expr topDirectory
+      path      <- getContextPath
+      stage     <- getStage
       mconcat [ arg "register"
+              , arg =<< pkgPath <$> getPackage
+              , arg $ top -/- path
+              , stagedBuilderPath (Ghc CompileHs)
+              , stagedBuilderPath (GhcPkg Update)
               , getInputs
-              ]
-  ]
+              ]]
+
 
 -- TODO: Isn't vanilla always built? If yes, some conditions are redundant.
 -- TODO: Need compiler_stage1_CONFIGURE_OPTS += --disable-library-for-ghci?
@@ -124,6 +131,7 @@ withBuilderArgs b = case b of
       notStage0 ? arg ("--ghc-pkg-option=--global-package-db=" ++ top -/- pkgDb)
     _          -> return [] -- no arguments
 
+
 -- Expression 'with Alex' appends "--with-alex=/path/to/alex" and needs Alex.
 with :: Builder -> Args
 with b = do
@@ -137,3 +145,12 @@ with b = do
 withStaged :: (Stage -> Builder) -> Args
 withStaged sb = with . sb =<< getStage
 
+stagedBuilderPath :: (Stage -> Builder) -> Args
+stagedBuilderPath sb = builderPath . sb =<< getStage
+  where builderPath :: Builder -> Args
+        builderPath b = do
+          path <- getBuilderPath b
+          if (null path) then mempty else do
+            top <- expr topDirectory
+            expr $ needBuilder b
+            arg $ unifyPath (top </> path)

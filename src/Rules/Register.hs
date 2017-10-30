@@ -125,11 +125,8 @@ buildConf rs context@Context {..} conf = do
                                                  , "share" -- <docdir>
                                                  , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
                                                  ] []
-    build $ target context (GhcCabal Reg stage)  [ (pkgPath package)
-                                                 , ctxPath
-                                                 , "ghc"     -- TODO: path to staged ghc.
-                                                 , "ghc-pkg" -- TODO: path to staged ghc-pkg.
-                                                 , libPath
+    build $ target context (GhcCabal Reg stage)  [ -- <directory> <distdir> <ghc> <ghc-pkg> are provided by the ghcCabalBuilderArgs
+                                                   libPath
                                                  , stgPath
                                                  , ""
                                                  , libPath
