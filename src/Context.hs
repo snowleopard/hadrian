@@ -116,9 +116,9 @@ libPath context = buildRoot <&> (-/- libDir context)
 
 pkgFile :: Context -> String -> String -> Action FilePath
 pkgFile context@Context {..} prefix suffix = do
-    path <- libPath context
+    path <- buildPath context
     pid  <- pkgId package
-    return $ path -/- pid -/- prefix ++ pid ++ suffix
+    return $ path -/- prefix ++ pid ++ suffix
 
 -- | Path to inplace package configuration file of a given 'Context'.
 pkgInplaceConfig :: Context -> Action FilePath
