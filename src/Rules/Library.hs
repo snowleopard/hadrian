@@ -44,39 +44,8 @@ library context@Context{..} = do
       Nothing   -> return (pkgName package)
 
     "//" ++ libDir context -/- pkgId -/- archive way pkgId %> \a -> do
-      -- ghc-cabal copy libraries/terminfo $PWD/_build/stage0/libraries/terminfo : $PWD/_build/stage1 "" "lib" "share" "v"
-      -- ghc-cabal register libraries/terminfo $PWD/_build/stage0/libraries/terminfo ghc ghc-pkg $PWD/_build/stage1/lib $PWD/_build_stage1 "" "lib" "share" YES
-      _a <- buildPath context <&> (-/- archive way pkgId)
-      _o <- buildPath context <&> (-/- pkgObject way pkgId)
-
-      need [_a, _o]
-
-      -- might need some package-db resource to limit read/write,
-      -- see packageRules
-      top     <- topDirectory
-      ctxPath <- (top -/-) <$> contextPath context
-      stgPath <- (top -/-) <$> stagePath context
-      libPath <- (top -/-) <$> libPath context
-      build $ target context (GhcCabal Copy stage) [ "libraries" -/- (pkgName package) -- <directory>
-                                                   , ctxPath -- <distdir>
-                                                   , ":" -- no strip. ':' special marker
-                                                   , stgPath -- <destdir>
-                                                   , ""      -- <prefix>
-                                                   , "lib"   -- <libdir>
-                                                   , "share" -- <docdir>
-                                                   , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
-                                                   ] []
-      build $ target context (GhcCabal Reg stage)  [ "libraries" -/- (pkgName package)
-                                                   , ctxPath
-                                                   , "ghc"     -- TODO: path to staged ghc.
-                                                   , "ghc-pkg" -- TODO: path to staged ghc-pkg.
-                                                   , libPath
-                                                   , stgPath
-                                                   , ""
-                                                   , "lib"
-                                                   , "share"
-                                                   , "YES"   -- <relocatable>
-                                                   ] [a]
+        need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) [pkgId]
+        return ()
 
 libraryObjects :: Context -> Action [FilePath]
 libraryObjects context@Context{..} = do

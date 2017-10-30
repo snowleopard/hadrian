@@ -1,7 +1,7 @@
 module Utilities (
     build, buildWithResources, buildWithCmdOptions, runBuilder, runBuilderWith,
     needLibrary, contextDependencies, stage1Dependencies, libraryTargets,
-    topsortPackages, askWithResources
+    topsortPackages, askWithResources, cabalDependencies
     ) where
 
 import qualified Hadrian.Builder as H
@@ -42,6 +42,9 @@ contextDependencies Context {..} = case pkgCabalFile package of
         deps <- pkgDependencies cabalFile
         pkgs <- sort <$> stagePackages depStage
         return . map depContext $ intersectOrd (compare . pkgName) pkgs deps
+
+cabalDependencies :: Context -> Action [String]
+cabalDependencies ctx = interpretInContext ctx $ getPkgDataList DepIds
 
 -- | Lookup dependencies of a 'Package' in the vanilla Stage1 context.
 stage1Dependencies :: Package -> Action [Package]
