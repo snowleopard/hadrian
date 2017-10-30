@@ -144,7 +144,7 @@ builderProvenance = \case
     GhcPkg _ _       -> context Stage1 ghcPkg
     Haddock _        -> context Stage2 haddock
     Hpc              -> context Stage1 hpcBin
-    Hsc2Hs stage     -> context (succ stage) hsc2hs
+    Hsc2Hs stage     -> context Stage1 hsc2hs
     Unlit            -> context Stage1 unlit
     _                -> Nothing
   where
