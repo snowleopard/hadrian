@@ -170,9 +170,6 @@ rtsPackageArgs = package rts ? do
             , (not <$> flag GccIsClang) ?
               inputs ["//Compact.c"] ? arg "-finline-limit=2500"
 
-            , inputs ["//Evac_thr.c", "//Scav_thr.c"] ?
-              pure ["-DPARALLEL_GC", "-Irts/sm"]
-
             , input "//StgCRun.c" ? windowsHost ? arg "-Wno-return-local-addr"
             , input "//RetainerProfile.c" ? flag GccIsClang ?
               arg "-Wno-incompatible-pointer-types"
