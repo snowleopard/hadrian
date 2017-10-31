@@ -14,11 +14,13 @@ compilePackage rs context@Context {..} = do
     let dir             = "//" ++ buildDir context
         nonHs extension = dir -/- extension <//> "*" <.> osuf way
         compile compiler obj2src obj = do
+            -- need =<< interpretInContext context generatedDependencies
             src <- obj2src context obj
             need [src]
             needDependencies context src $ obj <.> "d"
             buildWithResources rs $ target context (compiler stage) [src] [obj]
         compileHs = \[obj, _hi] -> do
+            -- need =<< interpretInContext context generatedDependencies
             path <- contextPath context
             (src, deps) <- lookupDependencies (path -/- ".dependencies") obj
             need $ src : deps
@@ -26,7 +28,7 @@ compilePackage rs context@Context {..} = do
             buildWithResources rs $ target context (Ghc CompileHs stage) [src] [obj]
 
     priority 2.0 $ do
-        nonHs "c"   %> compile (Ghc CompileCWithGhc) (obj2src "c"   isGeneratedCFile  )
+        nonHs "c"   %> compile (Ghc CompileCWithGhc) (obj2src "c"   $ const False     )
         nonHs "cmm" %> compile (Ghc CompileHs)       (obj2src "cmm" isGeneratedCmmFile)
         nonHs "s"   %> compile (Ghc CompileHs)       (obj2src "S"   $ const False     )
 
