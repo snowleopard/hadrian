@@ -66,7 +66,6 @@ libraryTargets includeGhciLib context = do
                 then interpretInContext context $ getPkgData BuildGhciLib
                 else return "NO"
     let ghci = ghciFlag == "YES"
-    liftIO $ putStrLn $ "GHCI: " ++ show ghciFlag
     return $ [ libFile ] ++ [ lib0File | lib0 ] ++ [ ghciLib | ghci ]
 
 -- | Coarse-grain 'need': make sure all given libraries are fully built.

@@ -121,9 +121,6 @@ buildConf rs context@Context {..} conf = do
     -- ghc-cabal register libraries/terminfo $PWD/_build/stage0/libraries/terminfo ghc ghc-pkg $PWD/_build/stage1/lib $PWD/_build_stage1 "" "lib" "share" YES
 
     ways <- interpretInContext context (getLibraryWays <> if package == rts then getRtsWays else mempty)
-
-    liftIO . putStrLn . show =<< concatMapM (libraryTargets True) [ context { way = w } | w <- ways ]
-
     need =<< concatMapM (libraryTargets True) [ context { way = w } | w <- ways ]
 
     -- might need some package-db resource to limit read/write,
