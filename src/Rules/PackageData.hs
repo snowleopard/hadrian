@@ -80,21 +80,23 @@ packageCSources pkg
 
 packageAsmSources :: Package -> Action [FilePath]
 packageAsmSources pkg
-    | pkg /= rts = return []
-    | otherwise  = do
+    | pkg == rts = do
         buildAdjustor   <- anyTargetArch ["i386", "powerpc", "powerpc64"]
         buildStgCRunAsm <- anyTargetArch ["powerpc64le"]
         return $ [ "AdjustorAsm.S" | buildAdjustor   ]
               ++ [ "StgCRunAsm.S"  | buildStgCRunAsm ]
+    | otherwise  = return []
 
 packageCmmSources :: Package -> Action [FilePath]
 packageCmmSources pkg
-    | pkg /= rts = return []
-    | otherwise  = do
+    | pkg == rts  = do
         rtsPath <- rtsBuildPath
         sources <- getDirectoryFiles (pkgPath pkg) ["*.cmm"]
         return $ sources ++ [ rtsPath -/- "cmm/AutoApply.cmm" ]
-
+    | pkg == base = do
+        sources <- getDirectoryFiles (pkgPath pkg) ["cbits/*.cmm"]
+        return sources
+    | otherwise   = return []
 -- Prepare a given 'packaga-data.mk' file for parsing by readConfigFile:
 -- 1) Drop lines containing '$'. For example, get rid of
 -- @libraries/Win32_dist-install_CMM_SRCS  := $(addprefix cbits/,$(notdir ...@
@@ -104,12 +106,17 @@ packageCmmSources pkg
 -- is replaced by @VERSION = 1.4.0.0@.
 -- Reason: Shake's built-in makefile parser doesn't recognise slashes
 -- TODO (izgzhen): should fix DEP_LIB_REL_DIRS_SEARCHPATH
+--
+-- Note: we also inject the cmm and asm sources here, as there is no way to
+--       specify them with cabal yet.
 postProcessPackageData :: Context -> FilePath -> Action ()
 postProcessPackageData context@Context {..} file = do
     top     <- topDirectory
-    cmmSrcs <- getDirectoryFiles (pkgPath package) ["cbits/*.cmm"]
+    cmmSrcs <- packageCmmSources package
+    asmSrcs <- packageAsmSources package
     path    <- contextPath context
     let len = length (pkgPath package) + length (top -/- path) + 2
     fixFile file $ unlines
-                 . (++ ["CMM_SRCS = " ++ unwords (map unifyPath cmmSrcs) ])
+                 . (++ [ "CMM_SRCS = " ++ unwords (map unifyPath cmmSrcs)
+                       , "S_SRCS = " ++ unwords (map unifyPath asmSrcs)  ])
                  . map (drop len) . filter ('$' `notElem`) . lines
