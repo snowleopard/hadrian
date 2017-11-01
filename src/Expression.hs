@@ -14,7 +14,7 @@ module Expression (
 
     -- * Convenient accessors
     getBuildRoot, getContext, getPkgData, getPkgDataList, getOutputs, getInputs,
-    getInput, getOutput,
+    getInput, getOutput, getCabalData,
 
     -- * Re-exports
     module Base,
@@ -25,6 +25,8 @@ module Expression (
 
 import qualified Hadrian.Expression as H
 import Hadrian.Expression hiding (Expr, Predicate, Args)
+import Hadrian.Haskell.Cabal.Parse (Cabal)
+import Hadrian.Oracles.TextFile (readCabalFile')
 
 import Base
 import Builder
@@ -50,6 +52,13 @@ getPkgData key = expr . pkgData . key =<< getContextPath
 -- | Get a list of values from the @package-data.mk@ file of the current context.
 getPkgDataList :: (FilePath -> PackageDataList) -> Expr [String]
 getPkgDataList key = expr . pkgDataList . key =<< getContextPath
+
+getCabalData :: (Cabal -> a) -> Expr a
+getCabalData key = do
+  stage <- getStage
+  path  <- unsafePkgCabalFile <$> getPackage
+  cabal <- expr (readCabalFile' stage path)
+  return $ key cabal
 
 -- | Is the build currently in the provided stage?
 stage :: Stage -> Predicate

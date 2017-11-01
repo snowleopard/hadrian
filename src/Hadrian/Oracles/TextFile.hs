@@ -13,8 +13,10 @@
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalFile, textFileOracle
+    readCabalFile, readCabalFile', textFileOracle
     ) where
+
+import Stage
 
 import Control.Monad
 import qualified Data.HashMap.Strict as Map
@@ -30,9 +32,9 @@ newtype TextFile = TextFile FilePath
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult TextFile = String
 
-newtype CabalFile = CabalFile FilePath
+newtype CabalFile = CabalFile (Stage, FilePath)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult CabalFile = Cabal
+type instance RuleResult CabalFile = Maybe Cabal
 
 newtype KeyValue = KeyValue (FilePath, String)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -90,8 +92,11 @@ lookupDependencies depFile file = do
         Just (source : files) -> return (source, files)
 
 -- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalFile :: FilePath -> Action Cabal
-readCabalFile = askOracle . CabalFile
+readCabalFile :: Stage -> FilePath -> Action (Maybe Cabal)
+readCabalFile stage file = askOracle $ CabalFile (stage, file)
+
+readCabalFile' :: Stage -> FilePath -> Action Cabal
+readCabalFile' stage file = fromJust <$> readCabalFile stage file
 
 -- | This oracle reads and parses text files to answer 'readTextFile' and
 -- 'lookupValue' queries, as well as their derivatives, tracking the results.
@@ -116,8 +121,12 @@ textFileOracle = do
         return $ Map.fromList [ (key, values) | (key:values) <- contents ]
     void $ addOracle $ \(KeyValues (file, key)) -> Map.lookup key <$> kvs file
 
-    cabal <- newCache $ \file -> do
-        need [file]
-        putLoud $ "| CabalFile oracle: reading " ++ quote file ++ "..."
-        liftIO $ parseCabal file
-    void $ addOracle $ \(CabalFile file) -> cabal file
+    cabalMap <- fmap Map.fromList . forM [Stage0 ..] $ \stage -> do
+        cabal <- newCache $ \file -> do
+            need [file]
+            putLoud $ "| CabalFile oracle: reading " ++ quote file ++ "..."
+            parseCabal stage file
+        return (stage, cabal)
+    void $ addOracle $ \(CabalFile (stage, file)) -> case Map.lookup stage cabalMap of
+      Just cabal -> Just  <$> cabal file
+      Nothing    -> return $ Nothing
