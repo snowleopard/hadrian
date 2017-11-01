@@ -42,7 +42,7 @@ contextDependencies Context {..} = case pkgCabalFile package of
     Just cabalFile -> do
         let depStage   = min stage Stage1
             depContext = \pkg -> Context depStage pkg way
-        deps <- pkgDependencies cabalFile
+        deps <- pkgDependencies stage cabalFile
         pkgs <- sort <$> stagePackages depStage
         return . map depContext $ intersectOrd (compare . pkgName) pkgs deps
 
