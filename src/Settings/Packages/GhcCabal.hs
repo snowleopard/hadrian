@@ -15,6 +15,7 @@ ghcCabalPackageArgs = stage0 ? package ghcCabal ? builder Ghc ? do
         , arg "--make"
         , arg "-j"
         , arg ("-DCABAL_VERSION=" ++ replace "." "," cabalVersion)
+        , arg "-DCABAL_PARSEC"
         , arg "-DBOOTSTRAPPING"
         , arg "-DMIN_VERSION_binary_0_8_0"
         , arg "-ilibraries/Cabal/Cabal"
