@@ -98,16 +98,15 @@ packageRules = do
 
     forM_ (filter isProgram knownPackages) $
         Rules.Program.buildProgram readPackageDb
-
-    Rules.Register.copyBootPackages writePackageDb (Context Stage0 base vanilla) -- base is only a dummy here.
+    forM_ [Stage0 .. ] $ \stage -> do
+      Rules.Register.registerPackages writePackageDb (Context stage base vanilla) -- base is only a dummy here.
 
     forM_ vanillaContexts $ mconcat
         [ Rules.PackageData.buildPackageData
         , Rules.Dependencies.buildPackageDependencies readPackageDb
         , Rules.Documentation.buildPackageDocumentation
         , Rules.Library.buildPackageGhciLibrary
-        , Rules.Generate.generatePackageCode
-        , Rules.Register.registerPackage writePackageDb ]
+        , Rules.Generate.generatePackageCode ]
 
 buildRules :: Rules ()
 buildRules = do

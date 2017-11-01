@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module Rules.Register (copyBootPackages, registerPackage) where
+module Rules.Register (registerPackages) where
 
 import Base
 import Context
@@ -22,66 +22,36 @@ parseCabalName = readPToMaybe parse
 
 -- | This rule provides rules for copying packges into the
 -- boot packages db from the installed compiler.
-copyBootPackages :: [(Resource, Int)] -> Context -> Rules ()
-copyBootPackages rs context@Context {..} = do
-    "//" ++ stage0PackageDbDir -/- "*.conf" %> \conf -> do
-      settings <- libPath context <&> (-/- "settings")
-      platformConstants <- libPath context <&> (-/- "platformConstants")
-      need [settings, platformConstants]
-      copyConf rs context conf
-
--- TODO: Simplify.
 -- | Build rules for registering packages and initialising package databases
 -- by running the @ghc-pkg@ utility.
-registerPackage :: [(Resource, Int)] -> Context -> Rules ()
-registerPackage rs context@Context {..} = do
-    pkgId <- case pkgCabalFile package of
-        Just file -> liftIO $ parseCabalPkgId file
-        Nothing   -> return (pkgName package)
+registerPackages :: [(Resource, Int)] -> Context -> Rules ()
+registerPackages rs context@Context {..} = do
+    "//" ++ inplacePackageDbPath stage %>
+      buildStamp rs context
 
-    -- 'rts' has no version. As such we should never generate a rule for the
-    -- rts in stage0. The rts is also not expected to be built for stage0.
-    -- We intend to copy over the pkg from the bootstrap compiler.
-    --
-    -- This usually works if packges have <name>-<version> identifier. As
-    -- dependencies will pick from the bootstrap compiler as needed. For
-    -- packages without version though, this results duplicated rules for
-    -- the copyBootPackage and the packge.
-    --
-    -- TODO: HACK
-    -- This should really come from the flavour's packages. But those are
-    -- currently not available at rule time...
-    let bootpackages = [ binary, text, transformers, mtl, parsec, cabal, hpc
-                       , ghcBootTh, ghcBoot, templateHaskell, compiler, ghci
-                       , terminfo -- TODO: only if Windows_HOST == NO
-                       ]
-    when (stage == Stage0 && package `elem` bootpackages) $ do
-        -- Packages @ghc-boot@ and @ghc-boot-th@ both match the @ghc-boot*@
-        -- pattern, therefore we need to use priorities to match the right rule.
-        -- TODO: Get rid of this hack.
-        "//" ++ stage0PackageDbDir -/- pkgId ++ ".conf" %%>
-            buildConf rs context
+    "//" ++ inplacePackageDbPath stage -/- packageDbStamp %> \stamp -> do
+      writeFileLines stamp []
 
-        -- This is hack. This check is only here so we build it at most once.
-        when (package == binary) $ "//" ++ stage0PackageDbDir -/- packageDbStamp %>
-            buildStamp rs context
+    "//" ++ inplacePackageDbPath stage -/- "*.conf" %> \conf -> do
+      settings <- libPath context <&> (-/- "settings")
+      platformConstants <- libPath context <&> (-/- "platformConstants")
 
-    when (stage == Stage1) $ do
-        "//" ++ inplacePackageDbPath stage -/- pkgId ++ ".conf" %%>
-            buildConf rs context
-
-        when (package == ghc) $ "//" ++ inplacePackageDbPath stage -/- packageDbStamp %>
-            buildStamp rs context
+      need [settings, platformConstants]
+      let Just pkgName | takeBaseName conf == "rts" = Just "rts"
+                       | otherwise = fst <$> parseCabalName (takeBaseName conf)
+      let Just pkg = findPackageByName pkgName
+      bootLibs <- filter isLibrary <$> (defaultPackages Stage0)
+      case stage of
+        Stage0 | not (pkg `elem` bootLibs) -> copyConf rs (context { package = pkg }) conf
+        _                                  -> buildConf rs (context { package = pkg }) conf
 
 copyConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 copyConf rs context@Context {..} conf = do
-    let Just pkgName | takeBaseName conf == "rts" = Just "rts"
-                     | otherwise = fst <$> parseCabalName (takeBaseName conf)
     depPkgIds <- fmap stdOutToPkgIds . askWithResources rs $
-      target context (GhcPkg Dependencies stage) [pkgName] []
+      target context (GhcPkg Dependencies stage) [pkgName package] []
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
     buildWithResources rs $ do
-      target context (GhcPkg Clone stage) [pkgName] [conf]
+      target context (GhcPkg Clone stage) [pkgName package] [conf]
 
   where
     stdOutToPkgIds :: String -> [String]
@@ -140,10 +110,7 @@ buildConf rs context@Context {..} conf = do
                                                  ] [conf]
 
 buildStamp :: [(Resource, Int)] -> Context -> FilePath -> Action ()
-buildStamp rs Context {..} stamp = do
-    let path = takeDirectory stamp
-    removeDirectory path
+buildStamp rs Context {..} path = do
     buildWithResources rs $
         target (vanillaContext stage ghc) (GhcPkg Init stage) [] [path]
-    writeFileLines stamp []
     putSuccess $ "| Successfully initialised " ++ path
