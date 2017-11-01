@@ -107,13 +107,12 @@ doWith f info rs opts target args = do
     info target
     verbose <- interpret target verboseCommand
     let quietlyUnlessVerbose = if verbose then withVerbosity Loud else quietly
-    quietlyUnlessVerbose $ do
-        f (builder target) $ BuildInfo
-            { buildArgs      = argList
-            , buildInputs    = inputs target
-            , buildOutputs   = outputs target
-            , buildOptions   = opts
-            , buildResources = rs }
+    quietlyUnlessVerbose $ f (builder target) $
+        BuildInfo { buildArgs      = argList
+                  , buildInputs    = inputs target
+                  , buildOutputs   = outputs target
+                  , buildOptions   = opts
+                  , buildResources = rs }
 
 buildWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action ()
 buildWith = doWith runBuilderWith runInfo

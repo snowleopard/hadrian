@@ -14,13 +14,11 @@ compilePackage rs context@Context {..} = do
     let dir             = "//" ++ buildDir context
         nonHs extension = dir -/- extension <//> "*" <.> osuf way
         compile compiler obj2src obj = do
-            -- need =<< interpretInContext context generatedDependencies
             src <- obj2src context obj
             need [src]
             needDependencies context src $ obj <.> "d"
             buildWithResources rs $ target context (compiler stage) [src] [obj]
-        compileHs = \[obj, _hi] -> do
-            -- need =<< interpretInContext context generatedDependencies
+        compileHs [obj, _hi] = do
             path <- contextPath context
             (src, deps) <- lookupDependencies (path -/- ".dependencies") obj
             need $ src : deps

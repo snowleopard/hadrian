@@ -21,6 +21,8 @@ import GHC.Generics
 import qualified Hadrian.Builder as H
 import Hadrian.Builder hiding (Builder)
 import Hadrian.Builder.Ar
+import Hadrian.Builder.Sphinx
+import Hadrian.Builder.Tar
 import Hadrian.Oracles.Path
 import Hadrian.Oracles.TextFile
 import Hadrian.Utilities
@@ -76,23 +78,6 @@ data HaddockMode = BuildPackage | BuildIndex deriving (Eq, Generic, Show)
 instance Binary   HaddockMode
 instance Hashable HaddockMode
 instance NFData   HaddockMode
-
--- | Sphinx can be used in three different modes:
--- * Convert RST to HTML
--- * Convert RST to LaTeX
--- * Convert RST to Man pages
-data SphinxMode = Html | Latex | Man deriving (Eq, Generic, Show)
-
-instance Binary   SphinxMode
-instance Hashable SphinxMode
-instance NFData   SphinxMode
-
--- | Tar can be used to create an archive or extract from it.
-data TarMode = Create | Extract deriving (Eq, Generic, Show)
-
-instance Binary TarMode
-instance Hashable TarMode
-instance NFData TarMode
 
 -- | A 'Builder' is an external command invoked in a separate process via 'cmd'.
 -- @Ghc Stage0@ is the bootstrapping compiler.
@@ -252,9 +237,9 @@ instance H.Builder Builder where
                 _  -> cmd echo [path] buildArgs
 
 -- TODO: Some builders are required only on certain platforms. For example,
--- Objdump is only required on OpenBSD and AIX, as mentioned in #211. Add
--- support for platform-specific optional builders as soon as we can reliably
--- test this feature.
+-- 'Objdump' is only required on OpenBSD and AIX. Add support for platform
+-- specific optional builders as soon as we can reliably test this feature.
+-- See https://github.com/snowleopard/hadrian/issues/211.
 isOptional :: Builder -> Bool
 isOptional = \case
     Objdump  -> True
