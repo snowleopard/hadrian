@@ -4,6 +4,8 @@ module Builder (
     ArMode (..), CcMode (..), GhcCabalMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
     SphinxMode (..), TarMode (..), Builder (..),
 
+    builderPath',
+
     -- * Builder properties
     builderProvenance, systemBuilderPath, builderPath, isSpecified, needBuilder,
     runBuilder, runBuilderWith, runBuilderWithCmdOptions, getBuilderPath,
@@ -149,6 +151,9 @@ builderProvenance = \case
     _                -> Nothing
   where
     context s p = Just $ vanillaContext s p
+
+builderPath' :: Builder -> Action FilePath
+builderPath' = builderPath
 
 instance H.Builder Builder where
     builderPath :: Builder -> Action FilePath

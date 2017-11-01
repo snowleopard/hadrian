@@ -2,6 +2,7 @@ module Builder where
 
 import Stage
 import Hadrian.Builder.Ar
+import Development.Shake
 
 data CcMode = CompileC | FindCDependencies
 data GhcMode = Settings | CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
@@ -36,3 +37,5 @@ data Builder = Alex
              | Tar TarMode
              | Unlit
              | Xelatex
+
+builderPath' :: Builder -> Action FilePath
