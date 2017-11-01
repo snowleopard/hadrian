@@ -17,12 +17,14 @@ import Oracles.Setting
 import Settings
 import UserSettings
 
+import Hadrian.Haskell.Cabal.Parse (cabalIncludeDirs)
+
 cIncludeArgs :: Args
 cIncludeArgs = do
     pkg     <- getPackage
     root    <- getBuildRoot
     path    <- getBuildPath
-    incDirs <- getPkgDataList IncludeDirs
+    incDirs <- getCabalData cabalIncludeDirs
     depDirs <- getPkgDataList DepIncludeDirs
     cross   <- expr crossCompiling
     compilerOrGhc <- package compiler ||^ package ghc

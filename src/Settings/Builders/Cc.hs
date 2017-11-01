@@ -1,12 +1,13 @@
 module Settings.Builders.Cc (ccBuilderArgs) where
 
 import Settings.Builders.Common
+import Hadrian.Haskell.Cabal.Parse (cabalCcArgs)
 
 ccBuilderArgs :: Args
 ccBuilderArgs = do
   way <- getWay
   builder Cc ? mconcat
-    [ getPkgDataList CcArgs
+    [ getCabalData cabalCcArgs
     , getStagedSettingList ConfCcArgs
     , cIncludeArgs
 

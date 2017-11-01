@@ -7,6 +7,7 @@ import Hadrian.Haskell.Cabal
 import Flavour
 import Rules.Gmp
 import Settings.Builders.Common
+import Hadrian.Haskell.Cabal.Parse (cabalCcArgs)
 
 ghcBuilderArgs :: Args
 ghcBuilderArgs = (builder (Ghc CompileHs) ||^ builder (Ghc LinkHs)) ? do
@@ -27,7 +28,7 @@ needTouchy = notStage0 ? windowsHost ? do
 ghcCBuilderArgs :: Args
 ghcCBuilderArgs = builder (Ghc CompileCWithGhc) ? do
     way <- getWay
-    let ccArgs = [ getPkgDataList CcArgs
+    let ccArgs = [ getCabalData cabalCcArgs
                  , getStagedSettingList ConfCcArgs
                  , cIncludeArgs
                  , arg "-Werror"
