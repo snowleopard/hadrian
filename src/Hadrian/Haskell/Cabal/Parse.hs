@@ -48,7 +48,7 @@ instance NFData Cabal where
     rnf (Cabal a b c d e) = a `seq` b `seq` c `seq` d `seq` e `seq` ()
 
 parseCabalPkgId :: FilePath -> IO String
-parseCabalPkgId file = show . C.package . C.packageDescription <$> C.readGenericPackageDescription C.silent file
+parseCabalPkgId file = C.display . C.package . C.packageDescription <$> C.readGenericPackageDescription C.silent file
 
 cabalCcArgs :: Cabal -> [String]
 cabalCcArgs c = concatMap C.ccOptions [ C.libBuildInfo lib | (Just lib) <- [C.library (packageDesc c)]
