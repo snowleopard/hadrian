@@ -36,11 +36,7 @@ copyBootPackages rs context@Context {..} = do
 registerPackage :: [(Resource, Int)] -> Context -> Rules ()
 registerPackage rs context@Context {..} = do
     pkgId <- case pkgCabalFile package of
-        Just file -> do
-            cabal <- liftIO $ parseCabal file
-            return $ if (null $ version cabal)
-                     then Cabal.name cabal
-                     else Cabal.name cabal ++ "-" ++ version cabal
+        Just file -> liftIO $ parseCabalPkgId file
         Nothing   -> return (pkgName package)
 
     -- 'rts' has no version. As such we should never generate a rule for the
@@ -100,11 +96,7 @@ pkgObject way pkgId = "HS" ++ pkgId ++ (waySuffix way <.> "o")
 buildConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 buildConf rs context@Context {..} conf = do
     pkgId <- case pkgCabalFile package of
-      Just file -> do
-        cabal <- liftIO $ parseCabal file
-        return $ if (null $ version cabal)
-          then Cabal.name cabal
-          else Cabal.name cabal ++ "-" ++ version cabal
+      Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
     depPkgIds <- cabalDependencies context

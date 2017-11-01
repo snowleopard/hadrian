@@ -36,11 +36,7 @@ pkgObject way pkgId = "HS" ++ pkgId ++ (waySuffix way <.> "o")
 library :: Context -> Rules ()
 library context@Context{..} = do
     pkgId <- case pkgCabalFile package of
-      Just file -> do
-        cabal <- liftIO $ parseCabal file
-        return $ if (null $ version cabal)
-          then Cabal.name cabal
-          else Cabal.name cabal ++ "-" ++ version cabal
+      Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
     "//" ++ libDir context -/- pkgId -/- archive way pkgId %> \a -> do
@@ -67,11 +63,7 @@ libraryObjects context@Context{..} = do
 buildDynamicLib :: Context -> Rules ()
 buildDynamicLib context@Context{..} = do
     pkgId <- case pkgCabalFile package of
-      Just file -> do
-        cabal <- liftIO $ parseCabal file
-        return $ if (null $ version cabal)
-          then Cabal.name cabal
-          else Cabal.name cabal ++ "-" ++ version cabal
+      Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
     let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgId
@@ -90,11 +82,7 @@ buildDynamicLib context@Context{..} = do
 buildPackageLibrary :: Context -> Rules ()
 buildPackageLibrary context@Context {..} = do
     pkgId <- case pkgCabalFile package of
-      Just file -> do
-        cabal <- liftIO $ parseCabal file
-        return $ if (null $ version cabal)
-          then Cabal.name cabal
-          else Cabal.name cabal ++ "-" ++ version cabal
+      Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
     let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgId
@@ -117,11 +105,7 @@ buildPackageLibrary context@Context {..} = do
 buildPackageGhciLibrary :: Context -> Rules ()
 buildPackageGhciLibrary context@Context {..} = priority 2 $ do
     pkgId <- case pkgCabalFile package of
-      Just file -> do
-        cabal <- liftIO $ parseCabal file
-        return $ if (null $ version cabal)
-          then Cabal.name cabal
-          else Cabal.name cabal ++ "-" ++ version cabal
+      Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
     let libPrefix = "//" ++ buildDir context -/- "HS" ++ pkgId
