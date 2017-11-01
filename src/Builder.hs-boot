@@ -2,6 +2,8 @@ module Builder where
 
 import Stage
 import Hadrian.Builder.Ar
+import Hadrian.Builder.Sphinx
+import Hadrian.Builder.Tar
 import Development.Shake
 
 data CcMode = CompileC | FindCDependencies
@@ -9,8 +11,6 @@ data GhcMode = Settings | CompileHs | CompileCWithGhc | FindHsDependencies | Lin
 data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
 data GhcPkgMode = Init | Update | Clone | Dependencies
 data HaddockMode = BuildPackage | BuildIndex
-data SphinxMode = Html | Latex | Man
-data TarMode = Create | Extract
 data Builder = Alex
              | Ar ArMode Stage
              | DeriveConstants
