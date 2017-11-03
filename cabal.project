@@ -1,5 +1,4 @@
 packages: ../libraries/Cabal/Cabal/
-          ../libraries/mtl/
           ../libraries/filepath/
           ../libraries/text/
           ../libraries/hpc/

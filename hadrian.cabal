@@ -27,7 +27,7 @@ executable hadrian
                        , Expression
                        , Flavour
                        , GHC
-                       , GHC.Package
+                       , GHC.Packages
                        , Hadrian.Builder
                        , Hadrian.Builder.Ar
                        , Hadrian.Builder.Sphinx
