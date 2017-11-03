@@ -122,7 +122,7 @@ nonHsObjects :: Context -> Action [FilePath]
 nonHsObjects context = do
     path    <- contextPath context
     cObjs   <- cObjects context
-    cmmSrcs <- pkgDataList (CmmSrcs path)
+    cmmSrcs <- interpretInContext context (getCabalData cabalCmmSrcs)
     cmmObjs <- mapM (objectPath context) cmmSrcs
     eObjs   <- extraObjects context
     return $ cObjs ++ cmmObjs ++ eObjs
@@ -130,7 +130,7 @@ nonHsObjects context = do
 cObjects :: Context -> Action [FilePath]
 cObjects context = do
     path <- contextPath context
-    srcs <- pkgDataList (CSrcs path)
+    srcs <- interpretInContext context (getCabalData cabalCSrcs)
     objs <- mapM (objectPath context) srcs
     return $ if way context == threaded
         then objs

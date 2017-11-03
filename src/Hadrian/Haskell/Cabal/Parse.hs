@@ -8,7 +8,12 @@
 --
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
-module Hadrian.Haskell.Cabal.Parse (Cabal (..), parseCabal, parseCabalPkgId, cabalCcArgs, cabalIncludeDirs) where
+module Hadrian.Haskell.Cabal.Parse ( Cabal (..)
+                                   , parseCabal, parseCabalPkgId
+                                   , cabalCcArgs, cabalIncludeDirs, cabalCSrcs
+                                   , cabalModules, cabalOtherModules
+                                   , cabalSrcDirs, cabalCmmSrcs
+                                   ) where
 
 import Stage
 import Types.Context
@@ -28,6 +33,7 @@ import qualified Distribution.Simple.GHC               as GHC
 import qualified Distribution.Simple.Program.Db        as Db
 import qualified Distribution.Simple                   as Hooks (simpleUserHooks, autoconfUserHooks)
 import qualified Distribution.Simple.UserHooks         as Hooks
+import Distribution.Text (display)
 import Distribution.Simple (defaultMainWithHooksNoReadArgs)
 import Distribution.Simple.Compiler (compilerInfo)
 import Hadrian.Package
@@ -35,7 +41,8 @@ import Hadrian.Utilities
 import System.FilePath
 import System.Directory
 import GHC.Generics
-
+import qualified Distribution.ModuleName as ModuleName
+import Data.Maybe (maybeToList)
 import GHC.Packages (rts)
 
 import Context.Paths
@@ -61,15 +68,33 @@ instance NFData Cabal where
 parseCabalPkgId :: FilePath -> IO String
 parseCabalPkgId file = C.display . C.package . C.packageDescription <$> C.readGenericPackageDescription C.silent file
 
+
+biModules :: Cabal -> (C.BuildInfo, [ModuleName.ModuleName])
+biModules c = go [ comp | comp@(bi,_) <- (map libBiModules . maybeToList $ C.library (packageDesc c))
+                                         ++ (map exeBiModules $ C.executables (packageDesc c))
+                        , C.buildable bi ]
+  where libBiModules lib = (C.libBuildInfo lib, C.libModules lib)
+        exeBiModules exe = (C.buildInfo exe, ModuleName.main : C.exeModules exe)
+        go [] = error "no buildable component found"
+        go [x] = x
+        go _  = error "can not handle more than one buildinfo yet!"
+
 cabalCcArgs :: Cabal -> [String]
-cabalCcArgs c = concatMap C.ccOptions [ C.libBuildInfo lib | (Just lib) <- [C.library (packageDesc c)]
-                                                           , C.buildable . C.libBuildInfo $ lib ]
-
-
+cabalCcArgs c = C.ccOptions (fst (biModules c))
+cabalCSrcs :: Cabal -> [String]
+cabalCSrcs c = C.cSources (fst (biModules c))
+cabalCmmSrcs :: Cabal -> [String]
+cabalCmmSrcs c = C.cmmSources (fst (biModules c))
 cabalIncludeDirs :: Cabal -> [String]
-cabalIncludeDirs c = concatMap C.includeDirs [ C.libBuildInfo lib | (Just lib) <- [C.library (packageDesc c)]
-                                                                  , C.buildable . C.libBuildInfo $ lib ]
+cabalIncludeDirs c = C.includeDirs (fst (biModules c))
+cabalModules :: Cabal -> [String]
+cabalModules c = map display $ snd (biModules c)
 
+cabalSrcDirs :: Cabal -> [String]
+cabalSrcDirs c = C.hsSourceDirs $ fst (biModules c)
+
+cabalOtherModules :: Cabal -> [String]
+cabalOtherModules c = map display $ C.otherModules (fst (biModules c))
 --cabalDepIncludeDirs
 
 
