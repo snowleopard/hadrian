@@ -22,10 +22,12 @@ executable hadrian
                        , Builder
                        , CommandLine
                        , Context
+                       , Context.Paths
                        , Environment
                        , Expression
                        , Flavour
                        , GHC
+                       , GHC.Package
                        , Hadrian.Builder
                        , Hadrian.Builder.Ar
                        , Hadrian.Builder.Sphinx
@@ -100,6 +102,9 @@ executable hadrian
                        , Settings.Packages.Rts
                        , Settings.Packages.RunGhc
                        , Stage
+                       , Types.Context
+                       , Types.Package
+                       , Types.Stage
                        , Target
                        , UserSettings
                        , Utilities
@@ -119,6 +124,7 @@ executable hadrian
                        , ansi-terminal        == 0.6.*
                        , Cabal
                        , containers           == 0.5.*
+                       , filepath
                        , directory            >= 1.2 && < 1.4
                        , extra                >= 1.4.7
                        , mtl                  == 2.2.*

@@ -17,20 +17,11 @@ import GHC.Generics
 import Hadrian.Expression
 import Hadrian.Haskell.Cabal
 
+import Types.Context
+import Context.Paths
+
 import Base
 import Oracles.Setting
-
--- | Build context for a currently built 'Target'. We generate potentially
--- different build rules for each 'Context'.
-data Context = Context
-    { stage   :: Stage   -- ^ Currently build Stage
-    , package :: Package -- ^ Currently build Package
-    , way     :: Way     -- ^ Currently build Way (usually 'vanilla')
-    } deriving (Eq, Generic, Show)
-
-instance Binary   Context
-instance Hashable Context
-instance NFData   Context
 
 -- | Most targets are built only one way, hence the notion of 'vanillaContext'.
 vanillaContext :: Stage -> Package -> Context
@@ -65,40 +56,6 @@ withHsPackage expr = do
     case pkgCabalFile pkg of
         Just file -> expr file
         Nothing   -> mempty
-
--- | The directory to the current stage
-stageDir :: Context -> FilePath
-stageDir Context {..} = stageString stage
-
--- | The path to the current stage
-stagePath :: Context -> Action FilePath
-stagePath context = buildRoot <&> (-/- stageDir context)
-
-getStagePath :: Expr Context b FilePath
-getStagePath = expr . stagePath =<< getContext
-
--- | The directory in 'buildRoot' containing build artefacts of a given 'Context'.
-contextDir :: Context -> FilePath
-contextDir Context {..} = stageString stage -/- pkgPath package
-
--- | Path to the context directory, containing the "build folder"
-contextPath :: Context -> Action FilePath
-contextPath context = buildRoot <&> (-/- contextDir context)
-
-getContextPath :: Expr Context b FilePath
-getContextPath = expr . contextPath =<< getContext
-
--- | The directory in 'buildRoot' containing the object artefacts.
-buildDir :: Context -> FilePath
-buildDir context = contextDir context -/- "build"
-
--- | Path to the directory containing build artefacts of a given 'Context'.
-buildPath :: Context -> Action FilePath
-buildPath context = buildRoot <&> (-/- (buildDir context))
-
--- | Get the build path of the current 'Context'.
-getBuildPath :: Expr Context b FilePath
-getBuildPath = expr . buildPath =<< getContext
 
 pkgId :: Package -> Action FilePath
 pkgId package = case pkgCabalFile package of
