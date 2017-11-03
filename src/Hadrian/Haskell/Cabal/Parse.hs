@@ -11,10 +11,11 @@
 module Hadrian.Haskell.Cabal.Parse (Cabal (..), parseCabal, parseCabalPkgId, cabalCcArgs, cabalIncludeDirs) where
 
 import Stage
+import Types.Context
 import {-# SOURCE #-} Builder hiding (Builder)
 -- import Hadrian.Builder as H
 import Data.List.Extra
-import Development.Shake
+import Development.Shake                                      hiding (doesFileExist)
 import Development.Shake.Classes
 import qualified Distribution.Package                  as C
 import qualified Distribution.PackageDescription       as C
@@ -25,9 +26,19 @@ import qualified Distribution.Types.CondTree           as C
 import qualified Distribution.Verbosity                as C
 import qualified Distribution.Simple.GHC               as GHC
 import qualified Distribution.Simple.Program.Db        as Db
+import qualified Distribution.Simple                   as Hooks (simpleUserHooks, autoconfUserHooks)
+import qualified Distribution.Simple.UserHooks         as Hooks
+import Distribution.Simple (defaultMainWithHooksNoReadArgs)
 import Distribution.Simple.Compiler (compilerInfo)
 import Hadrian.Package
+import Hadrian.Utilities
+import System.FilePath
+import System.Directory
 import GHC.Generics
+
+import GHC.Packages (rts)
+
+import Context.Paths
 
 -- TODO: Use fine-grain tracking instead of tracking the whole Cabal file.
 -- | Haskell package metadata extracted from a Cabal file.
@@ -61,32 +72,46 @@ cabalIncludeDirs c = concatMap C.includeDirs [ C.libBuildInfo lib | (Just lib) <
 
 --cabalDepIncludeDirs
 
+
+-- TODO: Taken from Context, but Context depends on Oracles.Settings, and this
+--       would then lead to recursive imports.
+contextPath :: Context -> Action FilePath
+contextPath context = buildRoot <&> (-/- contextDir context)
+
+buildDir :: Context -> FilePath
+buildDir context = contextDir context -/- "build"
+
 -- | Parse a Cabal file.
-parseCabal :: Stage -> FilePath -> Action Cabal
-parseCabal stage file = do
+parseCabal :: Context -> Action Cabal
+parseCabal context@Context {..} = do
+    let (Just file) = pkgCabalFile package
+
     -- read the package description from the cabal file
     gpd <- liftIO $ C.readGenericPackageDescription C.silent file
 
     -- figure out what hooks we need.
-    let hooks = case buildType (flattenPackageDescription gpd) of
-          Just Configure -> autoconfUserHooks
+    hooks <- case C.buildType (C.flattenPackageDescription gpd) of
+          Just C.Configure -> pure Hooks.autoconfUserHooks
           -- time has a "Custom" Setup.hs, but it's actually Configure
           -- plus a "./Setup test" hook. However, Cabal is also
           -- "Custom", but doesn't have a configure script.
-          Just Custom ->
-              do configureExists <- doesFileExist (replaceFileName file "configure")
+          Just C.Custom ->
+              do configureExists <- liftIO $ doesFileExist (replaceFileName file "configure")
                  if configureExists
-                     then autoconfUserHooks
-                     else simpleUserHooks
+                     then pure Hooks.autoconfUserHooks
+                     else pure Hooks.simpleUserHooks
           -- not quite right, but good enough for us:
-          _ | (pkgName . package . packageDescription $ gpd) == mkPackageName "rts" ->
+          _ | package == rts ->
               -- don't try to do post conf validation for rts.
               -- this will simply not work, due to the ld-options,
               -- and the Stg.h.
-              simpleUserHooks { postConf = \_ _ _ _ -> return () }
-            | otherwise -> simpleUserHooks
+              pure $ Hooks.simpleUserHooks { Hooks.postConf = \_ _ _ _ -> return () }
+            | otherwise -> pure Hooks.simpleUserHooks
 
-    defaultMainWithHooksNoReadArgs hooks gpd ["configure", "--distdir", undefined, "--ipid", "$pkg-$version"]
+    bPath <- buildPath context
+    liftIO $
+      withCurrentDirectory (pkgPath package) $
+        defaultMainWithHooksNoReadArgs hooks gpd ["configure", "--distdir", bPath, "--ipid", "$pkg-$version"]
 
     hcPath <- builderPath' (Ghc CompileHs stage)
     (compiler, Just platform, _pgdb) <- liftIO $ GHC.configure C.silent (Just hcPath) Nothing Db.emptyProgramDb

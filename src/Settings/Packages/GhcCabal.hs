@@ -5,11 +5,13 @@ import Hadrian.Haskell.Cabal
 import Base
 import Expression
 import Utilities
+import qualified Types.Context as Context
 
 ghcCabalPackageArgs :: Args
 ghcCabalPackageArgs = stage0 ? package ghcCabal ? builder Ghc ? do
     cabalDeps    <- expr $ stage1Dependencies cabal
-    cabalVersion <- expr $ pkgVersion (unsafePkgCabalFile cabal) -- TODO: improve
+    ctx          <- getContext
+    Just cabalVersion <- expr $ pkgVersion (ctx { Context.package = cabal }) -- TODO: improve
     mconcat
         [ pure [ "-package " ++ pkgName pkg | pkg <- cabalDeps, pkg /= parsec ]
         , arg "--make"

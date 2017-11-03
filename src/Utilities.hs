@@ -37,12 +37,11 @@ ask target = H.ask target getArgs
 -- dependencies we scan package @.cabal@ files, see 'pkgDependencies' defined
 -- in "Hadrian.Haskell.Cabal".
 contextDependencies :: Context -> Action [Context]
-contextDependencies Context {..} = case pkgCabalFile package of
+contextDependencies ctx@Context {..} = pkgDependencies ctx >>= \case
     Nothing        -> return [] -- Non-Cabal packages have no dependencies.
-    Just cabalFile -> do
+    Just deps -> do
         let depStage   = min stage Stage1
             depContext = \pkg -> Context depStage pkg way
-        deps <- pkgDependencies stage cabalFile
         pkgs <- sort <$> stagePackages depStage
         return . map depContext $ intersectOrd (compare . pkgName) pkgs deps
 

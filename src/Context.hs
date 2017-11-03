@@ -48,18 +48,19 @@ getWay = way <$> getContext
 getStagedSettingList :: (Stage -> SettingList) -> Args Context b
 getStagedSettingList f = getSettingList . f =<< getStage
 
--- | Construct an expression that depends on the Cabal file of the current
--- package and is empty in a non-Haskell context.
-withHsPackage :: (Monoid a, Semigroup a) => (FilePath -> Expr Context b a) -> Expr Context b a
+-- | Construct an expression that depends on the current package having
+-- a Cabal file. For non haskell contexts it's empty.
+withHsPackage :: (Monoid a, Semigroup a) => (Context -> Expr Context b a) -> Expr Context b a
 withHsPackage expr = do
     pkg <- getPackage
+    ctx <- getContext
     case pkgCabalFile pkg of
-        Just file -> expr file
+        Just file -> expr ctx
         Nothing   -> mempty
 
-pkgId :: Package -> Action FilePath
-pkgId package = case pkgCabalFile package of
-    Just file -> pkgIdentifier file
+pkgId :: Context -> Action FilePath
+pkgId context@Context {..} = case pkgCabalFile package of
+    Just file -> pkgIdentifier context
     Nothing   -> return (pkgName package) -- Non-Haskell packages, e.g. rts
 
 -- | The directroy in 'buildRoot' that will hold the final install artifact for a given 'Context'.
@@ -74,7 +75,7 @@ libPath context = buildRoot <&> (-/- libDir context)
 pkgFile :: Context -> String -> String -> Action FilePath
 pkgFile context@Context {..} prefix suffix = do
     path <- buildPath context
-    pid  <- pkgId package
+    pid  <- pkgId context
     return $ path -/- prefix ++ pid ++ suffix
 
 -- | Path to inplace package configuration file of a given 'Context'.
@@ -124,9 +125,9 @@ pkgGhciLibraryFile context = pkgFile context "HS" ".o"
 
 -- | Path to the configuration file of a given 'Context'.
 pkgConfFile :: Context -> Action FilePath
-pkgConfFile Context {..} = do
+pkgConfFile context@Context {..} = do
     root  <- buildRoot
-    pid   <- pkgId package
+    pid   <- pkgId context
     let dbDir | stage == Stage0 = root -/- stage0PackageDbDir
               | otherwise       = root -/- inplacePackageDbPath stage
     return $ dbDir -/- pid <.> "conf"

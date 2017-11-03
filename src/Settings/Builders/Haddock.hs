@@ -14,7 +14,7 @@ versionToInt s = case map read . words $ replaceEq '.' ' ' s of
     _                     -> error "versionToInt: cannot parse version."
 
 haddockBuilderArgs :: Args
-haddockBuilderArgs = withHsPackage $ \cabalFile -> mconcat
+haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
     [ builder (Haddock BuildIndex) ? do
         output <- getOutput
         inputs <- getInputs
@@ -32,11 +32,11 @@ haddockBuilderArgs = withHsPackage $ \cabalFile -> mconcat
         output   <- getOutput
         pkg      <- getPackage
         path     <- getBuildPath
-        version  <- expr $ pkgVersion  cabalFile
-        synopsis <- expr $ pkgSynopsis cabalFile
+        Just version  <- expr $ pkgVersion  ctx
+        Just synopsis <- expr $ pkgSynopsis ctx
         deps     <- getPkgDataList DepNames
         haddocks <- expr . haddockDependencies =<< getContext
-        hVersion <- expr $ pkgVersion (unsafePkgCabalFile haddock) -- TODO: improve
+        Just hVersion <- expr $ pkgVersion ctx
         ghcOpts  <- haddockGhcArgs
         mconcat
             [ arg $ "--odir=" ++ takeDirectory output

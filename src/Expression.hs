@@ -26,7 +26,7 @@ module Expression (
 import qualified Hadrian.Expression as H
 import Hadrian.Expression hiding (Expr, Predicate, Args)
 import Hadrian.Haskell.Cabal.Parse (Cabal)
-import Hadrian.Oracles.TextFile (readCabalFile')
+import Hadrian.Oracles.TextFile (readCabalFile)
 
 import Base
 import Builder
@@ -55,9 +55,8 @@ getPkgDataList key = expr . pkgDataList . key =<< getContextPath
 
 getCabalData :: (Cabal -> a) -> Expr a
 getCabalData key = do
-  stage <- getStage
-  path  <- unsafePkgCabalFile <$> getPackage
-  cabal <- expr (readCabalFile' stage path)
+  ctx   <- getContext
+  Just cabal <- expr (readCabalFile ctx)
   return $ key cabal
 
 -- | Is the build currently in the provided stage?

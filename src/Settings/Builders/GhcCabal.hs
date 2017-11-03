@@ -7,6 +7,7 @@ import Hadrian.Haskell.Cabal
 import Context
 import Flavour
 import Settings.Builders.Common
+import qualified Types.Context as Context
 
 ghcCabalBuilderArgs :: Args
 ghcCabalBuilderArgs = mconcat
@@ -103,8 +104,9 @@ bootPackageConstraints :: Args
 bootPackageConstraints = stage0 ? do
     bootPkgs <- expr $ stagePackages Stage0
     let pkgs = filter (\p -> p /= compiler && isLibrary p) bootPkgs
+    ctx <- getContext
     constraints <- expr $ fmap catMaybes $ forM (sort pkgs) $ \pkg -> do
-        version <- traverse pkgVersion (pkgCabalFile pkg)
+        version <- pkgVersion (ctx { Context.package = pkg})
         return $ fmap ((pkgName pkg ++ " == ") ++) version
     pure $ concat [ ["--constraint", c] | c <- constraints ]
 

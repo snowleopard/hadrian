@@ -111,7 +111,7 @@ buildBinary rs bin context@Context {..} = do
         --         -- As such, we will ignore this for now, even though it will mean
         --         -- that hadrian will not properly track the dependencies of
         --         -- ghc-cabal properly.
-             
+
         --      ghcCabalPath <- contextPath (context { Context.package = ghcCabal })
         --      cabalPath    <- contextPath (context { Context.package = cabal    })
         --      textPath     <- contextPath (context { Context.package = text     })
@@ -133,6 +133,6 @@ buildBinary rs bin context@Context {..} = do
                   ++ [ path -/- "build" -/- "Paths_haddock.o" | package == haddock ]
     need binDeps
     buildWithResources rs $ target context (Ghc LinkHs stage) binDeps [bin]
-    synopsis <- traverse pkgSynopsis (pkgCabalFile package)
+    synopsis <- pkgSynopsis context
     putSuccess $ renderProgram
         (quote (pkgName package) ++ " (" ++ show stage ++ ").") bin synopsis

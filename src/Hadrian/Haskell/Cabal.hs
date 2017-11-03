@@ -14,6 +14,7 @@ module Hadrian.Haskell.Cabal (
     ) where
 
 import Stage
+import Types.Context
 import Development.Shake
 
 import Hadrian.Haskell.Cabal.Parse
@@ -21,14 +22,14 @@ import Hadrian.Package
 import Hadrian.Oracles.TextFile
 
 -- | Read a Cabal file and return the package version. The Cabal file is tracked.
-pkgVersion :: FilePath -> Action String
-pkgVersion cabalFile = version <$> readCabalFile' Stage0 cabalFile
+pkgVersion :: Context -> Action (Maybe String)
+pkgVersion = fmap (fmap version) . readCabalFile
 
 -- | Read a Cabal file and return the package identifier, e.g. @base-4.10.0.0@.
 -- The Cabal file is tracked.
-pkgIdentifier :: FilePath -> Action String
-pkgIdentifier cabalFile = do
-    cabal <- readCabalFile' Stage0 cabalFile
+pkgIdentifier :: Context -> Action String
+pkgIdentifier ctx = do
+    Just cabal <- readCabalFile ctx
     return $ if null (version cabal)
         then name cabal
         else name cabal ++ "-" ++ version cabal
@@ -37,9 +38,9 @@ pkgIdentifier cabalFile = do
 -- The current version does not take care of Cabal conditionals and therefore
 -- returns a crude overapproximation of actual dependencies. The Cabal file is
 -- tracked.
-pkgDependencies :: Stage -> FilePath -> Action [PackageName]
-pkgDependencies stage cabalFile = dependencies <$> readCabalFile' stage cabalFile
+pkgDependencies :: Context -> Action (Maybe [PackageName])
+pkgDependencies = fmap (fmap dependencies) . readCabalFile
 
 -- | Read a Cabal file and return the package synopsis. The Cabal file is tracked.
-pkgSynopsis :: FilePath -> Action String
-pkgSynopsis cabalFile = synopsis <$> readCabalFile' Stage0 cabalFile
+pkgSynopsis :: Context -> Action (Maybe String)
+pkgSynopsis = fmap (fmap synopsis) . readCabalFile

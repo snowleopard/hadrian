@@ -97,7 +97,8 @@ defaultLibraryWays :: Ways
 defaultLibraryWays = mconcat
     [ pure [vanilla]
     , notStage0 ? pure [profiling]
-    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic] ]
+    -- , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
+    ]
 
 -- | Default build ways for the RTS.
 defaultRtsWays :: Ways
@@ -106,9 +107,10 @@ defaultRtsWays = do
     mconcat
         [ pure [ logging, debug, threaded, threadedDebug, threadedLogging ]
         , (profiling `elem` ways) ? pure [threadedProfiling]
-        , (dynamic `elem` ways) ?
-          pure [ dynamic, debugDynamic, threadedDynamic, threadedDebugDynamic
-                 , loggingDynamic, threadedLoggingDynamic ] ]
+        -- , (dynamic `elem` ways) ?
+        --   pure [ dynamic, debugDynamic, threadedDynamic, threadedDebugDynamic
+        --          , loggingDynamic, threadedLoggingDynamic ]
+        ]
 
 -- | Default build flavour. Other build flavours are defined in modules
 -- @Settings.Flavours.*@. Users can add new build flavours in "UserSettings".

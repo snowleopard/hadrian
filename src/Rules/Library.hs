@@ -95,7 +95,7 @@ buildPackageLibrary context@Context {..} = do
         if isLib0 then build $ target context (Ar Pack stage) []   [a] -- TODO: Scan for dlls
                   else build $ target context (Ar Pack stage) objs [a]
 
-        synopsis <- traverse pkgSynopsis (pkgCabalFile package)
+        synopsis <- pkgSynopsis context
         unless isLib0 . putSuccess $ renderLibrary
             (quote (pkgName package) ++ " (" ++ show stage ++ ", way "
             ++ show way ++ ").") a synopsis

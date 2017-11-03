@@ -126,8 +126,8 @@ wayGhcArgs = do
               pure ["-ticky", "-DTICKY_TICKY"] ]
 
 packageGhcArgs :: Args
-packageGhcArgs = withHsPackage $ \cabalFile -> do
-    pkgId <- expr $ pkgIdentifier cabalFile
+packageGhcArgs = withHsPackage $ \ctx -> do
+    pkgId <- expr $ pkgIdentifier ctx
     mconcat [ arg "-hide-all-packages"
             , arg "-no-user-package-db"
             , bootPackageDatabaseArgs
