@@ -64,10 +64,34 @@ cabalIncludeDirs c = concatMap C.includeDirs [ C.libBuildInfo lib | (Just lib) <
 -- | Parse a Cabal file.
 parseCabal :: Stage -> FilePath -> Action Cabal
 parseCabal stage file = do
+    -- read the package description from the cabal file
+    gpd <- liftIO $ C.readGenericPackageDescription C.silent file
+
+    -- figure out what hooks we need.
+    let hooks = case buildType (flattenPackageDescription gpd) of
+          Just Configure -> autoconfUserHooks
+          -- time has a "Custom" Setup.hs, but it's actually Configure
+          -- plus a "./Setup test" hook. However, Cabal is also
+          -- "Custom", but doesn't have a configure script.
+          Just Custom ->
+              do configureExists <- doesFileExist (replaceFileName file "configure")
+                 if configureExists
+                     then autoconfUserHooks
+                     else simpleUserHooks
+          -- not quite right, but good enough for us:
+          _ | (pkgName . package . packageDescription $ gpd) == mkPackageName "rts" ->
+              -- don't try to do post conf validation for rts.
+              -- this will simply not work, due to the ld-options,
+              -- and the Stg.h.
+              simpleUserHooks { postConf = \_ _ _ _ -> return () }
+            | otherwise -> simpleUserHooks
+
+    defaultMainWithHooksNoReadArgs hooks gpd ["configure", "--distdir", undefined, "--ipid", "$pkg-$version"]
+
     hcPath <- builderPath' (Ghc CompileHs stage)
     (compiler, Just platform, _pgdb) <- liftIO $ GHC.configure C.silent (Just hcPath) Nothing Db.emptyProgramDb
-    gpd <- liftIO $ C.readGenericPackageDescription C.silent file
-    let (Right (pd,_)) = C.finalizePackageDescription [] (const True) platform (compilerInfo compiler) [] gpd
+
+    let (Right (pd,_)) = C.finalizePackageDescription mempty (const True) platform (compilerInfo compiler) [] gpd
     let -- pd      = C.packageDescription gpd
         pkgId   = C.package pd
         name    = C.unPackageName (C.pkgName pkgId)
