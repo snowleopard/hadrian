@@ -18,7 +18,6 @@ data PackageDataList = AsmSrcs        FilePath
                      | DepIds         FilePath
                      | DepIncludeDirs FilePath
                      | DepLdArgs      FilePath
-                     | DepLibDirs     FilePath
                      | DepNames       FilePath
                      | Deps           FilePath
                      | HiddenModules  FilePath
@@ -52,7 +51,6 @@ pkgDataList packageData = fmap (map unquote . words) $ case packageData of
     DepExtraLibs   path -> askPackageData path "DEP_EXTRA_LIBS"
     DepIds         path -> askPackageData path "DEP_IPIDS"
     DepIncludeDirs path -> askPackageData path "DEP_INCLUDE_DIRS_SINGLE_QUOTED"
-    DepLibDirs     path -> askPackageData path "DEP_LIB_DIRS_SINGLE_QUOTED"
     DepLdArgs      path -> askPackageData path "DEP_LD_OPTS"
     DepNames       path -> askPackageData path "DEP_NAMES"
     Deps           path -> askPackageData path "DEPS"

@@ -49,7 +49,6 @@ ghcLinkArgs = builder (Ghc LinkHs) ? do
     way     <- getWay
     pkg     <- getPackage
     libs    <- getPkgDataList DepExtraLibs
-    libDirs <- getPkgDataList DepLibDirs
     intLib  <- expr (integerLibrary =<< flavour)
     gmpLibs <- if stage > Stage0 && intLib == integerGmp
                then do -- TODO: get this data more gracefully
@@ -63,7 +62,6 @@ ghcLinkArgs = builder (Ghc LinkHs) ? do
             ,      nonHsMainPackage pkg  ? arg "-no-hs-main"
             , not (nonHsMainPackage pkg) ? arg "-rtsopts"
             , pure [ "-optl-l" ++           lib | lib <- libs ++ gmpLibs ]
-            , pure [ "-optl-L" ++ unifyPath dir | dir <- libDirs ] ]
 
 splitObjectsArgs :: Args
 splitObjectsArgs = splitObjects <$> flavour ? do

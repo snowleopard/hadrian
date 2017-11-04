@@ -47,11 +47,9 @@ getCFlags = do
 
 getLFlags :: Expr [String]
 getLFlags = do
-    libDirs   <- getPkgDataList DepLibDirs
     extraLibs <- getPkgDataList DepExtraLibs
     mconcat [ getStagedSettingList ConfGccLinkerArgs
             , ldArgs
             , getPkgDataList LdArgs
-            , pure [ "-L" ++ unifyPath dir | dir <- libDirs ]
             , pure [ "-l" ++ unifyPath dir | dir <- extraLibs ]
             , getPkgDataList DepLdArgs ]
