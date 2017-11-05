@@ -1,4 +1,4 @@
-module Settings.Warnings (defaultHsWarningsArgs, warningArgs) where
+module Settings.Warnings (defaultGhcWarningsArgs, warningArgs) where
 
 import Expression
 import Oracles.Flag
@@ -7,9 +7,9 @@ import Oracles.Setting
 -- See @mk/warnings.mk@ for warning-related arguments in the Make build system.
 
 -- | Default Haskell warning-related arguments.
-defaultHsWarningsArgs :: Args
-defaultHsWarningsArgs = mconcat
-    [ notStage0 ? arg "-Werror"
+defaultGhcWarningsArgs :: Args
+defaultGhcWarningsArgs = mconcat
+    [ notStage0 ? pure [ "-Werror", "-Wnoncanonical-monad-instances" ]
     , (not <$> flag GccIsClang) ? mconcat
       [ (not <$> flag GccLt46) ?
         (not <$> windowsHost ) ? arg "-optc-Werror=unused-but-set-variable"

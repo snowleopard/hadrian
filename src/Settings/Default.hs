@@ -73,8 +73,7 @@ defaultSourceArgs :: SourceArgs
 defaultSourceArgs = SourceArgs
     { hsDefault  = mconcat [ stage0    ? arg "-O"
                            , notStage0 ? arg "-O2"
-                           , arg "-H32m"
-                           , defaultHsWarningsArgs ]
+                           , arg "-H32m" ]
     , hsLibrary  = mempty
     , hsCompiler = mempty
     , hsGhc      = mempty }
@@ -138,8 +137,6 @@ defaultBuilderArgs = mconcat
     , genPrimopCodeBuilderArgs
     , ghcBuilderArgs
     , ghcCabalBuilderArgs
-    , ghcCBuilderArgs
-    , ghcMBuilderArgs
     , ghcPkgBuilderArgs
     , haddockBuilderArgs
     , happyBuilderArgs
