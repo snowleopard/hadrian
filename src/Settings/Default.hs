@@ -43,6 +43,7 @@ import Settings.Packages.Haskeline
 import Settings.Packages.IntegerGmp
 import Settings.Packages.Rts
 import Settings.Packages.RunGhc
+import Settings.Warnings
 
 -- TODO: Move C source arguments here
 -- | Default and package-specific source arguments.
@@ -66,7 +67,8 @@ defaultArgs :: Args
 defaultArgs = mconcat
     [ defaultBuilderArgs
     , sourceArgs defaultSourceArgs
-    , defaultPackageArgs ]
+    , defaultPackageArgs
+    , warningArgs ]
 
 -- ref: mk/warnings.mk
 -- | Default Haskell warning-related arguments.
@@ -167,57 +169,19 @@ defaultBuilderArgs = mconcat
     , builder (Tar Create  ) ? Hadrian.Builder.Tar.args Create
     , builder (Tar Extract ) ? Hadrian.Builder.Tar.args Extract ]
 
--- TODO: Disable warnings for Windows specifics.
--- TODO: Move this elsewhere?
--- ref: mk/warnings.mk
--- | Disable warnings in packages we use.
-disableWarningArgs :: Args
-disableWarningArgs = builder Ghc ? mconcat
-    [ stage0 ? mconcat
-      [ package terminfo     ? pure [ "-fno-warn-unused-imports" ]
-      , package transformers ? pure [ "-fno-warn-unused-matches"
-                                    , "-fno-warn-unused-imports" ]
-      , libraryPackage       ? pure [ "-fno-warn-deprecated-flags" ] ]
-
-    , notStage0 ? mconcat
-      [ package base         ? pure [ "-Wno-trustworthy-safe" ]
-      , package binary       ? pure [ "-Wno-deprecations" ]
-      , package bytestring   ? pure [ "-Wno-inline-rule-shadowing" ]
-      , package directory    ? pure [ "-Wno-unused-imports" ]
-      , package ghcPrim      ? pure [ "-Wno-trustworthy-safe" ]
-      , package haddock      ? pure [ "-Wno-unused-imports"
-                                    , "-Wno-deprecations" ]
-      , package haskeline    ? pure [ "-Wno-deprecations"
-                                    , "-Wno-unused-imports"
-                                    , "-Wno-redundant-constraints"
-                                    , "-Wno-simplifiable-class-constraints" ]
-      , package pretty       ? pure [ "-Wno-unused-imports" ]
-      , package primitive    ? pure [ "-Wno-unused-imports"
-                                    , "-Wno-deprecations" ]
-      , package terminfo     ? pure [ "-Wno-unused-imports" ]
-      , package transformers ? pure [ "-Wno-unused-matches"
-                                    , "-Wno-unused-imports"
-                                    , "-Wno-redundant-constraints"
-                                    , "-Wno-orphans" ]
-      , package win32        ? pure [ "-Wno-trustworthy-safe" ]
-      , package xhtml        ? pure [ "-Wno-unused-imports"
-                                    , "-Wno-tabs" ]
-      , libraryPackage       ? pure [ "-Wno-deprecated-flags" ] ] ]
-
 -- | All 'Package'-dependent command line arguments.
 defaultPackageArgs :: Args
 defaultPackageArgs = mconcat
     [ basePackageArgs
     , cabalPackageArgs
     , compilerPackageArgs
-    , ghcPackageArgs
     , ghcCabalPackageArgs
     , ghciPackageArgs
+    , ghcPackageArgs
+    , ghcPkgPackageArgs
     , ghcPrimPackageArgs
     , haddockPackageArgs
+    , haskelinePackageArgs
     , integerGmpPackageArgs
     , rtsPackageArgs
-    , runGhcPackageArgs
-    , disableWarningArgs
-    , ghcPkgPackageArgs
-    , haskelinePackageArgs ]
+    , runGhcPackageArgs ]
