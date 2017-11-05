@@ -1,9 +1,22 @@
-module Settings.Warnings (warningArgs) where
+module Settings.Warnings (defaultHsWarningsArgs, warningArgs) where
 
 import Expression
+import Oracles.Flag
+import Oracles.Setting
 
--- ref: mk/warnings.mk
--- | Warnings-related build arguments, mostly suppressing various warnings.
+-- See @mk/warnings.mk@ for warning-related arguments in the Make build system.
+
+-- | Default Haskell warning-related arguments.
+defaultHsWarningsArgs :: Args
+defaultHsWarningsArgs = mconcat
+    [ notStage0 ? arg "-Werror"
+    , (not <$> flag GccIsClang) ? mconcat
+      [ (not <$> flag GccLt46) ?
+        (not <$> windowsHost ) ? arg "-optc-Werror=unused-but-set-variable"
+      , (not <$> flag GccLt44) ? arg "-optc-Wno-error=inline" ]
+    , flag GccIsClang ? arg "-optc-Wno-unknown-pragmas" ]
+
+-- | Package-specific warnings-related arguments, mostly suppressing various warnings.
 warningArgs :: Args
 warningArgs = builder Ghc ? mconcat
     [ stage0 ? mconcat
@@ -16,7 +29,9 @@ warningArgs = builder Ghc ? mconcat
       , package base         ? pure [ "-Wno-trustworthy-safe" ]
       , package binary       ? pure [ "-Wno-deprecations" ]
       , package bytestring   ? pure [ "-Wno-inline-rule-shadowing" ]
+      , package compiler     ? pure [ "-Wcpp-undef" ]
       , package directory    ? pure [ "-Wno-unused-imports" ]
+      , package ghc          ? pure [ "-Wcpp-undef" ]
       , package ghcPrim      ? pure [ "-Wno-trustworthy-safe" ]
       , package haddock      ? pure [ "-Wno-unused-imports"
                                     , "-Wno-deprecations" ]
@@ -27,6 +42,7 @@ warningArgs = builder Ghc ? mconcat
       , package pretty       ? pure [ "-Wno-unused-imports" ]
       , package primitive    ? pure [ "-Wno-unused-imports"
                                     , "-Wno-deprecations" ]
+      , package rts          ? pure [ "-Wcpp-undef" ]
       , package terminfo     ? pure [ "-Wno-unused-imports" ]
       , package transformers ? pure [ "-Wno-unused-matches"
                                     , "-Wno-unused-imports"

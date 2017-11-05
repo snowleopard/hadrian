@@ -13,7 +13,6 @@ import Expression
 import Flavour
 import Oracles.Flag
 import Oracles.PackageData
-import Oracles.Setting
 import Settings
 import Settings.Builders.Alex
 import Settings.Builders.DeriveConstants
@@ -67,18 +66,7 @@ defaultArgs :: Args
 defaultArgs = mconcat
     [ defaultBuilderArgs
     , sourceArgs defaultSourceArgs
-    , defaultPackageArgs
-    , warningArgs ]
-
--- ref: mk/warnings.mk
--- | Default Haskell warning-related arguments.
-defaultHsWarningsArgs :: Args
-defaultHsWarningsArgs = mconcat
-    [ notStage0 ? arg "-Werror"
-    , (not <$> flag GccIsClang) ? mconcat
-      [ (not <$> flag GccLt46) ? (not <$> windowsHost) ? arg "-optc-Werror=unused-but-set-variable"
-      , (not <$> flag GccLt44) ? arg "-optc-Wno-error=inline" ]
-    , flag GccIsClang ? arg "-optc-Wno-unknown-pragmas" ]
+    , defaultPackageArgs ]
 
 -- | Default source arguments, e.g. optimisation settings.
 defaultSourceArgs :: SourceArgs
@@ -184,4 +172,5 @@ defaultPackageArgs = mconcat
     , haskelinePackageArgs
     , integerGmpPackageArgs
     , rtsPackageArgs
-    , runGhcPackageArgs ]
+    , runGhcPackageArgs
+    , warningArgs ]
