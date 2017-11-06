@@ -49,11 +49,9 @@ warningArgs = builder Ghc ? do
         , package terminfo     ? pure [ "-Wno-unused-imports" ]
         , isIntegerSimple      ?
           package text         ? pure [ "-Wno-unused-imports" ]
-
         , package transformers ? pure [ "-Wno-unused-matches"
                                       , "-Wno-unused-imports"
                                       , "-Wno-redundant-constraints"
                                       , "-Wno-orphans" ]
         , package win32        ? pure [ "-Wno-trustworthy-safe" ]
-        , package xhtml        ? pure [ "-Wno-unused-imports"
-                                      , "-Wno-tabs" ] ] ]
+        , package xhtml        ? pure [ "-Wno-unused-imports" ] ] ]
