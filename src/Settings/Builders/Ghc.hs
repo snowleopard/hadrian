@@ -51,7 +51,7 @@ ghcLinkArgs = builder (Ghc LinkHs) ? do
     pkg     <- getPackage
     libs    <- getPkgDataList DepExtraLibs
     libDirs <- getPkgDataList DepLibDirs
-    intLib  <- expr (integerLibrary =<< flavour)
+    intLib  <- getIntegerPackage
     gmpLibs <- if stage > Stage0 && intLib == integerGmp
                then do -- TODO: get this data more gracefully
                    let strip = fromMaybe "" . stripPrefix "extra-libraries: "
