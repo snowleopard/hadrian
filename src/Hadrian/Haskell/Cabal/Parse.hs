@@ -287,10 +287,9 @@ parseConfiguredCabal context@Context {..} = do
 
     Just (Cabal _ _ _ gpd pd depPkgs) <- readCabalFile context
 
-    -- XXX: need the setup-config here, which would trigger the configure Package
-    configurePackage context
-
     cPath <- Context.contextPath context
+    need [cPath -/- "setup-config"]
+
     liftIO $ putStrLn $ "trying to obtain the persitendBuildConfig at " ++ show cPath
     lbi <- liftIO $ C.getPersistBuildConfig cPath
 
