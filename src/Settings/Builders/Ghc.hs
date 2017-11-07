@@ -7,7 +7,7 @@ import Hadrian.Haskell.Cabal
 import Flavour
 import Rules.Gmp
 import Settings.Builders.Common
-import Hadrian.Haskell.Cabal.Parse (cabalCcArgs)
+import Types.ConfiguredCabal as ConfCabal
 
 ghcBuilderArgs :: Args
 ghcBuilderArgs = (builder (Ghc CompileHs) ||^ builder (Ghc LinkHs)) ? do
@@ -28,7 +28,7 @@ needTouchy = notStage0 ? windowsHost ? do
 ghcCBuilderArgs :: Args
 ghcCBuilderArgs = builder (Ghc CompileCWithGhc) ? do
     way <- getWay
-    let ccArgs = [ getCabalData cabalCcArgs
+    let ccArgs = [ getConfiguredCabalData ConfCabal.ccOpts
                  , getStagedSettingList ConfCcArgs
                  , cIncludeArgs
                  , arg "-Werror"
@@ -48,7 +48,7 @@ ghcLinkArgs = builder (Ghc LinkHs) ? do
     stage   <- getStage
     way     <- getWay
     pkg     <- getPackage
-    libs    <- getPkgDataList DepExtraLibs
+    libs    <- pkg == hp2ps ? pure ["m"]
     intLib  <- expr (integerLibrary =<< flavour)
     gmpLibs <- if stage > Stage0 && intLib == integerGmp
                then do -- TODO: get this data more gracefully
@@ -62,6 +62,7 @@ ghcLinkArgs = builder (Ghc LinkHs) ? do
             ,      nonHsMainPackage pkg  ? arg "-no-hs-main"
             , not (nonHsMainPackage pkg) ? arg "-rtsopts"
             , pure [ "-optl-l" ++           lib | lib <- libs ++ gmpLibs ]
+            ]
 
 splitObjectsArgs :: Args
 splitObjectsArgs = splitObjects <$> flavour ? do
@@ -79,7 +80,7 @@ ghcMBuilderArgs = builder (Ghc FindHsDependencies) ? do
             , getInputs ]
 
 haddockGhcArgs :: Args
-haddockGhcArgs = mconcat [ commonGhcArgs, getPkgDataList HsArgs ]
+haddockGhcArgs = mconcat [ commonGhcArgs, getConfiguredCabalData ConfCabal.hcOpts ]
 
 -- Used in ghcBuilderArgs, ghcCBuilderArgs, ghcMBuilderArgs and haddockGhcArgs.
 commonGhcArgs :: Args
@@ -104,7 +105,7 @@ commonGhcArgs = do
             , (pkg == rts) ? notStage0 ? arg ("-ghc-version=" ++ ghcVersion)
             , map ("-optc" ++) <$> getStagedSettingList ConfCcArgs
             , map ("-optP" ++) <$> getStagedSettingList ConfCppArgs
-            , map ("-optP" ++) <$> getPkgDataList CppArgs
+            , map ("-optP" ++) <$> getConfiguredCabalData ConfCabal.cppOpts
             , arg "-odir"    , arg path
             , arg "-hidir"   , arg path
             , arg "-stubdir" , arg path ]
@@ -130,7 +131,7 @@ packageGhcArgs = withHsPackage $ \ctx -> do
             , arg "-no-user-package-db"
             , bootPackageDatabaseArgs
             , libraryPackage ? arg ("-this-unit-id " ++ pkgId)
-            , map ("-package-id " ++) <$> getPkgDataList DepIds ]
+            , map ("-package-id " ++) <$> getConfiguredCabalData ConfCabal.depIpIds ]
 
 includeGhcArgs :: Args
 includeGhcArgs = do
@@ -138,7 +139,7 @@ includeGhcArgs = do
     path    <- getBuildPath
     root    <- getBuildRoot
     context <- getContext
-    srcDirs <- getPkgDataList SrcDirs
+    srcDirs <- getConfiguredCabalData ConfCabal.srcDirs
     autogen <- expr $ autogenPath context
     mconcat [ arg "-i"
             , arg $ "-i" ++ path

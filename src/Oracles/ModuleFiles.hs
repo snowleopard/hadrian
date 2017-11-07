@@ -11,7 +11,7 @@ import Context
 import GHC
 import Oracles.PackageData
 import Expression
-import Hadrian.Haskell.Cabal.Parse
+import Types.ConfiguredCabal as ConfCabal
 
 newtype ModuleFiles = ModuleFiles (Stage, Package)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -91,7 +91,7 @@ hsSources context = do
 hsObjects :: Context -> Action [FilePath]
 hsObjects context = do
     path    <- contextPath context
-    modules <- interpretInContext context (getCabalData cabalModules)
+    modules <- interpretInContext context (getConfiguredCabalData ConfCabal.modules)
     -- GHC.Prim module is only for documentation, we do not actually build it.
     mapM (objectPath context . moduleSource) (filter (/= "GHC.Prim") modules)
 
@@ -108,7 +108,7 @@ moduleSource moduleName = replaceEq '.' '/' moduleName <.> "hs"
 contextFiles :: Context -> Action [(String, Maybe FilePath)]
 contextFiles context@Context {..} = do
     path    <- contextPath context
-    modules <- fmap sort $ interpretInContext context (getCabalData cabalModules)
+    modules <- fmap sort $ interpretInContext context (getConfiguredCabalData ConfCabal.modules)
     zip modules <$> askOracle (ModuleFiles (stage, package))
 
 -- | This is an important oracle whose role is to find and cache module source
@@ -127,8 +127,8 @@ moduleFilesOracle = void $ do
     void . addOracle $ \(ModuleFiles (stage, package)) -> do
         let context = vanillaContext stage package
         path    <- contextPath context
-        srcDirs <-             interpretInContext context (getCabalData cabalSrcDirs)
-        modules <- fmap sort $ interpretInContext context (getCabalData cabalModules)
+        srcDirs <-             interpretInContext context (getConfiguredCabalData ConfCabal.srcDirs)
+        modules <- fmap sort $ interpretInContext context (getConfiguredCabalData ConfCabal.modules)
         autogen <- autogenPath context
         let dirs = autogen : map (pkgPath package -/-) srcDirs
             modDirFiles = groupSort $ map decodeModule modules

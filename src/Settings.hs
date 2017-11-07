@@ -1,6 +1,6 @@
 module Settings (
     getArgs, getLibraryWays, getRtsWays, flavour, knownPackages,
-    findPackageByName, getPkgData, getPkgDataList, isLibrary, stagePackages,
+    findPackageByName, isLibrary, stagePackages,
     programContext, integerLibraryName, getDestDir
     ) where
 

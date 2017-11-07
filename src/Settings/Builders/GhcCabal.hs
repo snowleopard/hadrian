@@ -8,6 +8,7 @@ import Context
 import Flavour
 import Settings.Builders.Common
 import qualified Types.Context as Context
+import Data.Maybe (fromJust)
 
 ghcCabalBuilderArgs :: Args
 ghcCabalBuilderArgs = mconcat
@@ -17,8 +18,14 @@ ghcCabalBuilderArgs = mconcat
     path      <- getContextPath
     stage     <- getStage
     mconcat [ arg "configure"
-            , arg =<< pkgPath <$> getPackage
+            , arg "--cabal-file"
+            , arg =<< fromJust . pkgCabalFile <$> getPackage
+            , arg "--distdir"
             , arg $ top -/- path
+            , arg "--ipid"
+            , arg "$pkg-$version"
+            , arg "--prefix"
+            , arg "/"
             , withStaged $ Ghc CompileHs
             , withStaged (GhcPkg Update)
             , withBuilderArgs (GhcPkg Update stage)

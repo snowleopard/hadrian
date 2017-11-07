@@ -14,6 +14,7 @@ import Oracles.PackageData
 import Settings
 import Target
 import UserSettings
+import Types.ConfiguredCabal as ConfCabal
 
 build :: Target -> Action ()
 build target = H.build target getArgs
@@ -46,7 +47,7 @@ contextDependencies ctx@Context {..} = pkgDependencies ctx >>= \case
         return . map depContext $ intersectOrd (compare . pkgName) pkgs deps
 
 cabalDependencies :: Context -> Action [String]
-cabalDependencies ctx = interpretInContext ctx $ getPkgDataList DepIds
+cabalDependencies ctx = interpretInContext ctx $ getConfiguredCabalData ConfCabal.depIpIds
 
 -- | Lookup dependencies of a 'Package' in the vanilla Stage1 context.
 stage1Dependencies :: Package -> Action [Package]
@@ -61,10 +62,9 @@ libraryTargets includeGhciLib context = do
     lib0File <- pkgLibraryFile0    context
     lib0     <- buildDll0          context
     ghciLib  <- pkgGhciLibraryFile context
-    ghciFlag <- if includeGhciLib
-                then interpretInContext context $ getPkgData BuildGhciLib
-                else return "NO"
-    let ghci = ghciFlag == "YES"
+    ghci     <- if includeGhciLib
+                then interpretInContext context $ getConfiguredCabalData ConfCabal.buildGhciLib
+                else return False
     return $ [ libFile ] ++ [ lib0File | lib0 ] ++ [ ghciLib | ghci ]
 
 -- | Coarse-grain 'need': make sure all given libraries are fully built.

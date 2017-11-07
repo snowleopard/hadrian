@@ -6,6 +6,7 @@ import Hadrian.Haskell.Cabal
 import Rules.Documentation
 import Settings.Builders.Common
 import Settings.Builders.Ghc
+import Types.ConfiguredCabal as ConfCabal
 
 -- | Given a version string such as "2.16.2" produce an integer equivalent.
 versionToInt :: String -> Int
@@ -34,7 +35,7 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
         path     <- getBuildPath
         Just version  <- expr $ pkgVersion  ctx
         Just synopsis <- expr $ pkgSynopsis ctx
-        deps     <- getPkgDataList DepNames
+        deps     <- getConfiguredCabalData ConfCabal.depNames
         haddocks <- expr . haddockDependencies =<< getContext
         Just hVersion <- expr $ pkgVersion ctx
         ghcOpts  <- haddockGhcArgs
@@ -51,7 +52,7 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
             , arg $ "--prologue=" ++ path -/- "haddock-prologue.txt"
             , arg $ "--optghc=-D__HADDOCK_VERSION__="
                     ++ show (versionToInt hVersion)
-            , map ("--hide=" ++) <$> getPkgDataList HiddenModules
+            , map ("--hide=" ++) <$> getConfiguredCabalData ConfCabal.otherModules
             , pure [ "--read-interface=../" ++ dep
                      ++ ",../" ++ dep ++ "/src/%{MODULE}.html#%{NAME},"
                      ++ haddock | (dep, haddock) <- zip deps haddocks ]

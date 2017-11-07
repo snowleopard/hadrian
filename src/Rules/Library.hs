@@ -3,8 +3,9 @@ module Rules.Library (
     ) where
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.Parse as Cabal
+import Types.ConfiguredCabal as ConfCabal
 import qualified System.Directory as IO
+import Hadrian.Haskell.Cabal.Parse (parseCabalPkgId)
 
 import Base
 import Context
@@ -122,7 +123,7 @@ nonHsObjects :: Context -> Action [FilePath]
 nonHsObjects context = do
     path    <- contextPath context
     cObjs   <- cObjects context
-    cmmSrcs <- interpretInContext context (getCabalData cabalCmmSrcs)
+    cmmSrcs <- interpretInContext context (getConfiguredCabalData ConfCabal.cmmSrcs)
     cmmObjs <- mapM (objectPath context) cmmSrcs
     eObjs   <- extraObjects context
     return $ cObjs ++ cmmObjs ++ eObjs
@@ -130,7 +131,7 @@ nonHsObjects context = do
 cObjects :: Context -> Action [FilePath]
 cObjects context = do
     path <- contextPath context
-    srcs <- interpretInContext context (getCabalData cabalCSrcs)
+    srcs <- interpretInContext context (getConfiguredCabalData ConfCabal.cSrcs)
     objs <- mapM (objectPath context) srcs
     return $ if way context == threaded
         then objs

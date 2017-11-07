@@ -9,6 +9,8 @@ import Settings.Packages.Rts
 import Target
 import Utilities
 
+import Hadrian.Haskell.Cabal.Parse (configurePackage)
+
 -- | Build @package-data.mk@ by using ghc-cabal utility to process .cabal files.
 buildPackageData :: Context -> Rules ()
 buildPackageData context@Context {..} = do
@@ -16,19 +18,8 @@ buildPackageData context@Context {..} = do
         cabalFile = unsafePkgCabalFile package -- TODO: improve
         configure = pkgPath package -/- "configure"
     -- TODO: Get rid of hardcoded file paths.
-    [dir -/- "package-data.mk", dir -/- "setup-config"] &%> \[mk, setupConfig] -> do
-        -- Make sure all generated dependencies are in place before proceeding.
-        orderOnly =<< interpretInContext context generatedDependencies
-
-        -- GhcCabal may run the configure script, so we depend on it.
-        whenM (doesFileExist $ configure <.> "ac") $ need [configure]
-
-        -- Before we configure a package its dependencies need to be registered.
-        need =<< mapM pkgConfFile =<< contextDependencies context
-
-        need [cabalFile]
-        build $ target context (GhcCabal Conf stage) [cabalFile] [mk, setupConfig]
-        postProcessPackageData context mk
+    dir -/- "setup-config" %> \setupConfig -> do
+        configurePackage context
 
     -- TODO: Get rid of hardcoded file paths.
     dir -/- "inplace-pkg-config" %> \conf -> do

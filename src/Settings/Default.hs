@@ -44,6 +44,8 @@ import Settings.Packages.IntegerGmp
 import Settings.Packages.Rts
 import Settings.Packages.RunGhc
 
+import Types.ConfiguredCabal as ConfCabal
+
 -- TODO: Move C source arguments here
 -- | Default and package-specific source arguments.
 data SourceArgs = SourceArgs
@@ -56,7 +58,7 @@ data SourceArgs = SourceArgs
 sourceArgs :: SourceArgs -> Args
 sourceArgs SourceArgs {..} = builder Ghc ? mconcat
     [ hsDefault
-    , (not <$> builder (Ghc Settings)) ? getPkgDataList HsArgs
+    , (not <$> builder (Ghc Settings)) ? getConfiguredCabalData ConfCabal.hcOpts
     , libraryPackage   ? hsLibrary
     , package compiler ? hsCompiler
     , package ghc      ? hsGhc ]

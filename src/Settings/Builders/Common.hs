@@ -17,15 +17,15 @@ import Oracles.Setting
 import Settings
 import UserSettings
 
-import Hadrian.Haskell.Cabal.Parse (cabalIncludeDirs)
+import Types.ConfiguredCabal as ConfCabal
 
 cIncludeArgs :: Args
 cIncludeArgs = do
     pkg     <- getPackage
     root    <- getBuildRoot
     path    <- getBuildPath
-    incDirs <- getCabalData cabalIncludeDirs
-    depDirs <- getPkgDataList DepIncludeDirs
+    incDirs <- getConfiguredCabalData ConfCabal.includeDirs
+    depDirs <- getConfiguredCabalData ConfCabal.depIncludeDirs
     cross   <- expr crossCompiling
     compilerOrGhc <- package compiler ||^ package ghc
     mconcat [ not (cross && compilerOrGhc) ? arg "-Iincludes"

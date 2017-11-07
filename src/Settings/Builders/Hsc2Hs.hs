@@ -1,6 +1,7 @@
 module Settings.Builders.Hsc2Hs (hsc2hsBuilderArgs) where
 
 import Settings.Builders.Common
+import Types.ConfiguredCabal as ConfCabal
 
 hsc2hsBuilderArgs :: Args
 hsc2hsBuilderArgs = builder Hsc2Hs ? do
@@ -40,16 +41,14 @@ getCFlags = do
     mconcat [ remove ["-O"] (cArgs <> getStagedSettingList ConfCcArgs)
             , getStagedSettingList ConfCppArgs
             , cIncludeArgs
-            , getPkgDataList CppArgs
-            , getPkgDataList DepCcArgs
+            , getConfiguredCabalData ConfCabal.cppOpts
+            , getConfiguredCabalData ConfCabal.depCcOpts
             , cWarnings
             , arg "-include", arg $ autogen -/- "cabal_macros.h" ]
 
 getLFlags :: Expr [String]
 getLFlags = do
-    extraLibs <- getPkgDataList DepExtraLibs
     mconcat [ getStagedSettingList ConfGccLinkerArgs
             , ldArgs
-            , getPkgDataList LdArgs
-            , pure [ "-l" ++ unifyPath dir | dir <- extraLibs ]
-            , getPkgDataList DepLdArgs ]
+            , getConfiguredCabalData ConfCabal.ldOpts
+            , getConfiguredCabalData ConfCabal.depLdOpts ]

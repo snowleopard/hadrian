@@ -13,8 +13,8 @@ module Expression (
     interpret, interpretInContext,
 
     -- * Convenient accessors
-    getBuildRoot, getContext, getPkgData, getPkgDataList, getOutputs, getInputs,
-    getInput, getOutput, getCabalData,
+    getBuildRoot, getContext, getOutputs, getInputs,
+    getInput, getOutput, getConfiguredCabalData,
 
     -- * Re-exports
     module Base,
@@ -25,8 +25,9 @@ module Expression (
 
 import qualified Hadrian.Expression as H
 import Hadrian.Expression hiding (Expr, Predicate, Args)
-import Hadrian.Haskell.Cabal.Parse (Cabal)
-import Hadrian.Oracles.TextFile (readCabalFile)
+import Types.ConfiguredCabal (ConfiguredCabal)
+import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
+
 import Types.Expression
 
 import Base
@@ -35,18 +36,11 @@ import GHC
 import Context hiding (stage, package, way)
 import Oracles.PackageData
 
--- | Get a value from the @package-data.mk@ file of the current context.
-getPkgData :: (FilePath -> PackageData) -> Expr String
-getPkgData key = expr . pkgData . key =<< getContextPath
-
--- | Get a list of values from the @package-data.mk@ file of the current context.
-getPkgDataList :: (FilePath -> PackageDataList) -> Expr [String]
-getPkgDataList key = expr . pkgDataList . key =<< getContextPath
-
-getCabalData :: (Cabal -> a) -> Expr a
-getCabalData key = do
+-- | Get values from a configured cabal stage.
+getConfiguredCabalData :: (ConfiguredCabal -> a) -> Expr a
+getConfiguredCabalData key = do
   ctx   <- getContext
-  Just cabal <- expr (readCabalFile ctx)
+  Just cabal <- expr (readConfiguredCabalFile ctx)
   return $ key cabal
 
 -- | Is the build currently in the provided stage?

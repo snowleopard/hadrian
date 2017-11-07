@@ -70,12 +70,14 @@ buildConf rs context@Context {..} conf = do
       Nothing   -> return (pkgName package)
 
     depPkgIds <- cabalDependencies context
-    confIn <- pkgInplaceConfig context
+    -- confIn <- pkgInplaceConfig context
+
     -- setup-config, triggers `ghc-cabal configure`
     -- everything of a package should depend on that
     -- in the first place.
     setupConfig <- (contextPath context) <&> (-/- "setup-config")
-    need [confIn, setupConfig]
+    need [-- confIn,
+          setupConfig]
 
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
 
@@ -91,23 +93,32 @@ buildConf rs context@Context {..} conf = do
     ctxPath <- (top -/-) <$> contextPath context
     stgPath <- (top -/-) <$> stagePath context
     libPath <- (top -/-) <$> libPath context
-    build $ target context (GhcCabal Copy stage) [ (pkgPath package) -- <directory>
-                                                 , ctxPath -- <distdir>
-                                                 , ":" -- no strip. ':' special marker
-                                                 , stgPath -- <destdir>
-                                                 , ""      -- <prefix>
-                                                 , "lib"   -- <libdir>
-                                                 , "share" -- <docdir>
-                                                 , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
-                                                 ] []
-    build $ target context (GhcCabal Reg stage)  [ -- <directory> <distdir> <ghc> <ghc-pkg> are provided by the ghcCabalBuilderArgs
-                                                   libPath
-                                                 , stgPath
-                                                 , ""
-                                                 , libPath
-                                                 , "share"
-                                                 , if stage == Stage0 then "NO" else "YES"  -- <relocatable>
-                                                 ] [conf]
+
+
+    liftIO $ putStrLn $ ">>> Trying to copy..."
+    -- COPY logic
+    copyPackage context
+    liftIO $ putStrLn $ ">>> Trying to register..."
+    registerPackage context
+    -- -- END COPY logic
+    -- build $ target context (GhcCabal Copy stage) [ (pkgPath package) -- <directory>
+    --                                              , ctxPath -- <distdir>
+    --                                              , ":" -- no strip. ':' special marker
+    --                                              , stgPath -- <destdir>
+    --                                              , ""      -- <prefix>
+    --                                              , "lib"   -- <libdir>
+    --                                              , "share" -- <docdir>
+    --                                              , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
+    --                                              ] []
+    -- build $ target context (GhcCabal Reg stage)  [ -- <directory> <distdir> <ghc> <ghc-pkg> are provided by the ghcCabalBuilderArgs
+    --                                                libPath
+    --                                              , stgPath
+    --                                              , ""
+    --                                              , libPath
+    --                                              , "share"
+    --                                              , if stage == Stage0 then "NO" else "YES"  -- <relocatable>
+    --                                              ] [conf]
+    
 
 buildStamp :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 buildStamp rs Context {..} path = do
