@@ -8,11 +8,12 @@
 --
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
-module Hadrian.Haskell.Cabal.Parse ( Cabal (..)
-                                   , parseCabal, parseCabalPkgId
-                                   , cabalCcArgs, cabalIncludeDirs, cabalCSrcs
-                                   , cabalModules, cabalOtherModules
-                                   , cabalSrcDirs, cabalCmmSrcs
+module Hadrian.Haskell.Cabal.Parse ( ConfiguredCabal (..)
+                                   , parseCabal, parseConfiguredCabal, parseCabalPkgId
+
+                                   -- XXX This should be Haskell.Cabal actually
+                                   , configurePackage, copyPackage, registerPackage
+
                                    ) where
 
 import Stage
@@ -28,13 +29,25 @@ import qualified Distribution.PackageDescription.Parse as C
 import qualified Distribution.PackageDescription.Configuration as C
 import qualified Distribution.Text                     as C
 import qualified Distribution.Types.CondTree           as C
+import qualified Distribution.Types.Dependency         as C
+import qualified Distribution.Types.MungedPackageId    as C (mungedName)
 import qualified Distribution.Verbosity                as C
+import qualified Distribution.Simple.Compiler          as C (packageKeySupported, languageToFlags, extensionsToFlags)
 import qualified Distribution.Simple.GHC               as GHC
 import qualified Distribution.Simple.Program.Db        as Db
 import qualified Distribution.Simple                   as Hooks (simpleUserHooks, autoconfUserHooks)
 import qualified Distribution.Simple.UserHooks         as Hooks
+import qualified Distribution.Simple.Program.Builtin   as C
+import qualified Distribution.Simple.Program.Types     as C (programDefaultArgs, programOverrideArgs)
+import qualified Distribution.Simple.Configure         as C (getPersistBuildConfig)
+import qualified Distribution.Simple.Build             as C (initialBuildSteps)
+import qualified Distribution.InstalledPackageInfo as Installed
+import qualified Distribution.Simple.PackageIndex as PackageIndex
+import qualified Distribution.Simple.LocalBuildInfo    as LBI
+import Distribution.Simple.LocalBuildInfo (LocalBuildInfo)
+import qualified Distribution.Types.LocalBuildInfo as C
 import Distribution.Text (display)
-import Distribution.Simple (defaultMainWithHooksNoReadArgs)
+import Distribution.Simple (defaultMainWithHooksNoReadArgs, compilerFlavor, CompilerFlavor( GHC ))
 import Distribution.Simple.Compiler (compilerInfo)
 import Hadrian.Package
 import Hadrian.Utilities
@@ -42,17 +55,29 @@ import System.FilePath
 import System.Directory
 import GHC.Generics
 import qualified Distribution.ModuleName as ModuleName
-import Data.Maybe (maybeToList)
+import Data.Maybe (maybeToList, fromMaybe, fromJust)
 import GHC.Packages (rts)
+import Hadrian.Expression
+import Hadrian.Target
 import Types.Cabal ( Cabal( Cabal ) )
 import Types.ConfiguredCabal
 
+import Settings
+import Oracles.Setting
+
+import Hadrian.Haskell.Cabal
+
 import Context.Paths
 
+import Settings.Builders.GhcCabal
+import Settings.Default
+import Context
 
-instance Binary Cabal
+import Hadrian.Oracles.TextFile
 
 
+-- TODO: Use fine-grain tracking instead of tracking the whole Cabal file.
+-- | Haskell package metadata extracted from a Cabal file.
 
 parseCabalPkgId :: FilePath -> IO String
 parseCabalPkgId file = C.display . C.package . C.packageDescription <$> C.readGenericPackageDescription C.silent file
@@ -67,24 +92,6 @@ biModules pd = go [ comp | comp@(bi,_) <- (map libBiModules . maybeToList $ C.li
         go [] = error "no buildable component found"
         go [x] = x
         go _  = error "can not handle more than one buildinfo yet!"
-
-cabalCcArgs :: Cabal -> [String]
-cabalCcArgs c = C.ccOptions (fst (biModules c))
-cabalCSrcs :: Cabal -> [String]
-cabalCSrcs c = C.cSources (fst (biModules c))
-cabalCmmSrcs :: Cabal -> [String]
-cabalCmmSrcs c = C.cmmSources (fst (biModules c))
-cabalIncludeDirs :: Cabal -> [String]
-cabalIncludeDirs c = C.includeDirs (fst (biModules c))
-cabalModules :: Cabal -> [String]
-cabalModules c = map display $ snd (biModules c)
-
-cabalSrcDirs :: Cabal -> [String]
-cabalSrcDirs c = C.hsSourceDirs $ fst (biModules c)
-
-cabalOtherModules :: Cabal -> [String]
-cabalOtherModules c = map display $ C.otherModules (fst (biModules c))
---cabalDepIncludeDirs
 
 
 -- TODO: Taken from Context, but Context depends on Oracles.Settings, and this
@@ -127,6 +134,16 @@ parseCabal context@Context {..} = do
                    gpd
                    pd
                    depPkgs
+
+configurePackage :: Context -> Action ()
+configurePackage context@Context {..} = do
+    Just (Cabal _ _ _ gpd pd depPkgs) <- readCabalFile context
+
+    -- Stage packages are those we have in this stage.
+    stagePkgs <- stagePackages stage
+    -- we'll need those package in our package database.
+    need =<< sequence [ pkgConfFile (context { package = pkg }) | pkg <- depPkgs, pkg `elem` stagePkgs ]
+
     -- figure out what hooks we need.
     hooks <- case C.buildType (C.flattenPackageDescription gpd) of
           Just C.Configure -> pure Hooks.autoconfUserHooks
@@ -134,7 +151,7 @@ parseCabal context@Context {..} = do
           -- plus a "./Setup test" hook. However, Cabal is also
           -- "Custom", but doesn't have a configure script.
           Just C.Custom ->
-              do configureExists <- liftIO $ doesFileExist (replaceFileName file "configure")
+              do configureExists <- liftIO $ doesFileExist (replaceFileName (unsafePkgCabalFile package) "configure")
                  if configureExists
                      then pure Hooks.autoconfUserHooks
                      else pure Hooks.simpleUserHooks
@@ -146,13 +163,124 @@ parseCabal context@Context {..} = do
               pure $ Hooks.simpleUserHooks { Hooks.postConf = \_ _ _ _ -> return () }
             | otherwise -> pure Hooks.simpleUserHooks
 
-    bPath <- buildPath context
-    liftIO $
-      withCurrentDirectory (pkgPath package) $
-        defaultMainWithHooksNoReadArgs hooks gpd ["configure", "--distdir", bPath, "--ipid", "$pkg-$version"]
 
-    hcPath <- builderPath' (Ghc CompileHs stage)
-    (compiler, Just platform, _pgdb) <- liftIO $ GHC.configure C.silent (Just hcPath) Nothing Db.emptyProgramDb
+    case pkgCabalFile package of
+      Nothing -> error "No a cabal package!"
+      Just f -> do
+        -- compute the argList. This reuses the GhcCabal Conf builder for now.
+        -- and will include the flags for this context as well.
+        flagList <- interpret (target context (CabalFlags stage) [] []) defaultPackageArgs
+        argList <- interpret (target context (GhcCabal Conf stage) [] []) ghcCabalBuilderArgs
+        liftIO $ do
+          putStrLn $ "running main... for " ++ show (pkgPath package)
+          putStrLn $ show $ argList ++ ["--flags=" ++ unwords flagList ]
+          defaultMainWithHooksNoReadArgs hooks gpd (argList ++ ["--flags=" ++ unwords flagList])
+
+-- XXX: move this somewhere else. This is logic from ghc-cabal
+copyPackage :: Context -> Action ()
+copyPackage context@Context {..} = do
+  -- original invocation
+        -- build $ target context (GhcCabal Copy stage) [ (pkgPath package) -- <directory>
+        --                                          , ctxPath -- <distdir>
+        --                                          , ":" -- no strip. ':' special marker
+        --                                          , stgPath -- <destdir>
+        --                                          , ""      -- <prefix>
+        --                                          , "lib"   -- <libdir>
+        --                                          , "share" -- <docdir>
+        --                                          , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
+        --                                          ] []
+
+   -- ghc-cabal logic
+-- doCopy directory distDir
+--        strip myDestDir myPrefix myLibdir myDocdir withSharedLibs
+--        args
+--  = withCurrentDirectory directory $ do
+--      let copyArgs = ["copy", "--builddir", distDir]
+--                  ++ (if null myDestDir
+--                      then []
+--                      else ["--destdir", myDestDir])
+--                  ++ args
+--          copyHooks = userHooks {
+--                          copyHook = noGhcPrimHook
+--                                   $ modHook False
+--                                   $ copyHook userHooks
+--                      }
+
+--      defaultMainWithHooksArgs copyHooks copyArgs
+--     where
+--       noGhcPrimHook f pd lbi us flags
+--               = let pd'
+--                      | packageName pd == mkPackageName "ghc-prim" =
+--                         case library pd of
+--                         Just lib ->
+--                             let ghcPrim = fromJust (simpleParse "GHC.Prim")
+--                                 ems = filter (ghcPrim /=) (exposedModules lib)
+--                                 lib' = lib { exposedModules = ems }
+--                             in pd { library = Just lib' }
+--                         Nothing ->
+--                             error "Expected a library, but none found"
+--                      | otherwise = pd
+--                 in f pd' lbi us flags
+--       modHook relocatableBuild f pd lbi us flags
+--        = do let verbosity = normal
+--                 idts = updateInstallDirTemplates relocatableBuild
+--                                                  myPrefix myLibdir myDocdir
+--                                                  (installDirTemplates lbi)
+--                 progs = withPrograms lbi
+--                 stripProgram' = stripProgram {
+--                     programFindLocation = \_ _ -> return (Just (strip,[])) }
+
+--             progs' <- configureProgram verbosity stripProgram' progs
+--             let lbi' = lbi {
+--                                withPrograms = progs',
+--                                installDirTemplates = idts,
+--                                configFlags = cfg,
+--                                stripLibs = fromFlag (configStripLibs cfg),
+--                                withSharedLib = withSharedLibs
+--                            }
+
+--                 -- This hack allows to interpret the "strip"
+--                 -- command-line argument being set to ':' to signify
+--                 -- disabled library stripping
+--                 cfg | strip == ":" = (configFlags lbi) { configStripLibs = toFlag False }
+--                     | otherwise    = configFlags lbi
+
+--             f pd lbi' us flags
+
+    Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
+
+    top     <- topDirectory
+    ctxPath <- (top -/-) <$> Context.contextPath context
+    stgPath <- (top -/-) <$> stagePath context
+    libPath <- (top -/-) <$> libPath context
+
+    let userHooks = Hooks.autoconfUserHooks
+        copyHooks = userHooks
+        hooks = copyHooks
+
+    -- we would need `withCurrentDirectory (pkgPath package)`
+    liftIO $ defaultMainWithHooksNoReadArgs hooks gpd ["copy", "--builddir", ctxPath, "--destdir", stgPath]
+
+registerPackage :: Context -> Action ()
+registerPackage context@Context {..} = do
+    top     <- topDirectory
+    ctxPath <- (top -/-) <$> Context.contextPath context
+    Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
+    let userHooks = Hooks.autoconfUserHooks
+        regHooks = userHooks
+        hooks = regHooks {
+          Hooks.regHook = \pd lbi us flags ->
+              let lbi' = lbi { C.installDirTemplates = updateInstallDirTemplates (C.installDirTemplates lbi) }
+              in (Hooks.regHook regHooks) pd lbi' us flags
+          }
+
+    liftIO $ defaultMainWithHooksNoReadArgs hooks gpd ["register", "--builddir", ctxPath]
+
+  -- XXX: allow configure to set a prefix with a known variable. $topdir or $pkgroot
+  --      that would elivate the need for this hack.
+  where updateInstallDirTemplates :: LBI.InstallDirTemplates -> LBI.InstallDirTemplates
+        updateInstallDirTemplates idts = idts { LBI.prefix = LBI.toPathTemplate "${pkgroot}/.." }
+
 -- | Parse a ConfiguredCabal file.
 parseConfiguredCabal :: Context -> Action ConfiguredCabal
 parseConfiguredCabal context@Context {..} = do
