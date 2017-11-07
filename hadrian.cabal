@@ -105,6 +105,10 @@ executable hadrian
                        , Types.Context
                        , Types.Package
                        , Types.Stage
+                       , Types.Cabal
+                       , Types.ConfiguredCabal
+                       , Types.Expression
+                       , Types.Way
                        , Target
                        , UserSettings
                        , Utilities
