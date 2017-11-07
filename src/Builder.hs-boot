@@ -37,5 +37,6 @@ data Builder = Alex
              | Tar TarMode
              | Unlit
              | Xelatex
+             | CabalFlags Stage
 
 builderPath' :: Builder -> Action FilePath

@@ -110,6 +110,8 @@ data Builder = Alex
              | Tar TarMode
              | Unlit
              | Xelatex
+             | CabalFlags Stage -- ^ a virtual builder to use the Arg predicate logic
+                                --   to collect cabal flags. +x, -x
              deriving (Eq, Generic, Show)
 
 instance Binary   Builder
