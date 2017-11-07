@@ -13,11 +13,13 @@
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalFile, textFileOracle
+    readCabalFile, readConfiguredCabalFile, textFileOracle
     ) where
 
 import Stage
 import Types.Context
+import Types.Cabal
+import Types.ConfiguredCabal
 import Hadrian.Package
 
 import Control.Monad
@@ -37,6 +39,10 @@ type instance RuleResult TextFile = String
 newtype CabalFile = CabalFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult CabalFile = Maybe Cabal
+
+newtype ConfiguredCabalFile = ConfiguredCabalFile Context
+    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
+type instance RuleResult ConfiguredCabalFile = Maybe ConfiguredCabal
 
 newtype KeyValue = KeyValue (FilePath, String)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -97,6 +103,9 @@ lookupDependencies depFile file = do
 readCabalFile :: Context -> Action (Maybe Cabal)
 readCabalFile = askOracle . CabalFile
 
+readConfiguredCabalFile :: Context -> Action (Maybe ConfiguredCabal)
+readConfiguredCabalFile = askOracle . ConfiguredCabalFile
+
 -- | This oracle reads and parses text files to answer 'readTextFile' and
 -- 'lookupValue' queries, as well as their derivatives, tracking the results.
 textFileOracle :: Rules ()
@@ -129,3 +138,13 @@ textFileOracle = do
           Nothing -> return Nothing
 
     void $ addOracle $ \(CabalFile ctx) -> cabal ctx
+
+    confCabal <- newCache $ \(ctx@Context {..}) -> do
+        case pkgCabalFile package of
+          Just file -> do
+            need [file]
+            putLoud $ "| ConfiguredCabalFile oracle: reading " ++ quote file ++ " (Stage: " ++ stageString stage ++ ")..."
+            Just <$> parseConfiguredCabal ctx
+          Nothing -> return Nothing
+
+    void $ addOracle $ \(ConfiguredCabalFile ctx) -> confCabal ctx
