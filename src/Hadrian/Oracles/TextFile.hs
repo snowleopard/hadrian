@@ -27,7 +27,7 @@ import Development.Shake
 import Development.Shake.Classes
 import Development.Shake.Config
 
-import Hadrian.Haskell.Cabal.Parse
+import {-# SOURCE #-} Hadrian.Haskell.Cabal.Parse
 import Hadrian.Utilities
 
 newtype TextFile = TextFile FilePath
