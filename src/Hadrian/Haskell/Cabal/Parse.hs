@@ -335,16 +335,6 @@ parseConfiguredCabal context@Context {..} = do
                     -- the RTS's library-dirs here.
             _ -> error "No (or multiple) ghc rts package is registered!!"
 
-        wrap = map wrap1
-        wrap1 s
-          | null s        = error $ "Wrapping empty value"
-          | '\'' `elem` s = error $ "Single quote in value to be wrapped:" ++ s
-          -- We want to be able to assume things like <space><quote> is the
-          -- start of a value, so check there are no spaces in confusing
-          -- positions
-          | head s == ' ' = error "Leading space in value to be wrapped:" ++ s
-          | last s == ' ' = error "Trailing space in value to be wrapped:" ++ s
-          | otherwise     = ("\'" ++ s ++ "\'")
       in return $ ConfiguredCabal
       { dependencies = deps
       , name     = C.unPackageName . C.pkgName . C.package $ pd
@@ -380,12 +370,11 @@ parseConfiguredCabal context@Context {..} = do
       , cmmOpts   = C.cmmOptions . fst . biModules $ pd
       , cppOpts   = C.cppOptions . fst . biModules $ pd
       , ldOpts    = C.ldOptions . fst . biModules $ pd
-      , depIncludeDirs = wrap $ forDeps Installed.includeDirs
+      , depIncludeDirs = forDeps Installed.includeDirs
       , depCcOpts = forDeps Installed.ccOptions
       , depLdOpts = forDeps Installed.ldOptions
       , buildGhciLib = C.withGHCiLib lbi
       }
-      where
 
 collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
 collectDeps Nothing = []
