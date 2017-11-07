@@ -167,10 +167,10 @@ configurePackage context@Context {..} = do
     case pkgCabalFile package of
       Nothing -> error "No a cabal package!"
       Just f -> do
-        -- compute the argList. This reuses the GhcCabal Conf builder for now.
-        -- and will include the flags for this context as well.
+        -- compute the flaglist over the defaultPackageArgs
         flagList <- interpret (target context (CabalFlags stage) [] []) defaultPackageArgs
-        argList <- interpret (target context (GhcCabal Conf stage) [] []) ghcCabalBuilderArgs
+        -- compute the cabal conf args over all the default args
+        argList <- interpret (target context (GhcCabal Conf stage) [] []) defaultArgs
         liftIO $ do
           putStrLn $ "running main... for " ++ show (pkgPath package)
           putStrLn $ show $ argList ++ ["--flags=" ++ unwords flagList ]
