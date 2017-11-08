@@ -49,6 +49,9 @@ primopsTxt stage = buildDir (vanillaContext stage compiler) -/- "primops.txt"
 platformH :: Stage -> FilePath
 platformH stage = buildDir (vanillaContext stage compiler) -/- "ghc_boot_platform.h"
 
+versionsH :: Stage -> FilePath
+versionsH stage = buildDir (vanillaContext stage compiler) -/- "HsVersions.h"
+
 isGeneratedCmmFile :: FilePath -> Bool
 isGeneratedCmmFile file = takeBaseName file == "AutoApply"
 
@@ -143,7 +146,9 @@ generatePackageCode context@(Context stage pkg _) =
         when (pkg == compiler) $ do
             "//" ++ primopsTxt stage %> \file -> do
                 root <- buildRoot
-                need $ [root -/- platformH stage, primopsSource]
+                need $ [ root -/- platformH stage
+                       , root -/- versionsH stage
+                       , primopsSource]
                     ++ fmap (root -/-) includesDependencies
                 build $ target context HsCpp [primopsSource] [file]
 
@@ -152,6 +157,9 @@ generatePackageCode context@(Context stage pkg _) =
             when (stage == Stage0) $ do
               "//compiler/ghc_boot_platform.h" %> go generateGhcBootPlatformH
             "//" ++ platformH stage %> go generateGhcBootPlatformH
+            "//" ++ versionsH stage %> \file -> do
+              dir <- return "compiler"
+              copyFile (dir -/- takeFileName file) file
 
         when (pkg == rts) $ "//" ++ dir -/- "cmm/AutoApply.cmm" %> \file ->
             build $ target context GenApply [] [file]
