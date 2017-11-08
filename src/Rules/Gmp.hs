@@ -78,8 +78,11 @@ gmpRules = do
 
     -- This causes integerGmp package to be configured, hence creating the files
     [gmpBase -/- "config.mk", gmpBuildInfoPath] &%> \_ -> do
-        dataFile <- pkgDataFile gmpContext
-        need [dataFile]
+        -- setup-config, triggers `ghc-cabal configure`
+        -- everything of a package should depend on that
+        -- in the first place.
+        setupConfig <- (contextPath gmpContext) <&> (-/- "setup-config")
+        need [setupConfig]
 
     -- Run GMP's configure script
     -- TODO: Get rid of hard-coded @gmp@.
