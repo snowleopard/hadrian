@@ -172,81 +172,12 @@ configurePackage context@Context {..} = do
         -- compute the cabal conf args over all the default args
         argList <- interpret (target context (GhcCabal Conf stage) [] []) defaultArgs
         liftIO $ do
-          putStrLn $ "running main... for " ++ show (pkgPath package)
-          putStrLn $ show $ argList ++ ["--flags=" ++ unwords flagList ]
           defaultMainWithHooksNoReadArgs hooks gpd (argList ++ ["--flags=" ++ unwords flagList])
 
 -- XXX: move this somewhere else. This is logic from ghc-cabal
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
   -- original invocation
-        -- build $ target context (GhcCabal Copy stage) [ (pkgPath package) -- <directory>
-        --                                          , ctxPath -- <distdir>
-        --                                          , ":" -- no strip. ':' special marker
-        --                                          , stgPath -- <destdir>
-        --                                          , ""      -- <prefix>
-        --                                          , "lib"   -- <libdir>
-        --                                          , "share" -- <docdir>
-        --                                          , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
-        --                                          ] []
-
-   -- ghc-cabal logic
--- doCopy directory distDir
---        strip myDestDir myPrefix myLibdir myDocdir withSharedLibs
---        args
---  = withCurrentDirectory directory $ do
---      let copyArgs = ["copy", "--builddir", distDir]
---                  ++ (if null myDestDir
---                      then []
---                      else ["--destdir", myDestDir])
---                  ++ args
---          copyHooks = userHooks {
---                          copyHook = noGhcPrimHook
---                                   $ modHook False
---                                   $ copyHook userHooks
---                      }
-
---      defaultMainWithHooksArgs copyHooks copyArgs
---     where
---       noGhcPrimHook f pd lbi us flags
---               = let pd'
---                      | packageName pd == mkPackageName "ghc-prim" =
---                         case library pd of
---                         Just lib ->
---                             let ghcPrim = fromJust (simpleParse "GHC.Prim")
---                                 ems = filter (ghcPrim /=) (exposedModules lib)
---                                 lib' = lib { exposedModules = ems }
---                             in pd { library = Just lib' }
---                         Nothing ->
---                             error "Expected a library, but none found"
---                      | otherwise = pd
---                 in f pd' lbi us flags
---       modHook relocatableBuild f pd lbi us flags
---        = do let verbosity = normal
---                 idts = updateInstallDirTemplates relocatableBuild
---                                                  myPrefix myLibdir myDocdir
---                                                  (installDirTemplates lbi)
---                 progs = withPrograms lbi
---                 stripProgram' = stripProgram {
---                     programFindLocation = \_ _ -> return (Just (strip,[])) }
-
---             progs' <- configureProgram verbosity stripProgram' progs
---             let lbi' = lbi {
---                                withPrograms = progs',
---                                installDirTemplates = idts,
---                                configFlags = cfg,
---                                stripLibs = fromFlag (configStripLibs cfg),
---                                withSharedLib = withSharedLibs
---                            }
-
---                 -- This hack allows to interpret the "strip"
---                 -- command-line argument being set to ':' to signify
---                 -- disabled library stripping
---                 cfg | strip == ":" = (configFlags lbi) { configStripLibs = toFlag False }
---                     | otherwise    = configFlags lbi
-
---             f pd lbi' us flags
-
     Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
 
     top     <- topDirectory

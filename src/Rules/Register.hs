@@ -76,13 +76,9 @@ buildConf rs context@Context {..} conf = do
     -- everything of a package should depend on that
     -- in the first place.
     setupConfig <- (contextPath context) <&> (-/- "setup-config")
-    need [-- confIn,
-          setupConfig]
+    need [setupConfig]
 
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
-
-    -- ghc-cabal copy libraries/terminfo $PWD/_build/stage0/libraries/terminfo : $PWD/_build/stage1 "" "lib" "share" "v"
-    -- ghc-cabal register libraries/terminfo $PWD/_build/stage0/libraries/terminfo ghc ghc-pkg $PWD/_build/stage1/lib $PWD/_build_stage1 "" "lib" "share" YES
 
     ways <- interpretInContext context (getLibraryWays <> if package == rts then getRtsWays else mempty)
     need =<< concatMapM (libraryTargets True) [ context { way = w } | w <- ways ]
@@ -94,31 +90,9 @@ buildConf rs context@Context {..} conf = do
     stgPath <- (top -/-) <$> stagePath context
     libPath <- (top -/-) <$> libPath context
 
-
-    liftIO $ putStrLn $ ">>> Trying to copy..."
-    -- COPY logic
+    -- copy and register the package
     copyPackage context
-    liftIO $ putStrLn $ ">>> Trying to register..."
     registerPackage context
-    -- -- END COPY logic
-    -- build $ target context (GhcCabal Copy stage) [ (pkgPath package) -- <directory>
-    --                                              , ctxPath -- <distdir>
-    --                                              , ":" -- no strip. ':' special marker
-    --                                              , stgPath -- <destdir>
-    --                                              , ""      -- <prefix>
-    --                                              , "lib"   -- <libdir>
-    --                                              , "share" -- <docdir>
-    --                                              , "v"     -- TODO: <way> e.g. "v dyn" for dyn way.
-    --                                              ] []
-    -- build $ target context (GhcCabal Reg stage)  [ -- <directory> <distdir> <ghc> <ghc-pkg> are provided by the ghcCabalBuilderArgs
-    --                                                libPath
-    --                                              , stgPath
-    --                                              , ""
-    --                                              , libPath
-    --                                              , "share"
-    --                                              , if stage == Stage0 then "NO" else "YES"  -- <relocatable>
-    --                                              ] [conf]
-    
 
 buildStamp :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 buildStamp rs Context {..} path = do
