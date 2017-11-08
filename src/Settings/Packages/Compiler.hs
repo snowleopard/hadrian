@@ -28,10 +28,6 @@ compilerPackageArgs = package compiler ? do
               , notM ghcWithSMP ? arg "--ghc-option=-optc-DNOSMP"
               , (threaded `elem` rtsWays) ?
                 notStage0 ? arg "--ghc-option=-optc-DTHREADED_RTS"
-              , ghcWithNativeCodeGen ? arg "--flags=ncg"
-              , ghcWithInterpreter ?
-                notStage0 ? arg "--flags=ghci"
-              , crossCompiling ? arg "-f-terminfo"
               , ghcWithInterpreter ?
                 ghcEnableTablesNextToCode ?
                 notM (flag GhcUnregisterised) ?
@@ -41,5 +37,10 @@ compilerPackageArgs = package compiler ? do
                 notStage0 ? arg "--ghc-option=-DDEBUGGER"
               , ghcProfiled <$> flavour ?
                 notStage0 ? arg "--ghc-pkg-option=--force" ]
-
+            , builder CabalFlags ? mconcat
+              [ ghcWithNativeCodeGen ? arg "ncg"
+              , ghcWithInterpreter ?
+                notStage0 ? arg "ghci"
+              , crossCompiling ? arg "-terminfo"
+              ]
             , builder (Haddock BuildPackage) ? arg ("--optghc=-I" ++ path) ]

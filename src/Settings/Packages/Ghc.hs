@@ -9,5 +9,5 @@ ghcPackageArgs = package ghc ? do
     stage <- getStage
     path  <- expr $ buildPath (vanillaContext stage compiler)
     mconcat [ builder Ghc      ? arg ("-I" ++ path)
-            , builder (GhcCabal Conf) ? ghcWithInterpreter ? notStage0 ? arg "--flags=ghci"
-            , builder (GhcCabal Conf) ? crossCompiling ? arg "-f-terminfo" ]
+            , builder CabalFlags ? ghcWithInterpreter ? notStage0 ? arg "ghci"
+            , builder CabalFlags ? crossCompiling ? arg "-terminfo" ]

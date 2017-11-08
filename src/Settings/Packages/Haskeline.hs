@@ -5,4 +5,4 @@ import Oracles.Flag (crossCompiling)
 
 haskelinePackageArgs :: Args
 haskelinePackageArgs =
-    package haskeline ? builder (GhcCabal Conf) ? crossCompiling ? arg "-f-terminfo"
+    package haskeline ? builder CabalFlags ? crossCompiling ? arg "-terminfo"
