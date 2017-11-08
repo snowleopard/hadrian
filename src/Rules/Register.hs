@@ -87,8 +87,15 @@ buildConf rs context@Context {..} conf = do
     -- see packageRules
     top     <- topDirectory
     ctxPath <- (top -/-) <$> contextPath context
+    bldPath <- (top -/-) <$> buildPath context
     stgPath <- (top -/-) <$> stagePath context
     libPath <- (top -/-) <$> libPath context
+
+    -- special package cases (these should ideally be rolled into cabal one way or the other)
+    when (package == rts) $
+      -- iif cabal new about "generated-headers", we could read them from the configuredCabal
+      -- information, and just "need" them here.
+      need [bldPath -/- "DerivedConstants.h"]
 
     -- copy and register the package
     copyPackage context

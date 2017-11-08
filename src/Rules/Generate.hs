@@ -157,12 +157,18 @@ generatePackageCode context@(Context stage pkg _) =
             when (stage == Stage0) $ do
               "//compiler/ghc_boot_platform.h" %> go generateGhcBootPlatformH
             "//" ++ platformH stage %> go generateGhcBootPlatformH
-            "//" ++ versionsH stage %> \file -> do
-              dir <- return "compiler"
-              copyFile (dir -/- takeFileName file) file
+            ("//" ++ versionsH stage) <~ return "compiler"
 
-        when (pkg == rts) $ "//" ++ dir -/- "cmm/AutoApply.cmm" %> \file ->
+        when (pkg == rts) $ do
+          "//" ++ dir -/- "cmm/AutoApply.cmm" %> \file ->
             build $ target context GenApply [] [file]
+
+          -- XXX: this should be fixed properly, e.g. generated here on demand.
+          ("//" ++ dir -/- "DerivedConstants.h") <~ (buildRoot <&> (-/- generatedDir))
+  where
+    pattern <~ mdir = pattern %> \file -> do
+        dir <- mdir
+        copyFile (dir -/- takeFileName file) file
 
 genPrimopCode :: Context -> FilePath -> Action ()
 genPrimopCode context@(Context stage _pkg _) file = do
