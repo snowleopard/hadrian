@@ -18,8 +18,8 @@ import Utilities
 -- | TODO: Drop code duplication
 buildProgram :: [(Resource, Int)] -> Package -> Rules ()
 buildProgram rs package = do
-    forM_ [Stage1 ..] $ \stage -> do
-        let context = vanillaContext (pred stage) package
+    forM_ [Stage0 ..] $ \stage -> do
+        let context = vanillaContext stage package
 
         -- Rules for programs built in 'buildRoot'
         "//" ++ stageString stage -/- "bin" -/- programName context <.> exe %> \bin -> do
@@ -31,7 +31,7 @@ buildProgram rs package = do
               -- ghc depends on settings, platformConstants, llvm-targets
               --     ghc-usage.txt, ghci-usage.txt
               need =<< ghcDeps stage
-            buildBinary rs bin =<< programContext (pred stage) package
+            buildBinary rs bin =<< programContext stage package
 
         -- Rules for the GHC package, which is built 'inplace'
 
