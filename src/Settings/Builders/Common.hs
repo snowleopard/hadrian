@@ -58,4 +58,4 @@ bootPackageDatabaseArgs = do
         top    <- expr topDirectory
         root   <- getBuildRoot
         prefix <- ifM (builder Ghc) (return "-package-db ") (return "--package-db=")
-        arg $ prefix ++ top -/- root -/- stage0PackageDbDir
+        arg $ prefix ++ top -/- root -/- inplacePackageDbPath stage

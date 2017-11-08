@@ -128,9 +128,7 @@ pkgConfFile :: Context -> Action FilePath
 pkgConfFile context@Context {..} = do
     root  <- buildRoot
     pid   <- pkgId context
-    let dbDir | stage == Stage0 = root -/- stage0PackageDbDir
-              | otherwise       = root -/- inplacePackageDbPath stage
-    return $ dbDir -/- pid <.> "conf"
+    return $ root -/- inplacePackageDbPath stage -/- pid <.> "conf"
 
 -- | Given a 'Context' and a 'FilePath' to a source file, compute the 'FilePath'
 -- to its object file. For example:
