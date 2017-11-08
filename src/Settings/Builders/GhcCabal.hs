@@ -18,6 +18,8 @@ ghcCabalBuilderArgs = mconcat
     path      <- getContextPath
     stage     <- getStage
     mconcat [ arg "configure"
+            , arg "--basedir"
+            , arg =<< pkgPath <$> getPackage
             , arg "--cabal-file"
             , arg =<< fromJust . pkgCabalFile <$> getPackage
             , arg "--distdir"
