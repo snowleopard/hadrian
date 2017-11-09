@@ -47,7 +47,6 @@ stage0Packages = do
              , ghc
              , ghcBoot
              , ghcBootTh
-             , ghcCabal
              , ghci
              , ghcPkg
              , ghcTags
@@ -77,7 +76,6 @@ stage1Packages = do
              , directory
              , filepath
              , ghc
-             , ghcCabal
              , ghcCompact
              , ghcPrim
              , haskeline

@@ -16,7 +16,7 @@ ghcPackages :: [Package]
 ghcPackages =
     [ array, base, binary, bytestring, cabal, compareSizes, compiler, containers
     , deepseq, deriveConstants, directory, filepath, genapply, genprimopcode
-    , ghc, ghcBoot, ghcBootTh, ghcCabal, ghcCompact, ghci, ghcPkg, ghcPrim
+    , ghc, ghcBoot, ghcBootTh, ghcCompact, ghci, ghcPkg, ghcPrim
     , ghcTags, haddock, haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp
     , integerSimple, iservBin, libffi, mtl, parsec, parallel, pretty, primitive
     , process, rts, runGhc, stm, templateHaskell, terminfo, text, time, touchy
