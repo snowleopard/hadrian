@@ -30,19 +30,34 @@ allStages = [minBound .. maxBound]
 -- | This rule calls 'need' on all top-level build targets, respecting the
 -- 'Stage1Only' flag.
 topLevelTargets :: Rules ()
-topLevelTargets = action $ do
-    let libraryPackages = filter isLibrary (knownPackages \\ [libffi])
-    need =<< if stage1Only
-             then do
-                 libs <- concatForM [Stage0, Stage1] $ \stage ->
-                     concatForM libraryPackages $ packageTargets False stage
-                 prgs <- concatForM programsStage1Only $ packageTargets False Stage0
-                 return $ libs ++ prgs
-             else do
-                 targets <- concatForM allStages $ \stage ->
-                     concatForM (knownPackages \\ [libffi]) $
-                        packageTargets False stage
-                 return targets
+topLevelTargets = do
+    phony "stage2" $ do
+      putNormal "Building stage2"
+      let libraryPackages = filter isLibrary (knownPackages \\ [libffi])
+      need =<< mapM (f Stage1) =<< stagePackages Stage1
+
+      where
+        -- either the package databae config file for libraries or
+        -- the programPath for programs. However this still does
+        -- not support multiple targets, where a cabal package has
+        -- a lirbary /and/ a program.
+        f :: Stage -> Package -> Action FilePath
+        f stage pkg | isLibrary pkg = pkgConfFile (Context stage pkg (read "v"))
+                    | otherwise     = programPath =<< programContext stage pkg
+--      want []
+  -- action $ do
+  --   let libraryPackages = filter isLibrary (knownPackages \\ [libffi])
+  --   need =<< if stage1Only
+  --            then do
+  --                libs <- concatForM [Stage0, Stage1] $ \stage ->
+  --                    concatForM libraryPackages $ packageTargets False stage
+  --                prgs <- concatForM programsStage1Only $ packageTargets False Stage0
+  --                return $ libs ++ prgs
+  --            else do
+  --                targets <- concatForM allStages $ \stage ->
+  --                    concatForM (knownPackages \\ [libffi]) $
+  --                       packageTargets False stage
+  --                return targets
 
 -- TODO: Get rid of the @includeGhciLib@ hack.
 -- | Return the list of targets associated with a given 'Stage' and 'Package'.
