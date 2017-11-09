@@ -165,6 +165,11 @@ generatePackageCode context@(Context stage pkg _) =
 
           -- XXX: this should be fixed properly, e.g. generated here on demand.
           ("//" ++ dir -/- "DerivedConstants.h") <~ (buildRoot <&> (-/- generatedDir))
+          ("//" ++ dir -/- "ghcautoconf.h") <~ (buildRoot <&> (-/- generatedDir))
+          ("//" ++ dir -/- "ghcplatform.h") <~ (buildRoot <&> (-/- generatedDir))
+          ("//" ++ dir -/- "ghcversion.h") <~ (buildRoot <&> (-/- generatedDir))
+        when (pkg == integerGmp) $ do
+          ("//" ++ dir -/- "ghc-gmp.h") <~ (buildRoot <&> (-/- "include"))
   where
     pattern <~ mdir = pattern %> \file -> do
         dir <- mdir

@@ -95,7 +95,14 @@ buildConf rs context@Context {..} conf = do
     when (package == rts) $
       -- iif cabal new about "generated-headers", we could read them from the configuredCabal
       -- information, and just "need" them here.
-      need [bldPath -/- "DerivedConstants.h"]
+      need [ bldPath -/- "DerivedConstants.h"
+           , bldPath -/- "ghcautoconf.h"
+           , bldPath -/- "ghcplatform.h"
+           , bldPath -/- "ghcversion.h"
+           ]
+
+    when (package == integerGmp) $
+      need [bldPath -/- "ghc-gmp.h"]
 
     -- copy and register the package
     copyPackage context
