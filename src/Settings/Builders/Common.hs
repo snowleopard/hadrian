@@ -6,7 +6,7 @@ module Settings.Builders.Common (
     module Oracles.Setting,
     module Settings,
     module UserSettings,
-    cIncludeArgs, ldArgs, cArgs, cWarnings, bootPackageDatabaseArgs
+    cIncludeArgs, ldArgs, cArgs, cWarnings, packageDatabaseArgs, bootPackageDatabaseArgs
     ) where
 
 import Base
@@ -49,13 +49,19 @@ cWarnings = do
             , gccGe46 ? notM windowsHost ? arg "-Werror=unused-but-set-variable"
             , gccGe46 ? arg "-Wno-error=inline" ]
 
+packageDatabaseArgs :: Args
+packageDatabaseArgs = do
+    stage  <- getStage
+    dbPath <- expr $ packageDbPath stage
+    expr $ need [dbPath -/- packageDbStamp]
+    top    <- expr topDirectory
+    root   <- getBuildRoot
+    prefix <- ifM (builder Ghc) (return "-package-db ") (return "--package-db=")
+    arg $ prefix ++ top -/- root -/- inplacePackageDbPath stage
+
 bootPackageDatabaseArgs :: Args
 bootPackageDatabaseArgs = do
     stage  <- getStage
     dbPath <- expr $ packageDbPath stage
     expr $ need [dbPath -/- packageDbStamp]
-    stage0 ? do
-        top    <- expr topDirectory
-        root   <- getBuildRoot
-        prefix <- ifM (builder Ghc) (return "-package-db ") (return "--package-db=")
-        arg $ prefix ++ top -/- root -/- inplacePackageDbPath stage
+    stage0 ? packageDatabaseArgs

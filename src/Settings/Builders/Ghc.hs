@@ -129,7 +129,7 @@ packageGhcArgs = withHsPackage $ \ctx -> do
     pkgId <- expr $ pkgIdentifier ctx
     mconcat [ arg "-hide-all-packages"
             , arg "-no-user-package-db"
-            , bootPackageDatabaseArgs
+            , packageDatabaseArgs
             , libraryPackage ? arg ("-this-unit-id " ++ pkgId)
             , map ("-package-id " ++) <$> getConfiguredCabalData ConfCabal.depIpIds ]
 
