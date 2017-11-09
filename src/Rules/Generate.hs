@@ -183,12 +183,8 @@ copyRules = do
       (prefix -/- "ghc-usage.txt")     <~ return "driver"
       (prefix -/- "ghci-usage.txt"  )  <~ return "driver"
       (prefix -/- "llvm-targets")      <~ return "."
-      if stage == Stage0
-        then (prefix -/- "platformConstants") <~ askLibDir stage
-        else (prefix -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
-      if stage == Stage0
-        then (prefix -/- "settings")   <~ askLibDir stage
-        else (prefix -/- "settings")   <~ return "."
+      (prefix -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
+      (prefix -/- "settings")   <~ return "."
       (prefix -/- "template-hsc.h")    <~ return (pkgPath hsc2hs)
   where
     pattern <~ mdir = pattern %> \file -> do
