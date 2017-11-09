@@ -1,9 +1,10 @@
 module Settings.Flavours.Profiled (profiledFlavour) where
 
-import Flavour
 import Expression
+import Flavour
 import {-# SOURCE #-} Settings.Default
 
+-- Please update doc/flavours.md when changing this file.
 profiledFlavour :: Flavour
 profiledFlavour = defaultFlavour
     { name        = "prof"

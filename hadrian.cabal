@@ -101,6 +101,7 @@ executable hadrian
                        , Settings.Packages.IntegerGmp
                        , Settings.Packages.Rts
                        , Settings.Packages.RunGhc
+                       , Settings.Warnings
                        , Stage
                        , Types.Context
                        , Types.Package

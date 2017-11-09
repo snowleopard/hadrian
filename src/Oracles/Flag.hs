@@ -11,8 +11,6 @@ import Oracles.Setting
 data Flag = ArSupportsAtFile
           | CrossCompiling
           | GccIsClang
-          | GccLt44
-          | GccLt46
           | GhcUnregisterised
           | LeadingUnderscore
           | SolarisBrokenShld
@@ -29,8 +27,6 @@ flag f = do
             ArSupportsAtFile   -> "ar-supports-at-file"
             CrossCompiling     -> "cross-compiling"
             GccIsClang         -> "gcc-is-clang"
-            GccLt44            -> "gcc-lt-44"
-            GccLt46            -> "gcc-lt-46"
             GhcUnregisterised  -> "ghc-unregisterised"
             LeadingUnderscore  -> "leading-underscore"
             SolarisBrokenShld  -> "solaris-broken-shld"

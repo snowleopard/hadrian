@@ -16,6 +16,7 @@ ghcCabalPackageArgs = stage0 ? package ghcCabal ? builder Ghc ? do
         [ pure [ "-package " ++ pkgName pkg | pkg <- cabalDeps, pkg /= parsec ]
         , arg "--make"
         , arg "-j"
+        , pure ["-Wall", "-fno-warn-unused-imports", "-fno-warn-warnings-deprecations"]
         , arg ("-DCABAL_VERSION=" ++ replace "." "," cabalVersion)
         -- , arg "-DCABAL_PARSEC"
         , arg "-DBOOTSTRAPPING"

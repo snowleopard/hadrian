@@ -1,10 +1,11 @@
 module Settings.Flavours.QuickCross (quickCrossFlavour) where
 
-import Flavour
 import Expression
+import Flavour
 import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
 
+-- Please update doc/flavours.md when changing this file.
 quickCrossFlavour :: Flavour
 quickCrossFlavour = defaultFlavour
     { name        = "quick-cross"

@@ -1,9 +1,10 @@
 module Settings.Flavours.Development (developmentFlavour) where
 
-import Flavour
 import Expression
+import Flavour
 import {-# SOURCE #-} Settings.Default
 
+-- Please update doc/flavours.md when changing this file.
 developmentFlavour :: Stage -> Flavour
 developmentFlavour ghcStage = defaultFlavour
     { name = "devel" ++ show (fromEnum ghcStage)

@@ -1,9 +1,10 @@
 module Settings.Flavours.Performance (performanceFlavour) where
 
-import Flavour
 import Expression
+import Flavour
 import {-# SOURCE #-} Settings.Default
 
+-- Please update doc/flavours.md when changing this file.
 performanceFlavour :: Flavour
 performanceFlavour = defaultFlavour
     { name = "perf"

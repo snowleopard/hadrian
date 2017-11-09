@@ -106,6 +106,7 @@ rtsPackageArgs = package rts ? do
     destDir        <- expr getDestDir
     let cArgs = mconcat
           [ arg "-Irts"
+          , rtsWarnings
           , arg $ "-I" ++ path
           , flag UseSystemFfi ? arg ("-I" ++ ffiIncludeDir)
           , arg $ "-DRtsWay=\"rts_" ++ show way ++ "\""
@@ -195,3 +196,20 @@ rtsPackageArgs = package rts ? do
                , "-DINCLUDE_DIR=\"" ++ destDir ++ ghclibDir -/- "include\"" ]
 
         , builder HsCpp ? flag HaveLibMingwEx ? arg "-DHAVE_LIBMINGWEX" ]
+
+-- See @rts/ghc.mk@.
+rtsWarnings :: Args
+rtsWarnings = mconcat
+    [ pure ["-Wall", "-Werror"]
+    , arg "-Wextra"
+    , arg "-Wstrict-prototypes"
+    , arg "-Wmissing-prototypes"
+    , arg "-Wmissing-declarations"
+    , arg "-Winline"
+    , arg "-Waggregate-return"
+    , arg "-Wpointer-arith"
+    , arg "-Wmissing-noreturn"
+    , arg "-Wnested-externs"
+    , arg "-Wredundant-decls"
+    , arg "-Wundef"
+    , arg "-fno-strict-aliasing" ]
