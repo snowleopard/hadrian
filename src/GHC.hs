@@ -7,8 +7,9 @@ module GHC (
     ghcSplit, haddock, haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp,
     integerSimple, iservBin, libffi, mtl, parsec, parallel, pretty, primitive,
     process, rts, runGhc, stm, templateHaskell, terminfo, text, time, touchy,
-    transformers, unlit, unix, win32, xhtml, ghcPackages, isGhcPackage,
-    defaultPackages,
+    transformers, unlit, unix, win32, xhtml, dataBitcode, dataBitcodeLlvm,
+    dataBitcodeEdsl,
+    ghcPackages, isGhcPackage, defaultPackages,
 
     -- * Package information
     programName, nonCabalContext, nonHsMainPackage, autogenPath, installStage,
@@ -41,6 +42,9 @@ stage0Packages = do
              , cabal
              , compareSizes
              , compiler
+             , dataBitcode
+             , dataBitcodeLlvm
+             , dataBitcodeEdsl
              , deriveConstants
              , genapply
              , genprimopcode

@@ -53,4 +53,41 @@ warningArgs = builder Ghc ? do
                                       , "-Wno-redundant-constraints"
                                       , "-Wno-orphans" ]
         , package win32        ? pure [ "-Wno-trustworthy-safe" ]
-        , package xhtml        ? pure [ "-Wno-unused-imports" ] ] ]
+        , package xhtml        ? pure [ "-Wno-unused-imports" ] ]
+        , package dataBitcode  ? pure [ "-Wno-name-shadowing"
+                                      , "-Wno-unused-top-binds"
+                                      , "-Wno-unused-matches"
+                                      , "-Wno-orphans"
+                                      , "-Wno-incomplete-patterns"
+                                      , "-Wno-unused-do-bind"
+                                      , "-Wno-unused-imports"
+                                      , "-Wno-missing-methods"
+                                      , "-Wno-type-defaults"
+                                      ]
+        , package dataBitcodeLlvm ? pure [ "-Wno-name-shadowing"
+                                      , "-Wno-unused-top-binds"
+                                      , "-Wno-unused-matches"
+                                      , "-Wno-orphans"
+                                      , "-Wno-incomplete-patterns"
+                                      , "-Wno-unused-do-bind"
+                                      , "-Wno-unused-imports"
+                                      , "-Wno-missing-methods"
+                                      , "-Wno-unused-local-binds"
+                                      , "-Wno-overlapping-patterns"
+                                      , "-Wno-type-defaults"
+                                      ]
+        , package dataBitcodeEdsl ? pure [ "-Wno-name-shadowing"
+                                      , "-Wno-unused-top-binds"
+                                      , "-Wno-unused-matches"
+                                      , "-Wno-orphans"
+                                      , "-Wno-incomplete-patterns"
+                                      , "-Wno-unused-do-bind"
+                                      , "-Wno-unused-imports"
+                                      , "-Wno-missing-methods"
+                                      , "-Wno-type-defaults"
+                                      , "-Wno-unused-local-binds"
+                                      , "-Wno-overlapping-patterns"
+                                      , "-Wno-type-defaults"
+                                      , "-Wno-missing-signatures"
+                                      ]
+        ]
