@@ -26,10 +26,7 @@ install:
     - appveyor-retry stack exec -- pacman -S autoconf automake-wrapper make patch python tar --noconfirm
 
 build_script:
-    # Build Hadrian
-    - stack build alex happy # Otherwise 'build' fails on AppVeyor
-
-    # Run internal Hadrian tests
+    # Build Hadrian and run internal Hadrian tests
     - build selftest
 
     # Build GHC
