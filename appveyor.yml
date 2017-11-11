@@ -20,6 +20,9 @@ install:
     # Move new Hadrian into ./ghc/hadrian
     - mv new-hadrian ghc/hadrian
 
+    # Install Alex and Happy
+    stack install alex happy
+
     # Install all Hadrian and GHC build dependencies
     - cd ghc/hadrian
     - stack setup > nul
