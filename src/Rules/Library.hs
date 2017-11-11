@@ -12,7 +12,6 @@ import Context
 import Expression hiding (way, package)
 import Flavour
 import Oracles.ModuleFiles
-import Oracles.PackageData
 import Oracles.Setting
 import Rules.Gmp
 import Settings
@@ -21,9 +20,6 @@ import Utilities
 
 archive :: Way -> String -> String
 archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")
-
-pkgObject :: Way -> String -> String
-pkgObject way pkgId = "HS" ++ pkgId ++ (waySuffix way <.> "o")
 
 -- | Building a library consist of building
 -- the artefacts, and copying it somewhere
@@ -40,7 +36,7 @@ library context@Context{..} = do
       Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
-    "//" ++ libDir context -/- pkgId -/- archive way pkgId %> \a -> do
+    "//" ++ libDir context -/- pkgId -/- archive way pkgId %> \_ -> do
         need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) [pkgId]
         return ()
 
@@ -121,7 +117,6 @@ allObjects context = (++) <$> nonHsObjects context <*> hsObjects context
 
 nonHsObjects :: Context -> Action [FilePath]
 nonHsObjects context = do
-    path    <- contextPath context
     cObjs   <- cObjects context
     cmmSrcs <- interpretInContext context (getConfiguredCabalData ConfCabal.cmmSrcs)
     cmmObjs <- mapM (objectPath context) cmmSrcs
@@ -130,7 +125,6 @@ nonHsObjects context = do
 
 cObjects :: Context -> Action [FilePath]
 cObjects context = do
-    path <- contextPath context
     srcs <- interpretInContext context (getConfiguredCabalData ConfCabal.cSrcs)
     objs <- mapM (objectPath context) srcs
     return $ if way context == threaded

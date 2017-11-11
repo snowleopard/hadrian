@@ -23,7 +23,6 @@ module Expression (
     module GHC
     ) where
 
-import qualified Hadrian.Expression as H
 import Hadrian.Expression hiding (Expr, Predicate, Args)
 import Types.ConfiguredCabal (ConfiguredCabal)
 import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
@@ -34,7 +33,6 @@ import Base
 import Builder
 import GHC
 import Context hiding (stage, package, way)
-import Oracles.PackageData
 
 -- | Get values from a configured cabal stage.
 getConfiguredCabalData :: (ConfiguredCabal -> a) -> Expr a

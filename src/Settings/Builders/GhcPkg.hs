@@ -11,7 +11,9 @@ ghcPkgBuilderArgs = mconcat
         pkgDb     <- expr $ packageDbPath stage
         mconcat [ arg "--global-package-db"
                 , arg pkgDb
-                , arg "register" ]
+                , arg "register"
+                , verbosity < Chatty ? arg "-v0"
+                ]
     , builder (GhcPkg Update) ? do
         verbosity <- expr getVerbosity
         context   <- getContext

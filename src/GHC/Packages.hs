@@ -2,7 +2,6 @@
 module GHC.Packages where
 
 import Types.Package
-import Types.Stage
 
 import Hadrian.Package
 import Hadrian.Utilities

@@ -122,18 +122,6 @@ installStage pkg
         stages <- filterM (fmap (pkg `elem`) . defaultPackages) [Stage0 ..]
         return $ if null stages then Nothing else Just (maximum stages)
 
--- | Is the program corresponding to a given context built 'inplace', i.e. in
--- the @inplace/bin@ directory? For most programs, only their /latest/ build
--- stages are built 'inplace'. The only exception is the GHC itself, which is
--- built 'inplace' in all stages. The function returns @False@ for libraries and
--- all user packages.
-isBuiltInplace :: Context -> Action Bool
-isBuiltInplace Context {..}
-    | isLibrary package          = return False
-    | not (isGhcPackage package) = return False
-    | package == ghc             = return False
-    | otherwise                  = (Just stage ==) <$> installStage package
-
 -- | The 'FilePath' to a program executable in a given 'Context'.
 programPath :: Context -> Action FilePath
 programPath context@Context {..} = do

@@ -49,7 +49,6 @@ installRunGhcWrapper WrappedBinary{..} = do
 inplaceGhcPkgWrapper :: WrappedBinary -> Expr String
 inplaceGhcPkgWrapper WrappedBinary{..} = do
     expr $ need [sourcePath -/- "Rules/Wrappers.hs"]
-    top <- expr topDirectory
     stage <- succ <$> getStage
     -- The wrapper is generated in StageN, but used in StageN+1. Therefore, we
     -- always use the inplace package database, located at 'inplacePackageDbPath',

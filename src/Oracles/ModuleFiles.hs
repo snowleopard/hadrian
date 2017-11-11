@@ -9,7 +9,6 @@ import Base
 import Builder
 import Context
 import GHC
-import Oracles.PackageData
 import Expression
 import Types.ConfiguredCabal as ConfCabal
 
@@ -90,10 +89,8 @@ hsSources context = do
 -- the build directory regardless of whether they are generated or not.
 hsObjects :: Context -> Action [FilePath]
 hsObjects context = do
-    path    <- contextPath context
     modules <- interpretInContext context (getConfiguredCabalData ConfCabal.modules)
-    -- GHC.Prim module is only for documentation, we do not actually build it.
-    mapM (objectPath context . moduleSource) (filter (/= "GHC.Prim") modules)
+    mapM (objectPath context . moduleSource) modules
 
 -- | Generated module files live in the 'Context' specific build directory.
 generatedFile :: Context -> String -> Action FilePath
@@ -107,7 +104,6 @@ moduleSource moduleName = replaceEq '.' '/' moduleName <.> "hs"
 -- | Module files for a given 'Context'.
 contextFiles :: Context -> Action [(String, Maybe FilePath)]
 contextFiles context@Context {..} = do
-    path    <- contextPath context
     modules <- fmap sort $ interpretInContext context (getConfiguredCabalData ConfCabal.modules)
     zip modules <$> askOracle (ModuleFiles (stage, package))
 
@@ -126,7 +122,6 @@ moduleFilesOracle :: Rules ()
 moduleFilesOracle = void $ do
     void . addOracle $ \(ModuleFiles (stage, package)) -> do
         let context = vanillaContext stage package
-        path    <- contextPath context
         srcDirs <-             interpretInContext context (getConfiguredCabalData ConfCabal.srcDirs)
         modules <- fmap sort $ interpretInContext context (getConfiguredCabalData ConfCabal.modules)
         autogen <- autogenPath context

@@ -12,7 +12,6 @@ import CommandLine
 import Expression
 import Flavour
 import Oracles.Flag
-import Oracles.PackageData
 import Settings
 import Settings.Builders.Alex
 import Settings.Builders.DeriveConstants

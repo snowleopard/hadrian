@@ -20,7 +20,6 @@ import qualified Rules.Program
 import qualified Rules.Register
 import Settings
 import Target
-import UserSettings
 import Utilities
 
 
@@ -33,7 +32,6 @@ topLevelTargets :: Rules ()
 topLevelTargets = do
     phony "stage2" $ do
       putNormal "Building stage2"
-      let libraryPackages = filter isLibrary (knownPackages \\ [libffi])
       need =<< mapM (f Stage1) =<< stagePackages Stage1
 
       where
@@ -44,20 +42,6 @@ topLevelTargets = do
         f :: Stage -> Package -> Action FilePath
         f stage pkg | isLibrary pkg = pkgConfFile (Context stage pkg (read "v"))
                     | otherwise     = programPath =<< programContext stage pkg
---      want []
-  -- action $ do
-  --   let libraryPackages = filter isLibrary (knownPackages \\ [libffi])
-  --   need =<< if stage1Only
-  --            then do
-  --                libs <- concatForM [Stage0, Stage1] $ \stage ->
-  --                    concatForM libraryPackages $ packageTargets False stage
-  --                prgs <- concatForM programsStage1Only $ packageTargets False Stage0
-  --                return $ libs ++ prgs
-  --            else do
-  --                targets <- concatForM allStages $ \stage ->
-  --                    concatForM (knownPackages \\ [libffi]) $
-  --                       packageTargets False stage
-  --                return targets
 
 -- TODO: Get rid of the @includeGhciLib@ hack.
 -- | Return the list of targets associated with a given 'Stage' and 'Package'.
@@ -135,6 +119,6 @@ oracleRules = do
     Hadrian.Oracles.TextFile.textFileOracle
     Oracles.ModuleFiles.moduleFilesOracle
 
-programsStage1Only :: [Package]
-programsStage1Only = [ deriveConstants, genapply, genprimopcode, ghc, ghcCabal
-                     , ghcPkg, hp2ps, hpc, hsc2hs, runGhc ]
+-- programsStage1Only :: [Package]
+-- programsStage1Only = [ deriveConstants, genapply, genprimopcode, ghc, ghcCabal
+--                      , ghcPkg, hp2ps, hpc, hsc2hs, runGhc ]

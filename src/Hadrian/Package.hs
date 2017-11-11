@@ -24,9 +24,7 @@ module Hadrian.Package (
     ) where
 
 import Data.Maybe
-import Development.Shake.Classes
 import Development.Shake.FilePath
-import GHC.Generics
 import GHC.Stack
 import Hadrian.Utilities
 

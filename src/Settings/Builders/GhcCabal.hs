@@ -7,7 +7,6 @@ import Hadrian.Haskell.Cabal
 import Context
 import Flavour
 import Settings.Builders.Common
-import qualified Types.Context as Context
 import Data.Maybe (fromJust)
 
 ghcCabalBuilderArgs :: Args
@@ -41,14 +40,12 @@ ghcCabalBuilderArgs = mconcat
             , verbosity < Chatty ? pure [ "-v0", "--configure-option=--quiet"
                 , "--configure-option=--disable-option-checking"  ] ]
   , builder (GhcCabal Copy) ? do
-      verbosity <- expr getVerbosity
       mconcat [ arg "copy"
               , getInputs
               ]
   , builder (GhcCabal Reg) ? do
       top       <- expr topDirectory
       path      <- getContextPath
-      stage     <- getStage
       mconcat [ arg "register"
               , arg =<< pkgPath <$> getPackage
               , arg $ top -/- path

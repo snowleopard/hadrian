@@ -2,7 +2,6 @@ module Settings.Flavours.Quick (quickFlavour) where
 
 import Expression
 import Flavour
-import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
 
 -- Please update doc/flavours.md when changing this file.

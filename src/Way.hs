@@ -9,12 +9,6 @@ module Way (
     wayPrefix, waySuffix, hisuf, osuf, hcsuf, obootsuf, hibootsuf, ssuf
     ) where
 
-import Data.IntSet (IntSet)
-import qualified Data.IntSet as Set
-import Data.List
-import Data.Maybe
-import Development.Shake.Classes
-import Hadrian.Utilities
 import Types.Way
 
 -- | Various combinations of RTS only ways.

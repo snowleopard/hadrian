@@ -57,20 +57,10 @@ copyConf rs context@Context {..} conf = do
     stdOutToPkgIds :: String -> [String]
     stdOutToPkgIds = drop 1 . concatMap words . lines
 
-archive :: Way -> String -> String
-archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")
-
-pkgObject :: Way -> String -> String
-pkgObject way pkgId = "HS" ++ pkgId ++ (waySuffix way <.> "o")
-
 buildConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
-buildConf rs context@Context {..} conf = do
-    pkgId <- case pkgCabalFile package of
-      Just file -> liftIO $ parseCabalPkgId file
-      Nothing   -> return (pkgName package)
+buildConf _ context@Context {..} _conf = do
 
     depPkgIds <- cabalDependencies context
-    -- confIn <- pkgInplaceConfig context
 
     -- setup-config, triggers `ghc-cabal configure`
     -- everything of a package should depend on that
@@ -86,10 +76,7 @@ buildConf rs context@Context {..} conf = do
     -- might need some package-db resource to limit read/write,
     -- see packageRules
     top     <- topDirectory
-    ctxPath <- (top -/-) <$> contextPath context
     bldPath <- (top -/-) <$> buildPath context
-    stgPath <- (top -/-) <$> stagePath context
-    libPath <- (top -/-) <$> libPath context
 
     -- special package cases (these should ideally be rolled into cabal one way or the other)
     when (package == rts) $

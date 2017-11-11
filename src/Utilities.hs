@@ -10,10 +10,8 @@ import Hadrian.Utilities
 
 import Context
 import Expression hiding (stage)
-import Oracles.PackageData
 import Settings
 import Target
-import UserSettings
 import Types.ConfiguredCabal as ConfCabal
 
 build :: Target -> Action ()

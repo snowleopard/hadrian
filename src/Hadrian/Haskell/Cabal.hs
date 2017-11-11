@@ -13,7 +13,6 @@ module Hadrian.Haskell.Cabal (
     pkgVersion, pkgIdentifier, pkgDependencies, pkgSynopsis
     ) where
 
-import Stage
 import Types.Context
 import Types.Cabal           as C
 import Types.ConfiguredCabal as CC

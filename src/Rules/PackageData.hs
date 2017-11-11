@@ -15,15 +15,12 @@ import Hadrian.Haskell.Cabal.Parse (configurePackage)
 buildPackageData :: Context -> Rules ()
 buildPackageData context@Context {..} = do
     let dir       = "//" ++ contextDir context
-        cabalFile = unsafePkgCabalFile package -- TODO: improve
-        configure = pkgPath package -/- "configure"
     -- TODO: Get rid of hardcoded file paths.
-    dir -/- "setup-config" %> \setupConfig -> do
+    dir -/- "setup-config" %> \_ -> do
         configurePackage context
 
     -- TODO: Get rid of hardcoded file paths.
     dir -/- "inplace-pkg-config" %> \conf -> do
-        path     <- contextPath context
         dataFile <- pkgDataFile context
         need [dataFile] -- ghc-cabal builds inplace package configuration file
         when (package == rts) $ do
@@ -63,7 +60,6 @@ packageCSources pkg
     | pkg /= rts = getDirectoryFiles (pkgPath pkg) ["*.c"]
     | otherwise  = do
         windows <- windowsHost
-        rtsPath <- rtsBuildPath
         sources <- fmap (map unifyPath) . getDirectoryFiles (pkgPath pkg) .
             map (-/- "*.c") $ [ ".", "hooks", "sm", "eventlog", "linker" ] ++
                               [ if windows then "win32" else "posix"     ]
@@ -88,26 +84,3 @@ packageCmmSources pkg
         sources <- getDirectoryFiles (pkgPath pkg) ["cbits/*.cmm"]
         return sources
     | otherwise   = return []
--- Prepare a given 'packaga-data.mk' file for parsing by readConfigFile:
--- 1) Drop lines containing '$'. For example, get rid of
--- @libraries/Win32_dist-install_CMM_SRCS  := $(addprefix cbits/,$(notdir ...@
--- and replace it with a tracked call to getDirectoryFiles.
--- 2) Drop path prefixes to individual settings.
--- For example, @libraries/deepseq/dist-install_VERSION = 1.4.0.0@
--- is replaced by @VERSION = 1.4.0.0@.
--- Reason: Shake's built-in makefile parser doesn't recognise slashes
--- TODO (izgzhen): should fix DEP_LIB_REL_DIRS_SEARCHPATH
---
--- Note: we also inject the cmm and asm sources here, as there is no way to
---       specify them with cabal yet.
-postProcessPackageData :: Context -> FilePath -> Action ()
-postProcessPackageData context@Context {..} file = do
-    top     <- topDirectory
-    cmmSrcs <- packageCmmSources package
-    asmSrcs <- packageAsmSources package
-    path    <- contextPath context
-    let len = length (pkgPath package) + length (top -/- path) + 2
-    fixFile file $ unlines
-                 . (++ [ "CMM_SRCS = " ++ unwords (map unifyPath cmmSrcs)
-                       , "S_SRCS = " ++ unwords (map unifyPath asmSrcs)  ])
-                 . map (drop len) . filter ('$' `notElem`) . lines

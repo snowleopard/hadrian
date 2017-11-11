@@ -133,7 +133,7 @@ builderProvenance = \case
     GhcPkg _ _       -> context Stage0 ghcPkg
     Haddock _        -> context Stage1 haddock
     Hpc              -> context Stage0 hpcBin
-    Hsc2Hs stage     -> context Stage0 hsc2hs
+    Hsc2Hs _         -> context Stage0 hsc2hs
     Unlit            -> context Stage0 unlit
     _                -> Nothing
   where
@@ -166,8 +166,6 @@ instance H.Builder Builder where
     askBuilderWith :: Builder -> BuildInfo -> Action String
     askBuilderWith builder BuildInfo {..} = case builder of
         Ghc Settings _ -> do
-            let input  = fromSingleton msgIn buildInputs
-                msgIn  = "[askBuilder] Exactly one input file expected."
             needBuilder builder
             path <- H.builderPath builder
             need [path]
@@ -182,6 +180,7 @@ instance H.Builder Builder where
             need [path]
             Stdout stdout <- cmd [path] ["--no-user-package-db", "field", input, "depends"]
             return stdout
+        _ -> error $ "Builder " ++ show builder ++ " can not be asked!"
 
     runBuilderWith :: Builder -> BuildInfo -> Action ()
     runBuilderWith builder BuildInfo {..} = do

@@ -7,7 +7,6 @@ import Base
 import Context
 import Expression hiding (stage, way)
 import Oracles.ModuleFiles
-import Oracles.PackageData
 import Oracles.Setting
 import Rules.Wrappers
 import Settings

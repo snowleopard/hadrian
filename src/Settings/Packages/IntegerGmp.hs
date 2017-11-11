@@ -2,7 +2,6 @@ module Settings.Packages.IntegerGmp (integerGmpPackageArgs) where
 
 import Base
 import Expression
-import Oracles.Setting
 import Rules.Gmp
 
 -- TODO: Is this needed?
@@ -13,8 +12,6 @@ integerGmpPackageArgs :: Args
 integerGmpPackageArgs = package integerGmp ? do
     path <- expr gmpBuildPath
     let includeGmp = "-I" ++ path -/- "include"
-    gmpIncludeDir <- getSetting GmpIncludeDir
-    gmpLibDir     <- getSetting GmpLibDir
     mconcat [ builder Cc ? arg includeGmp
 
             , builder (GhcCabal Conf) ? mconcat

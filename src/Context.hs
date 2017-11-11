@@ -13,7 +13,6 @@ module Context (
     pkgGhciLibraryFile, pkgConfFile, objectPath, pkgId
     ) where
 
-import GHC.Generics
 import Hadrian.Expression
 import Hadrian.Haskell.Cabal
 
@@ -55,13 +54,13 @@ withHsPackage expr = do
     pkg <- getPackage
     ctx <- getContext
     case pkgCabalFile pkg of
-        Just file -> expr ctx
-        Nothing   -> mempty
+        Just _  -> expr ctx
+        Nothing -> mempty
 
 pkgId :: Context -> Action FilePath
 pkgId context@Context {..} = case pkgCabalFile package of
-    Just file -> pkgIdentifier context
-    Nothing   -> return (pkgName package) -- Non-Haskell packages, e.g. rts
+    Just _  -> pkgIdentifier context
+    Nothing -> return (pkgName package) -- Non-Haskell packages, e.g. rts
 
 -- | The directroy in 'buildRoot' that will hold the final install artifact for a given 'Context'.
 libDir :: Context -> FilePath

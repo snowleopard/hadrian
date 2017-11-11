@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+-- ^ for now we don't care about cabal deprications.
+
 -----------------------------------------------------------------------------
 -- |
 -- Module     : Hadrian.Haskell.Cabal.Parse
@@ -16,20 +19,16 @@ module Hadrian.Haskell.Cabal.Parse ( ConfiguredCabal (..)
 
                                    ) where
 
-import Stage
 import Types.Context
 import {-# SOURCE #-} Builder hiding (Builder)
 -- import Hadrian.Builder as H
 import Data.List.Extra
 import Development.Shake                                      hiding (doesFileExist)
-import Development.Shake.Classes
 import qualified Distribution.Package                  as C
 import qualified Distribution.PackageDescription       as C
 import qualified Distribution.PackageDescription.Parse as C
 import qualified Distribution.PackageDescription.Configuration as C
 import qualified Distribution.Text                     as C
-import qualified Distribution.Types.CondTree           as C
-import qualified Distribution.Types.Dependency         as C
 import qualified Distribution.Types.MungedPackageId    as C (mungedName)
 import qualified Distribution.Verbosity                as C
 import qualified Distribution.Simple.Compiler          as C (packageKeySupported, languageToFlags, extensionsToFlags)
@@ -44,7 +43,6 @@ import qualified Distribution.Simple.Build             as C (initialBuildSteps)
 import qualified Distribution.InstalledPackageInfo as Installed
 import qualified Distribution.Simple.PackageIndex as PackageIndex
 import qualified Distribution.Simple.LocalBuildInfo    as LBI
-import Distribution.Simple.LocalBuildInfo (LocalBuildInfo)
 import qualified Distribution.Types.LocalBuildInfo as C
 import Distribution.Text (display)
 import Distribution.Simple (defaultMainWithHooksNoReadArgs, compilerFlavor, CompilerFlavor( GHC ))
@@ -53,9 +51,8 @@ import Hadrian.Package
 import Hadrian.Utilities
 import System.FilePath
 import System.Directory
-import GHC.Generics
 import qualified Distribution.ModuleName as ModuleName
-import Data.Maybe (maybeToList, fromMaybe, fromJust)
+import Data.Maybe (maybeToList, fromMaybe )
 import GHC.Packages (rts)
 import Hadrian.Expression
 import Hadrian.Target
@@ -65,11 +62,8 @@ import Types.ConfiguredCabal
 import Settings
 import Oracles.Setting
 
-import Hadrian.Haskell.Cabal
-
 import Context.Paths
 
-import Settings.Builders.GhcCabal
 import Settings.Default
 import Context
 
@@ -87,20 +81,11 @@ biModules :: C.PackageDescription -> (C.BuildInfo, [ModuleName.ModuleName])
 biModules pd = go [ comp | comp@(bi,_) <- (map libBiModules . maybeToList $ C.library pd)
                                          ++ (map exeBiModules $ C.executables pd)
                         , C.buildable bi ]
-  where libBiModules lib = (C.libBuildInfo lib, C.libModules lib)
+  where libBiModules lib = (C.libBuildInfo lib, C.explicitLibModules lib)
         exeBiModules exe = (C.buildInfo exe, ModuleName.main : C.exeModules exe)
         go [] = error "no buildable component found"
         go [x] = x
         go _  = error "can not handle more than one buildinfo yet!"
-
-
--- TODO: Taken from Context, but Context depends on Oracles.Settings, and this
---       would then lead to recursive imports.
-contextPath :: Context -> Action FilePath
-contextPath context = buildRoot <&> (-/- contextDir context)
-
-buildDir :: Context -> FilePath
-buildDir context = contextDir context -/- "build"
 
 parseCabal :: Context -> Action Cabal
 parseCabal context@Context {..} = do
@@ -137,7 +122,7 @@ parseCabal context@Context {..} = do
 
 configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
-    Just (Cabal _ _ _ gpd pd depPkgs) <- readCabalFile context
+    Just (Cabal _ _ _ gpd _pd depPkgs) <- readCabalFile context
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -166,7 +151,7 @@ configurePackage context@Context {..} = do
 
     case pkgCabalFile package of
       Nothing -> error "No a cabal package!"
-      Just f -> do
+      Just _ -> do
         -- compute the flaglist over the defaultPackageArgs
         flagList <- interpret (target context (CabalFlags stage) [] []) defaultPackageArgs
         -- compute the cabal conf args over all the default args
@@ -183,7 +168,6 @@ copyPackage context@Context {..} = do
     top     <- topDirectory
     ctxPath <- (top -/-) <$> Context.contextPath context
     stgPath <- (top -/-) <$> stagePath context
-    libPath <- (top -/-) <$> libPath context
 
     let userHooks = Hooks.autoconfUserHooks
         copyHooks = userHooks
@@ -216,7 +200,7 @@ registerPackage context@Context {..} = do
 parseConfiguredCabal :: Context -> Action ConfiguredCabal
 parseConfiguredCabal context@Context {..} = do
 
-    Just (Cabal _ _ _ gpd pd depPkgs) <- readCabalFile context
+    Just (Cabal _ _ _ _gpd pd _depPkgs) <- readCabalFile context
 
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]
@@ -305,9 +289,3 @@ parseConfiguredCabal context@Context {..} = do
       , depLdOpts = forDeps Installed.ldOptions
       , buildGhciLib = C.withGHCiLib lbi
       }
-
-collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
-collectDeps Nothing = []
-collectDeps (Just (C.CondNode _ deps ifs)) = deps ++ concatMap f ifs
-  where
-    f (C.CondBranch _ t mt) = collectDeps (Just t) ++ collectDeps mt
