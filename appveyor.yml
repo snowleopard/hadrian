@@ -21,6 +21,7 @@ install:
     - mv new-hadrian ghc\hadrian
 
     # Install Alex and Happy
+    - set PATH=C:\Users\appveyor\AppData\Roaming\local\bin;%PATH%
     - ghc\hadrian\stack install --install-ghc alex happy > nul
 
     # Install all Hadrian and GHC build dependencies
