@@ -235,7 +235,7 @@ instance H.Builder Builder where
                     Stdout pkgDesc <- cmd [path] ["--expand-pkgroot", "--no-user-package-db", "describe", input ]
                     cmd (Stdin pkgDesc) [path] (buildArgs ++ ["-"])
 
-                _  -> cmd echo [path] buildArgs
+                _  -> cmd echo [path] buildOptions buildArgs
 
 -- TODO: Some builders are required only on certain platforms. For example,
 -- 'Objdump' is only required on OpenBSD and AIX. Add support for platform

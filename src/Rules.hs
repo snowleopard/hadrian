@@ -22,6 +22,9 @@ import Settings
 import Target
 import Utilities
 
+import System.Directory (getCurrentDirectory)
+
+import Oracles.Setting
 
 allStages :: [Stage]
 allStages = [minBound .. maxBound]
@@ -30,6 +33,22 @@ allStages = [minBound .. maxBound]
 -- 'Stage1Only' flag.
 topLevelTargets :: Rules ()
 topLevelTargets = do
+    phony "binary-dist" $ do
+      -- This is kind of incorrect.  We should not "need" a phony rule.
+      -- Instead we should *need* the libraries and bianries we want to
+      -- put into the bianry distribution.  For now we will just *need*
+      -- stage2 and package up bin and lib.
+      need ["stage2"]
+      version <- setting ProjectVersion
+      cwd <- liftIO $ getCurrentDirectory
+      binDistDir <- getEnvWithDefault cwd "BINARY_DIST_DIR"
+      baseDir <- buildRoot <&> (-/- stageString Stage1)
+      buildWithCmdOptions [Cwd baseDir] $
+        -- ghc is a fake packge here.
+        target (vanillaContext Stage1 ghc) (Tar Create)
+               ["bin", "lib"]
+               [binDistDir -/- "ghc-" ++ version ++ ".tar.xz"]
+
     phony "stage2" $ do
       putNormal "Building stage2"
       need =<< mapM (f Stage1) =<< stagePackages Stage1
