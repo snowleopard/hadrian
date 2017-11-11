@@ -4,3 +4,6 @@ packages: ../libraries/Cabal/Cabal/
           ../libraries/hpc/
           ../libraries/parsec/
           ./
+
+package hadrian
+  ghc-options: -Werror
