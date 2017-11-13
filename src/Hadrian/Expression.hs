@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeFamilies, CPP #-}
 module Hadrian.Expression (
     -- * Expressions
     Expr, Predicate, Args,
@@ -19,7 +19,7 @@ module Hadrian.Expression (
 import Control.Monad.Extra
 import Control.Monad.Trans
 import Control.Monad.Trans.Reader
-import Data.Semigroup
+import Data.Semigroup (Semigroup, (<>))
 import Development.Shake
 import Development.Shake.Classes
 
@@ -71,7 +71,12 @@ class ToPredicate p c b where
 infixr 3 ?
 
 -- | Apply a predicate to an expression.
+
+#if !(MIN_VERSION_base(4,11,0))
 (?) :: (Monoid a, Semigroup a, ToPredicate p c b) => p -> Expr c b a -> Expr c b a
+#else
+(?) :: (Monoid a, ToPredicate p c b) => p -> Expr c b a -> Expr c b a
+#endif
 p ? e = do
     bool <- toPredicate p
     if bool then e else mempty

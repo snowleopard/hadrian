@@ -1,0 +1,6 @@
+[submodule "shake"]
+	path = shake
+	url = https://github.com/ndmitchell/shake.git
+[submodule "happy"]
+	path = happy
+	url = https://github.com/simonmar/happy.git
