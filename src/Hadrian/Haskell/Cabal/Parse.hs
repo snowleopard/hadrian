@@ -82,10 +82,18 @@ biModules pd = go [ comp | comp@(bi,_) <- (map libBiModules . maybeToList $ C.li
                                          ++ (map exeBiModules $ C.executables pd)
                         , C.buildable bi ]
   where libBiModules lib = (C.libBuildInfo lib, C.explicitLibModules lib)
-        exeBiModules exe = (C.buildInfo exe, ModuleName.main : C.exeModules exe)
+        exeBiModules exe = (C.buildInfo exe
+                           , if isHaskell (C.modulePath exe) -- if "main-is: ..." is not a .hs or .lhs file, do
+                                                             -- not inject "Main" into the modules.  This does
+                                                             -- not respect "-main-is" ghc-arguments!  See GHC.hs
+                                                             -- in Distribution.Simple.GHC from Cabal for the glory
+                                                             -- details.
+                             then ModuleName.main : C.exeModules exe
+                             else C.exeModules exe)
         go [] = error "no buildable component found"
         go [x] = x
         go _  = error "can not handle more than one buildinfo yet!"
+        isHaskell fp = takeExtension fp `elem` [".hs", ".lhs"]
 
 parseCabal :: Context -> Action Cabal
 parseCabal context@Context {..} = do
