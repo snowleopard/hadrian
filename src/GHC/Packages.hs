@@ -58,7 +58,7 @@ ghcSplit            = hsUtil "ghc-split"
 haddock             = hsUtil "haddock"
 haskeline           = hsLib  "haskeline"
 hsc2hs              = hsUtil "hsc2hs"
-hp2ps               = cUtil  "hp2ps"
+hp2ps               = hsUtil "hp2ps"
 hpc                 = hsLib  "hpc"
 hpcBin              = hsUtil "hpc-bin"         `setPath` "utils/hpc"
 integerGmp          = hsLib  "integer-gmp"
@@ -78,7 +78,7 @@ templateHaskell     = hsLib  "template-haskell"
 terminfo            = hsLib  "terminfo"
 text                = hsLib  "text"
 time                = hsLib  "time"
-touchy              = cUtil  "touchy"
+touchy              = hsUtil "touchy"
 transformers        = hsLib  "transformers"
 unlit               = hsUtil "unlit"
 unix                = hsLib  "unix"
@@ -104,10 +104,6 @@ hsPrg name = hsProgram name name
 -- | Construct a Haskell utility package, e.g. @haddock@.
 hsUtil :: PackageName -> Package
 hsUtil name = hsProgram name ("utils" -/- name)
-
--- | Construct a C utility package, e.g. @haddock@.
-cUtil :: PackageName -> Package
-cUtil name = cProgram name ("utils" -/- name)
 
 -- | Amend a package path if it doesn't conform to a typical pattern.
 setPath :: Package -> FilePath -> Package
