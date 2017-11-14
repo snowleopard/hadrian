@@ -134,7 +134,6 @@ programPath context@Context {..} = do
 nonCabalContext :: Context -> Bool
 nonCabalContext Context {..} = (package `elem` [ hp2ps
                                                , touchy
-                                               , unlit
                                                ])
     || package == ghcCabal && stage == Stage0
 
