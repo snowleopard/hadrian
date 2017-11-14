@@ -36,6 +36,7 @@ import Settings.Packages.Ghci
 import Settings.Packages.GhcPkg
 import Settings.Packages.GhcPrim
 import Settings.Packages.Haddock
+import Settings.Packages.Hsc2Hs
 import Settings.Packages.Haskeline
 import Settings.Packages.IntegerGmp
 import Settings.Packages.Rts
@@ -167,6 +168,7 @@ defaultPackageArgs = mconcat
     , ghcPkgPackageArgs
     , ghcPrimPackageArgs
     , haddockPackageArgs
+    , hsc2hsPackageArgs
     , haskelinePackageArgs
     , integerGmpPackageArgs
     , rtsPackageArgs

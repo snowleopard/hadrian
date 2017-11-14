@@ -129,7 +129,6 @@ buildBinary rs bin context@Context {..} = do
             cObjs  <- mapM (objectPath context) cSrcs
             hsObjs <- hsObjects context
             return $ cObjs ++ hsObjs
-                  ++ [ path -/- "build" -/- "Paths_hsc2hs.o"  | package == hsc2hs  ]
                   ++ [ path -/- "build" -/- "Paths_haddock.o" | package == haddock ]
     need binDeps
     buildWithResources rs $ target context (Ghc LinkHs stage) binDeps [bin]

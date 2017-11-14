@@ -97,6 +97,7 @@ executable hadrian
                        , Settings.Packages.GhcPkg
                        , Settings.Packages.GhcPrim
                        , Settings.Packages.Haddock
+                       , Settings.Packages.Hsc2Hs
                        , Settings.Packages.Haskeline
                        , Settings.Packages.IntegerGmp
                        , Settings.Packages.Rts
