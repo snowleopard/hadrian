@@ -93,7 +93,6 @@ executable hadrian
                        , Settings.Packages.Cabal
                        , Settings.Packages.Compiler
                        , Settings.Packages.Ghc
-                       , Settings.Packages.GhcCabal
                        , Settings.Packages.Ghci
                        , Settings.Packages.GhcPkg
                        , Settings.Packages.GhcPrim

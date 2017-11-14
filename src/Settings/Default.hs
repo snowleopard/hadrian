@@ -32,7 +32,6 @@ import Settings.Packages.Base
 import Settings.Packages.Cabal
 import Settings.Packages.Compiler
 import Settings.Packages.Ghc
-import Settings.Packages.GhcCabal
 import Settings.Packages.Ghci
 import Settings.Packages.GhcPkg
 import Settings.Packages.GhcPrim
@@ -163,7 +162,6 @@ defaultPackageArgs = mconcat
     [ basePackageArgs
     , cabalPackageArgs
     , compilerPackageArgs
-    , ghcCabalPackageArgs
     , ghciPackageArgs
     , ghcPackageArgs
     , ghcPkgPackageArgs
