@@ -235,6 +235,8 @@ parseConfiguredCabal context@Context {..} = do
         -- package mean linking fails on OS X (it's ld is a tad
         -- stricter than gnu ld). Thus we remove the ldOptions for
         -- GHC's rts package:
+        hackRtsPackage index | null (PackageIndex.allPackages index) = index
+        -- ^ do not hack the empty index
         hackRtsPackage index =
           case PackageIndex.lookupPackageName index (C.mkPackageName "rts") of
             [(_,[rts])] ->
