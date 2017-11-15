@@ -1,6 +1,7 @@
 module Settings.Packages.Cabal where
 
 import Expression
+import GHC.Packages
 
 cabalPackageArgs :: Args
 cabalPackageArgs = package cabal ?

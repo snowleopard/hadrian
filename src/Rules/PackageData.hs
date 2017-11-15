@@ -8,6 +8,8 @@ import Rules.Generate
 import Settings.Packages.Rts
 import Target
 import Utilities
+import GHC.Packages
+import GHC
 
 import Hadrian.Haskell.Cabal.Parse (configurePackage)
 

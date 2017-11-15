@@ -13,6 +13,8 @@ import Settings
 import Settings.Packages.Rts
 import Target
 import Utilities
+import GHC.Packages
+import GHC
 
 -- | TODO: Drop code duplication
 buildProgram :: [(Resource, Int)] -> Package -> Rules ()

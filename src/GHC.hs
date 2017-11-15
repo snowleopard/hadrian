@@ -15,7 +15,7 @@ module GHC (
     programName, nonCabalContext, nonHsMainPackage, autogenPath, installStage,
 
     -- * Miscellaneous
-    programPath, ghcSplitPath, stripCmdPath, buildDll0
+    programPath, ghcSplitPath, stripCmdPath
     ) where
 
 import Base
@@ -169,8 +169,3 @@ stripCmdPath = do
         "arm-unknown-linux" ->
              return ":" -- HACK: from the make-based system, see the ref above
         _ -> return "strip"
-
-buildDll0 :: Context -> Action Bool
-buildDll0 Context {..} = do
-    windows <- windowsHost
-    return $ windows && stage == Stage1 && package == compiler

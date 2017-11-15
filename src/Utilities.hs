@@ -13,6 +13,8 @@ import Expression hiding (stage)
 import Settings
 import Target
 import Types.ConfiguredCabal as ConfCabal
+import Oracles.Setting (windowsHost)
+import GHC.Packages
 
 build :: Target -> Action ()
 build target = H.build target getArgs
@@ -64,6 +66,11 @@ libraryTargets includeGhciLib context = do
                 then interpretInContext context $ getConfiguredCabalData ConfCabal.buildGhciLib
                 else return False
     return $ [ libFile ] ++ [ lib0File | lib0 ] ++ [ ghciLib | ghci ]
+
+  where buildDll0 :: Context -> Action Bool
+        buildDll0 Context {..} = do
+          windows <- windowsHost
+          return $ windows && stage == Stage1 && package == compiler
 
 -- | Coarse-grain 'need': make sure all given libraries are fully built.
 needLibrary :: [Context] -> Action ()

@@ -4,6 +4,7 @@ import Expression
 import Oracles.Flag
 import Oracles.Setting
 import Settings
+import GHC.Packages
 
 -- See @mk/warnings.mk@ for warning-related arguments in the Make build system.
 

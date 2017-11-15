@@ -10,7 +10,8 @@ module UserSettings (
 import Hadrian.Utilities
 import System.Console.ANSI
 
-import Flavour
+import Types.Flavour
+import Types.Package
 import Expression
 import {-# SOURCE #-} Settings.Default
 

@@ -21,6 +21,8 @@ import qualified Rules.Register
 import Settings
 import Target
 import Utilities
+import GHC.Packages
+import GHC
 
 import System.Directory (getCurrentDirectory)
 

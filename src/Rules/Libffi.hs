@@ -6,6 +6,7 @@ import Settings.Builders.Common
 import Settings.Packages.Rts
 import Target
 import Utilities
+import GHC.Packages
 
 -- | Libffi is considered a Stage1 package. This determines its build directory.
 libffiContext :: Context

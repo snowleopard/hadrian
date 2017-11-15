@@ -6,7 +6,7 @@ module Settings (
 
 import CommandLine
 import Expression
-import Flavour
+import Types.Flavour
 import {-# SOURCE #-} Settings.Default
 import Settings.Flavours.Development
 import Settings.Flavours.Performance
@@ -16,6 +16,7 @@ import Settings.Flavours.Quickest
 import Settings.Flavours.QuickCross
 import Settings.Flavours.QuickCrossNG
 import UserSettings
+import GHC.Packages
 
 getArgs :: Args
 getArgs = expr flavour >>= args

@@ -2,6 +2,7 @@ module Settings.Builders.Cc (ccBuilderArgs) where
 
 import Settings.Builders.Common
 import Types.ConfiguredCabal as ConfCabal
+import Builder ()
 
 ccBuilderArgs :: Args
 ccBuilderArgs = do

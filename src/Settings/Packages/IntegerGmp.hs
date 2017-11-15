@@ -3,6 +3,7 @@ module Settings.Packages.IntegerGmp (integerGmpPackageArgs) where
 import Base
 import Expression
 import Rules.Gmp
+import GHC.Packages
 
 -- TODO: Is this needed?
 -- ifeq "$(GMP_PREFER_FRAMEWORK)" "YES"

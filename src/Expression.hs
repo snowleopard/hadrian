@@ -20,7 +20,6 @@ module Expression (
     module Base,
     module Builder,
     module Context,
-    module GHC
     ) where
 
 import Hadrian.Expression hiding (Expr, Predicate, Args)
@@ -30,8 +29,7 @@ import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
 import Types.Expression
 
 import Base
-import Builder
-import GHC
+import {-# SOURCE #-} Builder
 import Context hiding (stage, package, way)
 
 -- | Get values from a configured cabal stage.

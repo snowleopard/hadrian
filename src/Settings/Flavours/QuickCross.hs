@@ -1,7 +1,7 @@
 module Settings.Flavours.QuickCross (quickCrossFlavour) where
 
 import Expression
-import Flavour
+import Types.Flavour
 import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
 

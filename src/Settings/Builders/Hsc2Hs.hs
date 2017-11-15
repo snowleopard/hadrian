@@ -2,6 +2,9 @@ module Settings.Builders.Hsc2Hs (hsc2hsBuilderArgs) where
 
 import Settings.Builders.Common
 import Types.ConfiguredCabal as ConfCabal
+import GHC (autogenPath)
+import Hadrian.Builder (getBuilderPath)
+import Builder ()
 
 hsc2hsBuilderArgs :: Args
 hsc2hsBuilderArgs = builder Hsc2Hs ? do

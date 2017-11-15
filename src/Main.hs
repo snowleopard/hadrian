@@ -15,6 +15,7 @@ import qualified Rules.Selftest
 import qualified Rules.Test
 import qualified UserSettings
 
+
 main :: IO ()
 main = do
     -- Provide access to command line arguments and some user settings through
@@ -22,10 +23,9 @@ main = do
     argsMap <- CommandLine.cmdLineArgsMap
     let extra = insertExtra UserSettings.buildProgressColour
               $ insertExtra UserSettings.successColour
-              $ insertExtra UserSettings.userBuildRoot
               $ insertExtra (VerboseCommand UserSettings.verboseCommand) argsMap
 
-        BuildRoot buildRoot = UserSettings.userBuildRoot
+        BuildRoot buildRoot = CommandLine.lookupBuildRoot argsMap
 
         rebuild = [ (RebuildLater, buildRoot -/- "stage0//*")
                   | CommandLine.lookupFreeze1 argsMap ]

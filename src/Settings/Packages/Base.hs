@@ -2,6 +2,7 @@ module Settings.Packages.Base (basePackageArgs) where
 
 import Expression
 import Settings
+import GHC.Packages
 
 basePackageArgs :: Args
 basePackageArgs = package base ? do

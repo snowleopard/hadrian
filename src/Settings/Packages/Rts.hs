@@ -7,6 +7,7 @@ import Expression
 import Oracles.Flag
 import Oracles.Setting
 import Settings
+import GHC.Packages
 
 -- | RTS is considered a Stage1 package. This determines RTS build directory.
 rtsContext :: Context

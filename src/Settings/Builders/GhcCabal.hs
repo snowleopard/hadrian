@@ -5,9 +5,12 @@ module Settings.Builders.GhcCabal (
 import Hadrian.Haskell.Cabal
 
 import Context
-import Flavour
+import Types.Flavour
 import Settings.Builders.Common
 import Data.Maybe (fromJust)
+import Hadrian.Builder (getBuilderPath, needBuilder )
+import Builder ( ArMode ( Pack ) )
+import GHC.Packages
 
 ghcCabalBuilderArgs :: Args
 ghcCabalBuilderArgs = mconcat

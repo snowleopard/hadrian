@@ -202,7 +202,6 @@ parseConfiguredCabal context@Context {..} = do
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]
 
-    liftIO $ putStrLn $ "trying to obtain the persitendBuildConfig at " ++ show cPath
     lbi <- liftIO $ C.getPersistBuildConfig cPath
 
     -- XXX: move this into it's own rule for build/autogen/cabal_macros.h, and build/autogen/Path_*.hs

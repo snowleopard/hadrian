@@ -2,12 +2,13 @@ module Rules.Test (testRules) where
 
 import Base
 import Expression
-import Flavour
+import Types.Flavour
 import Oracles.Flag
 import Oracles.Setting
 import Settings
 import Target
 import Utilities
+import GHC.Packages
 
 -- TODO: clean up after testing
 testRules :: Rules ()

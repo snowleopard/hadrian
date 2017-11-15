@@ -2,10 +2,11 @@ module Settings.Packages.Compiler (compilerPackageArgs) where
 
 import Base
 import Expression
-import Flavour
+import Types.Flavour
 import Oracles.Flag
 import Oracles.Setting
 import Settings
+import GHC.Packages
 
 compilerPackageArgs :: Args
 compilerPackageArgs = package compiler ? do

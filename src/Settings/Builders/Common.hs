@@ -16,6 +16,7 @@ import Oracles.PackageData
 import Oracles.Setting
 import Settings
 import UserSettings
+import GHC.Packages
 
 import Types.ConfiguredCabal as ConfCabal
 

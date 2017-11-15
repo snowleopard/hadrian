@@ -2,6 +2,7 @@ module Settings.Packages.GhcPrim (ghcPrimPackageArgs) where
 
 import Oracles.Flag
 import Expression
+import GHC.Packages
 
 ghcPrimPackageArgs :: Args
 ghcPrimPackageArgs = package ghcPrim ? mconcat

@@ -10,13 +10,14 @@ import Hadrian.Haskell.Cabal.Parse (parseCabalPkgId)
 import Base
 import Context
 import Expression hiding (way, package)
-import Flavour
+import Types.Flavour
 import Oracles.ModuleFiles
 import Oracles.Setting
 import Rules.Gmp
 import Settings
 import Target
 import Utilities
+import GHC.Packages
 
 archive :: Way -> String -> String
 archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")

@@ -8,6 +8,8 @@ import Base
 import Expression
 import Oracles.Setting
 import Settings
+import GHC.Packages
+import GHC (installStage)
 
 -- | Wrapper is an expression depending on (i) the 'FilePath' to the library and
 -- (ii) the name of the wrapped binary.

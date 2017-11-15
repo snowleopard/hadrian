@@ -8,7 +8,7 @@ module Rules.Documentation (
 
 import Base
 import Context
-import Flavour
+import Types.Flavour
 import GHC
 import Oracles.ModuleFiles
 import Oracles.PackageData

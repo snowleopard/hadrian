@@ -10,7 +10,7 @@ import qualified Hadrian.Builder.Tar
 
 import CommandLine
 import Expression
-import Flavour
+import Types.Flavour
 import Oracles.Flag
 import Settings
 import Settings.Builders.Alex
@@ -44,6 +44,10 @@ import Settings.Packages.RunGhc
 import Settings.Warnings
 
 import Types.ConfiguredCabal as ConfCabal
+
+import {-# SOURCE #-} Builder
+import GHC.Packages
+import GHC
 
 -- TODO: Move C source arguments here
 -- | Default and package-specific source arguments.

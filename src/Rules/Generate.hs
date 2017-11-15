@@ -5,7 +5,7 @@ module Rules.Generate (
 
 import Base
 import Expression
-import Flavour
+import Types.Flavour
 import Oracles.Flag
 import Oracles.ModuleFiles
 import Oracles.Setting
@@ -15,6 +15,8 @@ import Target
 import Settings
 import Settings.Packages.Rts
 import Utilities
+import GHC.Packages
+import GHC
 
 -- | Track this file to rebuild generated files whenever it changes.
 trackGenerateHs :: Expr ()

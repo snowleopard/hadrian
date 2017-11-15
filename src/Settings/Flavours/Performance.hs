@@ -1,7 +1,7 @@
 module Settings.Flavours.Performance (performanceFlavour) where
 
 import Expression
-import Flavour
+import Types.Flavour
 import {-# SOURCE #-} Settings.Default
 
 -- Please update doc/flavours.md when changing this file.

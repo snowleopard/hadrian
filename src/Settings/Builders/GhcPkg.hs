@@ -1,6 +1,7 @@
 module Settings.Builders.GhcPkg (ghcPkgBuilderArgs) where
 
 import Settings.Builders.Common
+import Builder ()
 
 ghcPkgBuilderArgs :: Args
 ghcPkgBuilderArgs = mconcat

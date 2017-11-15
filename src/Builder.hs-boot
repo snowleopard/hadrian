@@ -39,4 +39,6 @@ data Builder = Alex
              | Xelatex
              | CabalFlags Stage
 
+instance Eq Builder
+
 builderPath' :: Builder -> Action FilePath
