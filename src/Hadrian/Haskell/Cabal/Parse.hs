@@ -42,7 +42,6 @@ import qualified Distribution.Simple.Configure         as C (getPersistBuildConf
 import qualified Distribution.Simple.Build             as C (initialBuildSteps)
 import qualified Distribution.InstalledPackageInfo as Installed
 import qualified Distribution.Simple.PackageIndex as PackageIndex
-import qualified Distribution.Simple.LocalBuildInfo    as LBI
 import qualified Distribution.Types.LocalBuildInfo as C
 import Distribution.Text (display)
 import Distribution.Simple (defaultMainWithHooksNoReadArgs, compilerFlavor, CompilerFlavor( GHC ))
@@ -191,18 +190,8 @@ registerPackage context@Context {..} = do
     Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
     let userHooks = Hooks.autoconfUserHooks
         regHooks = userHooks
-        hooks = regHooks {
-          Hooks.regHook = \pd lbi us flags ->
-              let lbi' = lbi { C.installDirTemplates = updateInstallDirTemplates (C.installDirTemplates lbi) }
-              in (Hooks.regHook regHooks) pd lbi' us flags
-          }
 
-    liftIO $ defaultMainWithHooksNoReadArgs hooks gpd ["register", "--builddir", ctxPath]
-
-  -- XXX: allow configure to set a prefix with a known variable. $topdir or $pkgroot
-  --      that would elivate the need for this hack.
-  where updateInstallDirTemplates :: LBI.InstallDirTemplates -> LBI.InstallDirTemplates
-        updateInstallDirTemplates idts = idts { LBI.prefix = LBI.toPathTemplate "${pkgroot}/.." }
+    liftIO $ defaultMainWithHooksNoReadArgs regHooks gpd ["register", "--builddir", ctxPath]
 
 -- | Parse a ConfiguredCabal file.
 parseConfiguredCabal :: Context -> Action ConfiguredCabal

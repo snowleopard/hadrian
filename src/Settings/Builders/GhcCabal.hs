@@ -24,7 +24,7 @@ ghcCabalBuilderArgs = mconcat
             , arg "--ipid"
             , arg "$pkg-$version"
             , arg "--prefix"
-            , arg "/"
+            , arg "${pkgroot}/.."
             , withStaged $ Ghc CompileHs
             , withStaged (GhcPkg Update)
             , withBuilderArgs (GhcPkg Update stage)
