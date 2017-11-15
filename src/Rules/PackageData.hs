@@ -16,7 +16,8 @@ import Hadrian.Haskell.Cabal.Parse (configurePackage)
 -- | Build @package-data.mk@ by using ghc-cabal utility to process .cabal files.
 buildPackageData :: Context -> Rules ()
 buildPackageData context@Context {..} = do
-    let dir       = "//" ++ contextDir context
+    root <- buildRootRules
+    let dir       = root -/- contextDir context
     -- TODO: Get rid of hardcoded file paths.
     dir -/- "setup-config" %> \_ -> do
         configurePackage context

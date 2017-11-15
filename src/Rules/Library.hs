@@ -33,11 +33,12 @@ archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")
 -- the any of the lirbary artifacts.
 library :: Context -> Rules ()
 library context@Context{..} = do
+    root <- buildRootRules
     pkgId <- case pkgCabalFile package of
       Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
-    "//" ++ libDir context -/- pkgId -/- archive way pkgId %> \_ -> do
+    root -/- libDir context -/- pkgId -/- archive way pkgId %> \_ -> do
         need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) [pkgId]
         return ()
 
@@ -60,11 +61,12 @@ libraryObjects context@Context{..} = do
 
 buildDynamicLib :: Context -> Rules ()
 buildDynamicLib context@Context{..} = do
+    root <- buildRootRules
     pkgId <- case pkgCabalFile package of
       Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
-    let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgId
+    let libPrefix = root -/- buildDir context -/- "libHS" ++ pkgId
     -- OS X
     libPrefix ++ "*.dylib" %> buildDynamicLibUnix
     -- Linux
@@ -79,11 +81,12 @@ buildDynamicLib context@Context{..} = do
 
 buildPackageLibrary :: Context -> Rules ()
 buildPackageLibrary context@Context {..} = do
+    root <- buildRootRules
     pkgId <- case pkgCabalFile package of
       Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
-    let libPrefix = "//" ++ buildDir context -/- "libHS" ++ pkgId
+    let libPrefix = root -/- buildDir context -/- "libHS" ++ pkgId
         archive = libPrefix ++ (waySuffix way <.> "a")
     archive %%> \a -> do
         objs <- libraryObjects context
@@ -106,7 +109,8 @@ buildPackageGhciLibrary context@Context {..} = priority 2 $ do
       Just file -> liftIO $ parseCabalPkgId file
       Nothing   -> return (pkgName package)
 
-    let libPrefix = "//" ++ buildDir context -/- "HS" ++ pkgId
+    root <- buildRootRules
+    let libPrefix = root -/- buildDir context -/- "HS" ++ pkgId
         o = libPrefix ++ "*" ++ (waySuffix way <.> "o")
     o %> \obj -> do
         objs <- allObjects context

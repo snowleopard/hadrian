@@ -11,7 +11,8 @@ import Utilities
 
 compilePackage :: [(Resource, Int)] -> Context -> Rules ()
 compilePackage rs context@Context {..} = do
-    let dir             = "//" ++ buildDir context
+    root <- buildRootRules
+    let dir             = root -/- buildDir context
         nonHs extension = dir -/- extension <//> "*" <.> osuf way
         compile compiler obj2src obj = do
             src <- obj2src context obj

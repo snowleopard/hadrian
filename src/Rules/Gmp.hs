@@ -46,7 +46,8 @@ configureEnvironment = sequence [ builderEnvironment "CC" $ Cc CompileC Stage1
 gmpRules :: Rules ()
 gmpRules = do
     -- Copy appropriate GMP header and object files
-    "//" ++ gmpLibraryH %> \header -> do
+    root <- buildRootRules
+    root -/- gmpLibraryH %> \header -> do
         windows  <- windowsHost
         configMk <- readFile' $ gmpBase -/- "config.mk"
         if not windows && -- TODO: We don't use system GMP on Windows. Fix?
@@ -66,13 +67,13 @@ gmpRules = do
             copyFile (gmpPath -/- "gmp.h") (gmpPath -/- gmpLibraryInTreeH)
 
     -- Build in-tree GMP library
-    "//" ++ gmpLibrary %> \lib -> do
+    root -/- gmpLibrary %> \lib -> do
         gmpPath <- gmpBuildPath
         build $ target gmpContext (Make gmpPath) [gmpPath -/- "Makefile"] [lib]
         putSuccess "| Successfully built custom library 'gmp'"
 
     -- In-tree GMP header is built by the gmpLibraryH rule
-    "//" ++ gmpLibraryInTreeH %> \_ -> do
+    root -/- gmpLibraryInTreeH %> \_ -> do
         gmpPath <- gmpBuildPath
         need [gmpPath -/- gmpLibraryH]
 
@@ -86,7 +87,7 @@ gmpRules = do
 
     -- Run GMP's configure script
     -- TODO: Get rid of hard-coded @gmp@.
-    "//gmp/Makefile" %> \mk -> do
+    root -/- "gmp/Makefile" %> \mk -> do
         env     <- configureEnvironment
         gmpPath <- gmpBuildPath
         need [mk <.> "in"]
@@ -94,7 +95,7 @@ gmpRules = do
             target gmpContext (Configure gmpPath) [mk <.> "in"] [mk]
 
     -- Extract in-tree GMP sources and apply patches
-    "//gmp/Makefile.in" %> \_ -> do
+    root -/- "gmp/Makefile.in" %> \_ -> do
         gmpPath <- gmpBuildPath
         removeDirectory gmpPath
         -- Note: We use a tarball like gmp-4.2.4-nodoc.tar.bz2, which is

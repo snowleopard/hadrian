@@ -82,7 +82,8 @@ buildHtmlDocumentation :: Rules ()
 buildHtmlDocumentation = do
     mapM_ buildSphinxHtml $ docPaths \\ [ "libraries" ]
     buildLibraryDocumentation
-    "//" ++ htmlRoot -/- "index.html" %> \file -> do
+    root <- buildRootRules
+    root -/- htmlRoot -/- "index.html" %> \file -> do
         root <- buildRoot
         need $ map ((root -/-) . pathIndex) docPaths
         copyFileUntracked "docs/index.html" file
@@ -93,7 +94,8 @@ buildHtmlDocumentation = do
 -- | Compile a Sphinx ReStructured Text package to HTML
 buildSphinxHtml :: FilePath -> Rules ()
 buildSphinxHtml path = do
-    "//" ++ htmlRoot -/- path -/- "index.html" %> \file -> do
+    root <- buildRootRules
+    root -/- htmlRoot -/- path -/- "index.html" %> \file -> do
         let dest = takeDirectory file
             context = vanillaContext Stage0 docPackage
         build $ target context (Sphinx Html) [pathPath path] [dest]
@@ -104,7 +106,8 @@ buildSphinxHtml path = do
 -- | Build the haddocks for GHC's libraries
 buildLibraryDocumentation :: Rules ()
 buildLibraryDocumentation = do
-    "//" ++ htmlRoot -/- "libraries/index.html" %> \file -> do
+    root <- buildRootRules
+    root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
         haddocks <- allHaddocks
         need haddocks
         let libDocs = filter (\x -> takeFileName x /= "ghc.haddock") haddocks
@@ -141,7 +144,8 @@ buildPackageDocumentation context@Context {..} = when (stage == Stage1) $ do
         copyDirectory "utils/haddock/haddock-api/resources/html" dir
 
     -- Per-package haddocks
-    "//" ++ pkgName package <.> "haddock" %> \file -> do
+    root <- buildRootRules
+    root -/- pkgName package <.> "haddock" %> \file -> do
         haddocks <- haddockDependencies context
         srcs <- hsSources context
         need $ srcs ++ haddocks ++ [haddockHtmlLib]
@@ -163,7 +167,8 @@ buildPdfDocumentation = mapM_ buildSphinxPdf docPaths
 -- | Compile a Sphinx ReStructured Text package to LaTeX
 buildSphinxPdf :: FilePath -> Rules ()
 buildSphinxPdf path = do
-    "//" ++ path <.> "pdf" %> \file -> do
+    root <- buildRootRules
+    root -/- path <.> "pdf" %> \file -> do
         let context = vanillaContext Stage0 docPackage
         withTempDir $ \dir -> do
             build $ target context (Sphinx Latex) [pathPath path] [dir]
@@ -179,7 +184,8 @@ buildDocumentationArchives = mapM_ buildArchive docPaths
 
 buildArchive :: FilePath -> Rules ()
 buildArchive path = do
-    "//" ++ pathArchive path %> \file -> do
+    root <- buildRootRules
+    root -/- pathArchive path %> \file -> do
         root <- buildRoot
         let context = vanillaContext Stage0 docPackage
             src = root -/- pathIndex path

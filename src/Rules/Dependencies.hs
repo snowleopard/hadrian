@@ -13,7 +13,8 @@ import Utilities
 
 buildPackageDependencies :: [(Resource, Int)] -> Context -> Rules ()
 buildPackageDependencies rs context@Context {..} = do
-    "//" ++ contextDir context -/- ".dependencies.mk" %> \mk -> do
+    root <- buildRootRules
+    root -/- contextDir context -/- ".dependencies.mk" %> \mk -> do
         srcs <- hsSources context
         need srcs
         orderOnly =<< interpretInContext context generatedDependencies
@@ -23,7 +24,7 @@ buildPackageDependencies rs context@Context {..} = do
             target context (Ghc FindHsDependencies stage) srcs [mk]
         removeFile $ mk <.> "bak"
 
-    "//" ++ contextDir context -/- ".dependencies" %> \deps -> do
+    root -/- contextDir context -/- ".dependencies" %> \deps -> do
         need [deps <.> "mk"]
         mkDeps <- readFile' (deps <.> "mk")
         writeFileChanged deps . unlines

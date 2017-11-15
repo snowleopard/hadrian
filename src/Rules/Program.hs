@@ -19,11 +19,13 @@ import GHC
 -- | TODO: Drop code duplication
 buildProgram :: [(Resource, Int)] -> Package -> Rules ()
 buildProgram rs package = do
+    root <- buildRootRules
     forM_ [Stage0 ..] $ \stage -> do
         let context = vanillaContext stage package
 
         -- Rules for programs built in 'buildRoot'
-        "//" ++ stageString stage -/- "bin" -/- programName context <.> exe %> \bin -> do
+        root -/- stageString stage -/- "bin" -/- programName context <.> exe %> \bin -> do
+            liftIO . print $ bin
             when (package == hsc2hs) $ do
               -- hsc2hs needs the template-hsc.h file
               tmpl <- templateHscPath stage

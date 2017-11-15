@@ -26,13 +26,14 @@ parseCabalName = readPToMaybe parse
 -- by running the @ghc-pkg@ utility.
 registerPackages :: [(Resource, Int)] -> Context -> Rules ()
 registerPackages rs context@Context {..} = do
-    "//" ++ inplacePackageDbPath stage %>
+    root <- buildRootRules
+    root -/- inplacePackageDbPath stage %>
       buildStamp rs context
 
-    "//" ++ inplacePackageDbPath stage -/- packageDbStamp %> \stamp -> do
+    root -/- inplacePackageDbPath stage -/- packageDbStamp %> \stamp -> do
       writeFileLines stamp []
 
-    "//" ++ inplacePackageDbPath stage -/- "*.conf" %> \conf -> do
+    root -/- inplacePackageDbPath stage -/- "*.conf" %> \conf -> do
       settings <- libPath context <&> (-/- "settings")
       platformConstants <- libPath context <&> (-/- "platformConstants")
 
