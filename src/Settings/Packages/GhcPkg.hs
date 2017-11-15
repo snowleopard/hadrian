@@ -5,4 +5,4 @@ import Oracles.Flag (crossCompiling)
 import GHC.Packages
 
 ghcPkgPackageArgs :: Args
-ghcPkgPackageArgs = package ghcPkg ? builder (GhcCabal Conf) ? crossCompiling ? arg "-f-terminfo"
+ghcPkgPackageArgs = package ghcPkg ? builder CabalFlags ? crossCompiling ? arg "-terminfo"
