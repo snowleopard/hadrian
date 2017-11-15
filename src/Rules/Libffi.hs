@@ -48,11 +48,11 @@ configureEnvironment = do
 libffiRules :: Rules ()
 libffiRules = do
     root <- buildRootRules
-    fmap ((root -/- "rts/build") -/-) libffiDependencies &%> \_ -> do
+    fmap ((root <//> "rts/build") -/-) libffiDependencies &%> \_ -> do
         libffiPath <- libffiBuildPath
         need [libffiPath -/- libffiLibrary]
 
-    root -/- libffiLibrary %> \_ -> do
+    root <//> libffiLibrary %> \_ -> do
         useSystemFfi <- flag UseSystemFfi
         rtsPath      <- rtsBuildPath
         if useSystemFfi
@@ -77,7 +77,7 @@ libffiRules = do
 
             putSuccess "| Successfully built custom library 'libffi'"
 
-    root -/- "libffi/build/Makefile.in" %> \mkIn -> do
+    root <//> "libffi/build/Makefile.in" %> \mkIn -> do
         libffiPath <- libffiBuildPath
         removeDirectory libffiPath
         tarball <- unifyPath . fromSingleton "Exactly one LibFFI tarball is expected"
@@ -99,7 +99,7 @@ libffiRules = do
         fixFile mkIn (fixLibffiMakefile top)
 
     -- TODO: Get rid of hard-coded @libffi@.
-    root -/- "libffi/build/Makefile" %> \mk -> do
+    root <//> "libffi/build/Makefile" %> \mk -> do
         need [mk <.> "in"]
         libffiPath <- libffiBuildPath
         forM_ ["config.guess", "config.sub"] $ \file ->
