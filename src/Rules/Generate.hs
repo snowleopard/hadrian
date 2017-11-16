@@ -138,11 +138,11 @@ generatePackageCode context@(Context stage pkg _) = do
         whenM (doesFileExist boot) . copyFile boot $ file -<.> "hs-boot"
 
     priority 2.0 $ do
-        when (pkg == compiler) $ do root -/- dir -/- "Config.hs" %> go generateConfigHs
-                                    root -/- dir -/- "*.hs-incl" %> genPrimopCode context
-        when (pkg == ghcPrim) $ do (root -/- dir -/- "GHC/Prim.hs") %> genPrimopCode context
-                                   (root -/- dir -/- "GHC/PrimopWrappers.hs") %> genPrimopCode context
-        when (pkg == ghcPkg) $ do root -/- dir -/- "Version.hs" %> go generateVersionHs
+        when (pkg == compiler) $ do root <//> dir -/- "Config.hs" %> go generateConfigHs
+                                    root <//> dir -/- "*.hs-incl" %> genPrimopCode context
+        when (pkg == ghcPrim) $ do (root <//> dir -/- "GHC/Prim.hs") %> genPrimopCode context
+                                   (root <//> dir -/- "GHC/PrimopWrappers.hs") %> genPrimopCode context
+        when (pkg == ghcPkg) $ do root <//> dir -/- "Version.hs" %> go generateVersionHs
 
     -- TODO: needing platformH is ugly and fragile
     when (pkg == compiler) $ do
@@ -157,21 +157,21 @@ generatePackageCode context@(Context stage pkg _) = do
         -- only generate this once! Until we have the include logic fixed.
         -- See the note on `platformH`
         when (stage == Stage0) $ do
-           root -/- "compiler/ghc_boot_platform.h" %> go generateGhcBootPlatformH
-        root -/- platformH stage %> go generateGhcBootPlatformH
-        (root -/- versionsH stage) <~ return "compiler"
+           root <//> "compiler/ghc_boot_platform.h" %> go generateGhcBootPlatformH
+        root <//> platformH stage %> go generateGhcBootPlatformH
+        (root <//> versionsH stage) <~ return "compiler"
 
     when (pkg == rts) $ do
-      root -/- dir -/- "cmm/AutoApply.cmm" %> \file ->
+      root <//> dir -/- "cmm/AutoApply.cmm" %> \file ->
         build $ target context GenApply [] [file]
 
       -- XXX: this should be fixed properly, e.g. generated here on demand.
-      (root -/- dir -/- "DerivedConstants.h") <~ (buildRoot <&> (-/- generatedDir))
-      (root -/- dir -/- "ghcautoconf.h") <~ (buildRoot <&> (-/- generatedDir))
-      (root -/- dir -/- "ghcplatform.h") <~ (buildRoot <&> (-/- generatedDir))
-      (root -/- dir -/- "ghcversion.h") <~ (buildRoot <&> (-/- generatedDir))
+      (root <//> dir -/- "DerivedConstants.h") <~ (buildRoot <&> (-/- generatedDir))
+      (root <//> dir -/- "ghcautoconf.h") <~ (buildRoot <&> (-/- generatedDir))
+      (root <//> dir -/- "ghcplatform.h") <~ (buildRoot <&> (-/- generatedDir))
+      (root <//> dir -/- "ghcversion.h") <~ (buildRoot <&> (-/- generatedDir))
     when (pkg == integerGmp) $ do
-      (root -/- dir -/- "ghc-gmp.h") <~ (buildRoot <&> (-/- "include"))
+      (root <//> dir -/- "ghc-gmp.h") <~ (buildRoot <&> (-/- "include"))
  where
     pattern <~ mdir = pattern %> \file -> do
         dir <- mdir
@@ -202,9 +202,9 @@ copyRules = do
 generateRules :: Rules ()
 generateRules = do
     root <- buildRootRules
-    priority 2.0 $ (root -/- generatedDir -/- "ghcautoconf.h") <~ generateGhcAutoconfH
-    priority 2.0 $ (root -/- generatedDir -/- "ghcplatform.h") <~ generateGhcPlatformH
-    priority 2.0 $ (root -/- generatedDir -/-  "ghcversion.h") <~ generateGhcVersionH
+    priority 2.0 $ (root <//> generatedDir -/- "ghcautoconf.h") <~ generateGhcAutoconfH
+    priority 2.0 $ (root <//> generatedDir -/- "ghcplatform.h") <~ generateGhcPlatformH
+    priority 2.0 $ (root <//> generatedDir -/-  "ghcversion.h") <~ generateGhcVersionH
 
     ghcSplitPath %> \_ -> do
         generate ghcSplitPath emptyTarget generateGhcSplit

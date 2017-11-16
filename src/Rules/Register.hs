@@ -6,7 +6,6 @@ import Context
 import GHC
 import Target
 import Utilities
-import Oracles.Setting
 import Hadrian.Expression
 import Settings
 
@@ -76,8 +75,7 @@ buildConf _ context@Context {..} _conf = do
 
     -- might need some package-db resource to limit read/write,
     -- see packageRules
-    top     <- topDirectory
-    bldPath <- (top -/-) <$> buildPath context
+    bldPath <- buildPath context
 
     -- special package cases (these should ideally be rolled into cabal one way or the other)
     when (package == rts) $
