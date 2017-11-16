@@ -28,19 +28,8 @@ import Settings.Builders.HsCpp
 import Settings.Builders.Ld
 import Settings.Builders.Make
 import Settings.Builders.Xelatex
-import Settings.Packages.Base
-import Settings.Packages.Cabal
-import Settings.Packages.Compiler
-import Settings.Packages.Ghc
-import Settings.Packages.Ghci
-import Settings.Packages.GhcPkg
-import Settings.Packages.GhcPrim
-import Settings.Packages.Haddock
-import Settings.Packages.Hsc2Hs
-import Settings.Packages.Haskeline
-import Settings.Packages.IntegerGmp
+import Settings.Packages
 import Settings.Packages.Rts
-import Settings.Packages.RunGhc
 import Settings.Warnings
 
 import Types.ConfiguredCabal as ConfCabal
@@ -164,17 +153,6 @@ defaultBuilderArgs = mconcat
 -- | All 'Package'-dependent command line arguments.
 defaultPackageArgs :: Args
 defaultPackageArgs = mconcat
-    [ basePackageArgs
-    , cabalPackageArgs
-    , compilerPackageArgs
-    , ghciPackageArgs
-    , ghcPackageArgs
-    , ghcPkgPackageArgs
-    , ghcPrimPackageArgs
-    , haddockPackageArgs
-    , hsc2hsPackageArgs
-    , haskelinePackageArgs
-    , integerGmpPackageArgs
+    [ packageArgs
     , rtsPackageArgs
-    , runGhcPackageArgs
     , warningArgs ]
