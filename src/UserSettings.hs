@@ -3,8 +3,8 @@
 -- If you don't copy the file your changes will be tracked by git and you can
 -- accidentally commit them.
 module UserSettings (
-    userBuildRoot, userFlavours, userPackages, verboseCommand,
-    buildProgressColour, successColour, stage1Only
+    userBuildRoot, userFlavours, userPackages, userArgs,
+    verboseCommand, buildProgressColour, successColour, stage1Only
     ) where
 
 import Hadrian.Utilities
@@ -35,6 +35,10 @@ userFlavour = defaultFlavour { name = "user" } -- Modify other settings here.
 -- build flavour, modifying the list of packages that are built by default.
 userPackages :: [Package]
 userPackages = []
+
+-- | Arguments to pass to builders. See @doc/user-settings.md@.
+userArgs :: Args
+userArgs = mempty
 
 -- | Set to 'True' to print full command lines during the build process. Note:
 -- this is a 'Predicate', hence you can enable verbose output only for certain
