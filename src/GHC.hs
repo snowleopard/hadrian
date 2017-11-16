@@ -19,11 +19,11 @@ module GHC (
     ) where
 
 import Base
-import CommandLine
 import Context
 import Oracles.Flag
 import Oracles.Setting
-
+import Types.Flavour (integerLibrary)
+import Settings (flavour)
 import GHC.Packages
 
 -- | Packages that are built by default. You can change this in "UserSettings".
@@ -68,7 +68,7 @@ stage0Packages = do
 stage1Packages :: Action [Package]
 stage1Packages = do
     win        <- windowsHost
-    intSimple  <- cmdIntegerSimple
+    intLib     <- integerLibrary =<< flavour
     libraries0 <- filter isLibrary <$> stage0Packages
     return $ libraries0 -- Build all Stage0 libraries in Stage1
           ++ [ array
@@ -84,7 +84,7 @@ stage1Packages = do
              , haskeline
              , hpcBin
              , hsc2hs
-             , if intSimple then integerSimple else integerGmp
+             , intLib
              , pretty
              , process
              , rts
