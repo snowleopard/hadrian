@@ -196,6 +196,14 @@ registerPackage context@Context {..} = do
 -- | Parse a ConfiguredCabal file.
 parseConfiguredCabal :: Context -> Action ConfiguredCabal
 parseConfiguredCabal context@Context {..} = do
+    -- XXX: This is conceptually wrong!
+    --      We should use the gpd, and
+    --      the flagAssignment and compiler, hostPlatform, ... information
+    --      from the lbi.  And then compute the finaliz PD (flags, satisfiable dependencies, platform, compiler info, deps, gpd.)
+    -- 
+    -- let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
+    --
+    -- However when using the new-build path's this might change.
 
     Just (Cabal _ _ _ _gpd pd _depPkgs) <- readCabalFile context
 
