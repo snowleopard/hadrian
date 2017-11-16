@@ -4,12 +4,14 @@ import Expression
 import Types.Flavour
 import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
+import GHC.Packages
 
 -- Please update doc/flavours.md when changing this file.
 quickCrossFlavour :: Flavour
 quickCrossFlavour = defaultFlavour
     { name        = "quick-cross"
     , args        = defaultBuilderArgs <> quickCrossArgs <> defaultPackageArgs
+    , integerLibrary = pure integerSimple
     , libraryWays = mconcat
                     [ pure [vanilla]
                     , notStage0 ? platformSupportsSharedLibs ? pure [dynamic] ] }

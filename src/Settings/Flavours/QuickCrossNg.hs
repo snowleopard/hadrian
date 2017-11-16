@@ -2,17 +2,17 @@ module Settings.Flavours.QuickCrossNG (quickCrossNGFlavour) where
 
 import Expression
 import Types.Flavour
-import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
+import GHC.Packages
 
 -- Please update doc/flavours.md when changing this file.
 quickCrossNGFlavour :: Flavour
 quickCrossNGFlavour = defaultFlavour
     { name        = "quick-cross-ng"
     , args        = defaultBuilderArgs <> quickCrossNGArgs <> defaultPackageArgs
-    , libraryWays = mconcat
-                    [ pure [vanilla]
-                    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic] ] }
+    , integerLibrary = pure integerSimple
+    , libraryWays = pure [vanilla]
+    }
 
 quickCrossNGArgs :: Args
 quickCrossNGArgs = sourceArgs SourceArgs
