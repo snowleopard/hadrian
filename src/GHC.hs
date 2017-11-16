@@ -36,7 +36,6 @@ defaultPackages Stage3 = return []
 stage0Packages :: Action [Package]
 stage0Packages = do
     win <- windowsHost
-    ios <- iosHost
     cross <- crossCompiling
     return $ [ binary
              , cabal
@@ -62,9 +61,9 @@ stage0Packages = do
              , templateHaskell
              , text
              , transformers
-             , unlit                       ]
-          ++ [ terminfo | not win, not ios, not cross ]
-          ++ [ touchy   | win              ]
+             , unlit                         ]
+          ++ [ terminfo | not win, not cross ]
+          ++ [ touchy   | win                ]
 
 stage1Packages :: Action [Package]
 stage1Packages = do
