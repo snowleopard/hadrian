@@ -26,21 +26,27 @@ buildProgram rs package = do
 
         -- Rules for programs built in 'buildRoot'
         root -/- stageString stage -/- "bin" -/- programName context <.> exe %> \bin -> do
-            cross <- crossCompiling
-            case (package, cross, stage) of
-              (p, True, s) | s > Stage0 && p `elem` [ghc, ghcPkg, hsc2hs] -> do
-                               srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
-                               copyFile (srcDir -/- takeFileName bin) bin
-              _ -> do
-                when (package == hsc2hs) $ do
-                  -- hsc2hs needs the template-hsc.h file
-                  tmpl <- templateHscPath stage
-                  need [tmpl]
-                when (package == ghc) $ do
-                  -- ghc depends on settings, platformConstants, llvm-targets
-                  --     ghc-usage.txt, ghci-usage.txt
-                  need =<< ghcDeps stage
-                buildBinary rs bin =<< programContext stage package
+
+          -- Custom dependencies: this should be modeled better in the cabal file somehow.
+
+          when (package == hsc2hs) $ do
+            -- hsc2hs needs the template-hsc.h file
+            tmpl <- templateHscPath stage
+            need [tmpl]
+          when (package == ghc) $ do
+            -- ghc depends on settings, platformConstants, llvm-targets
+            --     ghc-usage.txt, ghci-usage.txt
+            need =<< ghcDeps stage
+
+
+          cross <- crossCompiling
+          -- for cross compiler. copy the stage0/bin/<pgm>
+          -- into stage1/bin/
+          case (package, cross, stage) of
+            (p, True, s) | s > Stage0 && p `elem` [ghc, ghcPkg, hsc2hs] -> do
+                             srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
+                             copyFile (srcDir -/- takeFileName bin) bin
+            _ -> buildBinary rs bin =<< programContext stage package
         -- Rules for the GHC package, which is built 'inplace'
 
     -- -- Rules for other programs built in inplace directories
