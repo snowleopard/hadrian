@@ -33,7 +33,16 @@ packageArgs = do
     , package bytestring
       ? builder CabalFlags ? intLibPkg == integerSimple ? arg "integer-simple"
     , package text
-      ? builder CabalFlags ? intLibPkg == integerSimple ? arg "integer-simple"
+      -- text is rather tricky. It's a boot lib, and it tries to determine on
+      -- it's own if it should link against integer-gmp or integer-simple.
+      -- For stage0, we need to use the integer library that the bootstrap
+      -- compiler has. (the interger-lib is not a boot lib) but as such, we'll
+      -- copy it over into the stage0 package-db (maybe we should stop doing this?)
+      -- And subsequently text for stage1 will detect the same integer lib again,
+      -- even though we don't build it in stage1, and at that point the
+      -- configuration is just wrong.
+      ? builder CabalFlags ? notStage0 ? intLibPkg == integerSimple ? pure [ "+integer-simple"
+                                                                           , "-bytestring-builder"]
     , package cabal
       -- Cabal is a rather large library and quite slow to compile. Moreover, we
       -- build it for stage0 only so we can link ghc-pkg against it, so there is
