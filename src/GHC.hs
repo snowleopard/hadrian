@@ -80,6 +80,7 @@ stage1Packages = do
              , filepath
              , ghc
              , ghcCompact
+             , ghcPkg
              , ghcPrim
              , haskeline
              , hpcBin
@@ -91,6 +92,7 @@ stage1Packages = do
              , runGhc
              , stm
              , time
+             , unlit
              , xhtml              ]
           ++ [ iservBin | not win ]
           ++ [ unix     | not win ]
