@@ -42,7 +42,7 @@ topLevelTargets = do
       -- stage2 and package up bin and lib.
       need ["stage2"]
       version <- setting ProjectVersion
-      cwd <- liftIO $ getCurrentDirectory
+      cwd <- liftIO getCurrentDirectory
       binDistDir <- getEnvWithDefault cwd "BINARY_DIST_DIR"
       baseDir <- buildRoot <&> (-/- stageString Stage1)
       buildWithCmdOptions [Cwd baseDir] $
@@ -53,8 +53,9 @@ topLevelTargets = do
 
     phony "stage2" $ do
       putNormal "Building stage2"
-      need =<< mapM (f Stage1) =<< stagePackages Stage1
-
+      targets <- mapM (f Stage1) =<< stagePackages Stage1
+      liftIO . putStrLn . unlines $ map ("- " ++) targets
+      need targets
       where
         -- either the package databae config file for libraries or
         -- the programPath for programs. However this still does
@@ -111,8 +112,8 @@ packageRules = do
     let dynamicContexts = liftM3 Context [Stage1 ..] knownPackages [dynamic]
     forM_ dynamicContexts Rules.Library.buildDynamicLib
 
-    forM_ (filter isProgram knownPackages) $
-        Rules.Program.buildProgram readPackageDb
+    Rules.Program.buildProgram readPackageDb
+
     forM_ [Stage0 .. ] $ \stage -> do
       Rules.Register.registerPackages writePackageDb (Context stage base vanilla) -- base is only a dummy here.
 

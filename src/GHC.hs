@@ -105,13 +105,17 @@ stage2Packages = return [haddock]
 -- assuming that the corresponding package's type is 'Program'. For example, GHC
 -- built in 'Stage0' is called @ghc-stage1@. If the given package is a
 -- 'Library', the function simply returns its name.
-programName :: Context -> String
-programName Context {..}
-    | package == ghc      = "ghc"
-    | package == hpcBin   = "hpc"
-    | package == runGhc   = "runhaskell"
-    | package == iservBin = "ghc-iserv"
-    | otherwise           = pkgName package
+programName :: Context -> Action String
+programName Context {..} = do
+    cross <- crossCompiling
+    targetPlatform <- setting TargetPlatform
+    let prefix = if cross then targetPlatform ++ "-" else ""
+      in return $ prefix ++ case package of
+                              p | p == ghc      -> "ghc"
+                                | p == hpcBin   -> "hpc"
+                                | p == runGhc   -> "runhaskell"
+                                | p == iservBin -> "ghc-iserv"
+                              _                 ->  pkgName package
 
 -- | The build stage whose results are used when installing a package, or
 -- @Nothing@ if the package is not installed, e.g. because it is a user package.
@@ -127,7 +131,8 @@ installStage pkg
 programPath :: Context -> Action FilePath
 programPath context@Context {..} = do
     path    <- stageBinPath stage
-    return $ path -/- programName context <.> exe
+    pgm     <- programName context
+    return $ path -/- pgm <.> exe
 
 -- | Some contexts are special: their packages do not have @.cabal@ metadata or
 -- we cannot run @ghc-cabal@ on them, e.g. because the latter hasn't been built

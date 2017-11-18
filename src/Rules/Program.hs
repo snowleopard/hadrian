@@ -18,93 +18,45 @@ import GHC.Packages
 import GHC
 
 -- | TODO: Drop code duplication
-buildProgram :: [(Resource, Int)] -> Package -> Rules ()
-buildProgram rs package = do
+buildProgram :: [(Resource, Int)] -> Rules ()
+buildProgram rs = do
     root <- buildRootRules
-    forM_ [Stage0 ..] $ \stage -> do
-        let context = vanillaContext stage package
+    forM_ [Stage0 ..] $ \stage ->
+      root -/- stageString stage -/- "bin" -/- "*" %> \bin -> do
 
-        -- Rules for programs built in 'buildRoot'
-        root -/- stageString stage -/- "bin" -/- programName context <.> exe %> \bin -> do
+          -- quite inefficient. But we can't access the programName from
+          -- Rules, as it's an Action, due to being backed by an Oracle.
+          activeProgramPackages <- filter isProgram <$> stagePackages stage
+          nameToCtxList <- forM activeProgramPackages $ \pkg -> do
+            let ctx = vanillaContext stage pkg
+            name <- programName ctx
+            return (name <.> exe, ctx)
 
-          -- Custom dependencies: this should be modeled better in the cabal file somehow.
+          case lookup (takeFileName bin) nameToCtxList of
+            Nothing -> fail "Unknown program"
+            Just (Context {..}) -> do
+              -- Rules for programs built in 'buildRoot'
 
-          when (package == hsc2hs) $ do
-            -- hsc2hs needs the template-hsc.h file
-            tmpl <- templateHscPath stage
-            need [tmpl]
-          when (package == ghc) $ do
-            -- ghc depends on settings, platformConstants, llvm-targets
-            --     ghc-usage.txt, ghci-usage.txt
-            need =<< ghcDeps stage
+              -- Custom dependencies: this should be modeled better in the cabal file somehow.
 
+              when (package == hsc2hs) $ do
+                -- hsc2hs needs the template-hsc.h file
+                tmpl <- templateHscPath stage
+                need [tmpl]
+              when (package == ghc) $ do
+                -- ghc depends on settings, platformConstants, llvm-targets
+                --     ghc-usage.txt, ghci-usage.txt
+                need =<< ghcDeps stage
 
-          cross <- crossCompiling
-          -- for cross compiler. copy the stage0/bin/<pgm>
-          -- into stage1/bin/
-          case (package, cross, stage) of
-            (p, True, s) | s > Stage0 && p `elem` [ghc, ghcPkg, hsc2hs] -> do
-                             srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
-                             copyFile (srcDir -/- takeFileName bin) bin
-            _ -> buildBinary rs bin =<< programContext stage package
-        -- Rules for the GHC package, which is built 'inplace'
-
-    -- -- Rules for other programs built in inplace directories
-    -- when (package /= ghc) $ do
-    --     let context0 = vanillaContext Stage0 package -- TODO: get rid of context0
-    --     inplaceBinPath -/- programName context0 <.> exe %> \bin -> do
-    --         stage <- installStage package -- TODO: get rid of fromJust
-    --         buildBinaryAndWrapper rs bin =<< programContext (fromJust stage) package
-
-    --     inplaceLibBinPath -/- programName context0 <.> exe %> \bin -> do
-    --         stage   <- installStage package -- TODO: get rid of fromJust
-    --         context <- programContext (fromJust stage) package
-    --         if package /= iservBin then
-    --             -- We *normally* build only unwrapped binaries in inplace/lib/bin
-    --             buildBinary rs bin context
-    --         else
-    --             -- Build both binary and wrapper in inplace/lib/bin for iservBin
-    --             buildBinaryAndWrapperLib rs bin context
-
-    --     inplaceLibBinPath -/- programName context0 <.> "bin" %> \bin -> do
-    --         stage <- installStage package -- TODO: get rid of fromJust
-    --         buildBinary rs bin =<< programContext (fromJust stage) package
-
--- buildBinaryAndWrapperLib :: [(Resource, Int)] -> FilePath -> Context -> Action ()
--- buildBinaryAndWrapperLib rs bin context = do
---     windows <- windowsHost
---     if windows
---     then buildBinary rs bin context -- We don't build wrappers on Windows
---     else case lookup context inplaceWrappers of
---         Nothing      -> buildBinary rs bin context -- No wrapper found
---         Just wrapper -> do
---             top <- topDirectory
---             let libdir = top -/- inplaceLibPath
---             let wrappedBin = inplaceLibBinPath -/- programName context <.> "bin"
---             need [wrappedBin]
---             buildWrapper context wrapper bin (WrappedBinary libdir (takeFileName wrappedBin))
-
--- buildBinaryAndWrapper :: [(Resource, Int)] -> FilePath -> Context -> Action ()
--- buildBinaryAndWrapper rs bin context = do
---     windows <- windowsHost
---     if windows
---     then buildBinary rs bin context -- We don't build wrappers on Windows
---     else case lookup context inplaceWrappers of
---         Nothing      -> buildBinary rs bin context -- No wrapper found
---         Just wrapper -> do
---             top <- topDirectory
---             let libPath    = top -/- inplaceLibPath
---                 wrappedBin = inplaceLibBinPath -/- takeFileName bin
---             need [wrappedBin]
---             buildWrapper context wrapper bin (WrappedBinary libPath (takeFileName bin))
-
--- buildWrapper :: Context -> Wrapper -> FilePath -> WrappedBinary -> Action ()
--- buildWrapper context@Context {..} wrapper wrapperPath wrapped = do
---     contents <- interpretInContext context $ wrapper wrapped
---     writeFileChanged wrapperPath contents
---     makeExecutable wrapperPath
---     putSuccess $ "| Successfully created wrapper for " ++
---         quote (pkgName package) ++ " (" ++ show stage ++ ")."
+              cross <- crossCompiling
+              -- for cross compiler. copy the stage0/bin/<pgm>
+              -- into stage1/bin/
+              case (package, cross, stage) of
+                (p, True, s) | s > Stage0 && p `elem` [ghc, ghcPkg, hsc2hs] -> do
+                                 srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
+                                 copyFile (srcDir -/- takeFileName bin) bin
+                _ -> buildBinary rs bin =<< programContext stage package
+          -- Rules for the GHC package, which is built 'inplace'
 
 -- TODO: Get rid of the Paths_hsc2hs.o hack.
 buildBinary :: [(Resource, Int)] -> FilePath -> Context -> Action ()
