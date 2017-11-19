@@ -105,7 +105,7 @@ configureArgs = do
         , conf "--with-curses-libraries"  $ arg =<< getSetting CursesLibDir
         , crossCompiling ? (conf "--host" $ arg =<< getSetting TargetPlatformFull)
         , conf "--with-cc" $ arg =<< getBuilderPath . (Cc CompileC) =<< getStage
-        , notStage0 ? (arg =<< ("--ghc-option=-ghc-version=" ++) <$> expr ((-/-) <$> topDirectory <*> ghcVersionH))]
+        , notStage0 ? (arg =<< ("--ghc-option=-ghcversion-file=" ++) <$> expr ((-/-) <$> topDirectory <*> ghcVersionH))]
 
 bootPackageConstraints :: Args
 bootPackageConstraints = stage0 ? do

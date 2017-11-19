@@ -106,7 +106,7 @@ commonGhcArgs = do
             -- file, to prevent ghc from trying to open the
             -- rts package from the package db, and failing
             -- over while doing so.
-            , (pkg == rts) ? notStage0 ? arg ("-ghc-version=" ++ ghcVersion)
+            , (pkg == rts) ? notStage0 ? arg ("-ghcversion-file=" ++ ghcVersion)
             , map ("-optc" ++) <$> getStagedSettingList ConfCcArgs
             , map ("-optP" ++) <$> getStagedSettingList ConfCppArgs
             , map ("-optP" ++) <$> getConfiguredCabalData ConfCabal.cppOpts
