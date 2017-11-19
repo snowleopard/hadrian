@@ -207,7 +207,7 @@ rtsPackageArgs = package rts ? do
 -- See @rts/ghc.mk@.
 rtsWarnings :: Args
 rtsWarnings = mconcat
-    [ pure ["-Wall", "-Werror"]
+    [ pure ["-Wall" ] -- , "-Werror"]
     , arg "-Wextra"
     , arg "-Wstrict-prototypes"
     , arg "-Wmissing-prototypes"
