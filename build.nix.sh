@@ -1,6 +1,9 @@
 #!/usr/bin/env nix-shell
 #! nix-shell -i bash shell.nix
 
+# This script sets up the build environment by invoking nix-shell shell.nix
+# and then runs the hadrian executable.
+
 function rl {
     TARGET_FILE="$1"
 

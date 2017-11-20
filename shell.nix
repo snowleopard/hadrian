@@ -1,3 +1,7 @@
+# Invoking nix-shell sets up an environment where we can build ghc
+# by only invoking hadrian.
+
+
 { nixpkgs ? import <nixpkgs> {} }:
 
 let
