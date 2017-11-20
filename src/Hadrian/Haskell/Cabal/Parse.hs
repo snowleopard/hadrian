@@ -48,8 +48,6 @@ import Distribution.Simple (defaultMainWithHooksNoReadArgs, compilerFlavor, Comp
 import Distribution.Simple.Compiler (compilerInfo)
 import Hadrian.Package
 import Hadrian.Utilities
-import System.FilePath
-import System.Directory
 import qualified Distribution.ModuleName as ModuleName
 import Data.Maybe (maybeToList, fromMaybe )
 import GHC.Packages (rts)
@@ -61,13 +59,12 @@ import Types.ConfiguredCabal
 import Settings
 import Oracles.Setting
 
-import Context.Paths
-
 import Settings.Default
 import Context
 
 import Hadrian.Oracles.TextFile
 
+import Base
 
 -- TODO: Use fine-grain tracking instead of tracking the whole Cabal file.
 -- | Haskell package metadata extracted from a Cabal file.
@@ -143,7 +140,7 @@ configurePackage context@Context {..} = do
           -- plus a "./Setup test" hook. However, Cabal is also
           -- "Custom", but doesn't have a configure script.
           Just C.Custom ->
-              do configureExists <- liftIO $ doesFileExist (replaceFileName (unsafePkgCabalFile package) "configure")
+              do configureExists <- doesFileExist (replaceFileName (unsafePkgCabalFile package) "configure")
                  if configureExists
                      then pure Hooks.autoconfUserHooks
                      else pure Hooks.simpleUserHooks
@@ -174,14 +171,14 @@ copyPackage context@Context {..} = do
 
     top     <- topDirectory
     ctxPath <- (top -/-) <$> Context.contextPath context
-    stgPath <- (top -/-) <$> stagePath context
+    pkgDbPath <- (top -/-) <$> packageDbPath stage
 
     let userHooks = Hooks.autoconfUserHooks
         copyHooks = userHooks
         hooks = copyHooks
 
     -- we would need `withCurrentDirectory (pkgPath package)`
-    liftIO $ defaultMainWithHooksNoReadArgs hooks gpd ["copy", "--builddir", ctxPath, "--destdir", stgPath]
+    liftIO $ defaultMainWithHooksNoReadArgs hooks gpd ["copy", "--builddir", ctxPath, "--target-package-db", pkgDbPath]
 
 registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do

@@ -173,7 +173,6 @@ userSettingRules defaultValue = do
     extra <- shakeExtra <$> getShakeOptionsRules
     return $ lookupExtra defaultValue extra
 
-
 newtype BuildRoot = BuildRoot FilePath deriving (Show, Eq, Typeable)
 
 -- | All build results are put into the 'buildRoot' directory.
