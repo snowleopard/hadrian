@@ -48,7 +48,7 @@ contextDependencies ctx@Context {..} = do
         deps <- concatMapM step pkgs
         let newPkgs = nubOrd $ sort (deps ++ pkgs)
         if pkgs == newPkgs then return pkgs else go newPkgs
-    step pkg   = pkgDependencies (ctx { package = pkg }) >>= \case
+    step pkg   = pkgDependencies (ctx { Context.package = pkg }) >>= \case
         Nothing        -> return [] -- Non-Cabal packages have no dependencies.
         Just deps -> do
             active <- sort <$> stagePackages depStage
