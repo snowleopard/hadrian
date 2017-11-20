@@ -89,12 +89,10 @@ buildBinary rs bin context@Context {..} = do
             when (stage > Stage0) $ do
                 ways <- interpretInContext context (getLibraryWays <> getRtsWays)
                 needLibrary [ rtsContext { way = w } | w <- ways ]
-            path   <- contextPath context
             cSrcs  <- interpretInContext context (getConfiguredCabalData ConfCabal.cSrcs)
             cObjs  <- mapM (objectPath context) cSrcs
             hsObjs <- hsObjects context
             return $ cObjs ++ hsObjs
-                  ++ [ path -/- "build" -/- "Paths_haddock.o" | package == haddock ]
     need binDeps
     buildWithResources rs $ target context (Ghc LinkHs stage) binDeps [bin]
     synopsis <- pkgSynopsis context
