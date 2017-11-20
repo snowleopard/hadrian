@@ -1,9 +1,8 @@
-packages: ../libraries/Cabal/Cabal/
-          ../libraries/filepath/
-          ../libraries/text/
+packages: ./
+          ../libraries/Cabal/Cabal/
           ../libraries/hpc/
           ../libraries/parsec/
-          ./
+          ../libraries/text/
 
 package hadrian
   ghc-options: -Werror

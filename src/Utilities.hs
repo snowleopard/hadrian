@@ -31,20 +31,28 @@ askWithResources rs target = H.askWithResources rs target getArgs
 ask :: Target -> Action String
 ask target = H.ask target getArgs
 
--- | Given a 'Context' this 'Action' look up the package dependencies and wrap
+-- TODO: Cache the computation.
+-- | Given a 'Context' this 'Action' looks up the package dependencies and wraps
 -- the results in appropriate contexts. The only subtlety here is that we never
 -- depend on packages built in 'Stage2' or later, therefore the stage of the
 -- resulting dependencies is bounded from above at 'Stage1'. To compute package
--- dependencies we scan package @.cabal@ files, see 'pkgDependencies' defined
--- in "Hadrian.Haskell.Cabal".
+-- dependencies we transitively scan @.cabal@ files using 'pkgDependencies'
+-- defined in "Hadrian.Haskell.Cabal".
 contextDependencies :: Context -> Action [Context]
-contextDependencies ctx@Context {..} = pkgDependencies ctx >>= \case
-    Nothing        -> return [] -- Non-Cabal packages have no dependencies.
-    Just deps -> do
-        let depStage   = min stage Stage1
-            depContext = \pkg -> Context depStage pkg way
-        pkgs <- sort <$> stagePackages depStage
-        return . map depContext $ intersectOrd (compare . pkgName) pkgs deps
+contextDependencies ctx@Context {..} = do
+    depPkgs <- go [package]
+    return [ Context depStage pkg way | pkg <- depPkgs, pkg /= package ]
+  where
+    depStage = min stage Stage1
+    go pkgs  = do
+        deps <- concatMapM step pkgs
+        let newPkgs = nubOrd $ sort (deps ++ pkgs)
+        if pkgs == newPkgs then return pkgs else go newPkgs
+    step pkg   = pkgDependencies (ctx { package = pkg }) >>= \case
+        Nothing        -> return [] -- Non-Cabal packages have no dependencies.
+        Just deps -> do
+            active <- sort <$> stagePackages depStage
+            return $ intersectOrd (compare . pkgName) active deps
 
 cabalDependencies :: Context -> Action [String]
 cabalDependencies ctx = interpretInContext ctx $ getConfiguredCabalData ConfCabal.depIpIds
