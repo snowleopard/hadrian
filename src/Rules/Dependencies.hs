@@ -23,7 +23,7 @@ buildPackageDependencies rs context@Context {..} =
         else buildWithResources rs $
             target context (Ghc FindHsDependencies stage) srcs [mk]
         removeFile $ mk <.> "bak"
-        mkDeps <- readFile' mk
+        mkDeps <- liftIO $ readFile mk
         writeFileChanged deps . unlines
                               . map (\(src, deps) -> unwords $ src : deps)
                               . map (bimap unifyPath (map unifyPath))
