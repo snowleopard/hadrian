@@ -93,7 +93,8 @@ stage1Packages = do
              , stm
              , time
              , unlit
-             , xhtml              ]
+             , xhtml
+             , haddock            ]
           ++ [ iservBin | not win ]
           ++ [ unix     | not win ]
           ++ [ win32    | win     ]
