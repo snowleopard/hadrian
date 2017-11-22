@@ -58,7 +58,6 @@ buildProgram rs = do
                 _ -> buildBinary rs bin =<< programContext stage package
           -- Rules for the GHC package, which is built 'inplace'
 
--- TODO: Get rid of the Paths_hsc2hs.o hack.
 buildBinary :: [(Resource, Int)] -> FilePath -> Context -> Action ()
 buildBinary rs bin context@Context {..} = do
     binDeps <- if stage == Stage0 && package == ghcCabal
