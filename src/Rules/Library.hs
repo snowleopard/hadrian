@@ -30,7 +30,7 @@ archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")
 --
 -- So we'll assume rules to build all the
 -- package artifacts, and provide rules for
--- the any of the lirbary artifacts.
+-- the any of the library artifacts.
 library :: Context -> Rules ()
 library context@Context{..} = do
     root <- buildRootRules

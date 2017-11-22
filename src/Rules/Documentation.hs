@@ -11,7 +11,6 @@ import Context
 import Types.Flavour
 import GHC
 import Oracles.ModuleFiles
-import Oracles.PackageData
 import Settings
 import Target
 import Utilities
@@ -125,9 +124,8 @@ haddockHtmlLib = "inplace/lib/html/haddock-util.js"
 
 -- | Find the haddock files for the dependencies of the current library
 haddockDependencies :: Context -> Action [FilePath]
-haddockDependencies context = do
-    path     <- buildPath context
-    depNames <- pkgDataList $ DepNames path
+haddockDependencies _context = do
+    depNames <- pure $ error "lookup DEP_NAMES via configuredCabalData" -- pkgDataList $ DepNames path
     sequence [ pkgHaddockFile $ vanillaContext Stage1 depPkg
              | Just depPkg <- map findPackageByName depNames, depPkg /= rts ]
 

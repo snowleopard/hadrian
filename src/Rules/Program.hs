@@ -7,9 +7,7 @@ import Base
 import Context
 import Expression hiding (stage, way)
 import Oracles.ModuleFiles
---import Oracles.Setting
 import Oracles.Flag (crossCompiling)
---import Rules.Wrappers
 import Settings
 import Settings.Packages.Rts
 import Target
@@ -49,7 +47,7 @@ buildProgram rs = do
                 need =<< ghcDeps stage
 
               cross <- crossCompiling
-              -- for cross compiler. copy the stage0/bin/<pgm>
+              -- for cross compiler, copy the stage0/bin/<pgm>
               -- into stage1/bin/
               case (package, cross, stage) of
                 (p, True, s) | s > Stage0 && p `elem` [ghc, ghcPkg, hsc2hs] -> do
@@ -62,27 +60,6 @@ buildBinary :: [(Resource, Int)] -> FilePath -> Context -> Action ()
 buildBinary rs bin context@Context {..} = do
     binDeps <- if stage == Stage0 && package == ghcCabal
         then hsSources context
-        -- then do -- this is a hack, but he ghc-cabal packge only list's it's Main
-        --         -- it does however depend on the Lexer in lib:Cabal, and the
-        --         -- cbits file in libraries/text.
-
-        --         -- it also depends on essnetially the content of all the following
-        --         -- libraries: Cabal/Cabal, binary, filepath, hpc, mtl, text, parsec
-        --         --
-        --         -- We can not use the hsSource or other queries on those pacakges as
-        --         -- they require the package-data.mk, which in turn requires ghc-cabal.
-        --         --
-        --         -- As such, we will ignore this for now, even though it will mean
-        --         -- that hadrian will not properly track the dependencies of
-        --         -- ghc-cabal properly.
-
-        --      ghcCabalPath <- contextPath (context { Context.package = ghcCabal })
-        --      cabalPath    <- contextPath (context { Context.package = cabal    })
-        --      textPath     <- contextPath (context { Context.package = text     })
-        --      return $ [ ghcCabalPath -/- "build" -/- "Main.o"
-        --               , cabalPath -/- "build" -/- "Cabal/Distribution/Parsec/Lexer.o"
-        --               , textPath -/- "build" -/- "c/cbits/cbits.o"
-        --               ]
         else do
             needLibrary =<< contextDependencies context
             when (stage > Stage0) $ do

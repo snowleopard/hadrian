@@ -44,7 +44,6 @@ executable hadrian
                        , Oracles.Flag
                        , Oracles.Setting
                        , Oracles.ModuleFiles
-                       , Oracles.PackageData
                        , Rules
                        , Rules.Clean
                        , Rules.Compile

@@ -2,7 +2,6 @@ module Settings.Builders.Common (
     module Base,
     module Expression,
     module Oracles.Flag,
-    module Oracles.PackageData,
     module Oracles.Setting,
     module Settings,
     module UserSettings,
@@ -12,7 +11,6 @@ module Settings.Builders.Common (
 import Base
 import Expression
 import Oracles.Flag
-import Oracles.PackageData
 import Oracles.Setting
 import Settings
 import UserSettings

@@ -61,7 +61,7 @@ topLevelTargets = do
         -- either the package databae config file for libraries or
         -- the programPath for programs. However this still does
         -- not support multiple targets, where a cabal package has
-        -- a lirbary /and/ a program.
+        -- a library /and/ a program.
         f :: Stage -> Package -> Action FilePath
         f stage pkg | isLibrary pkg = pkgConfFile (Context stage pkg (read "v"))
                     | otherwise     = programPath =<< programContext stage pkg
