@@ -16,7 +16,7 @@ stagePath context = buildRoot <&> (-/- stageDir context)
 getStagePath :: Expr Context b FilePath
 getStagePath = expr . stagePath =<< getContext
 
--- | The directory in 'buildRoot' containing build artefacts of a given 'Context'.
+-- | The directory in 'buildRoot' containing build artifacts of a given 'Context'.
 contextDir :: Context -> FilePath
 contextDir Context {..} = stageString stage -/- pkgPath package
 
@@ -27,11 +27,11 @@ contextPath context = buildRoot <&> (-/- contextDir context)
 getContextPath :: Expr Context b FilePath
 getContextPath = expr . contextPath =<< getContext
 
--- | The directory in 'buildRoot' containing the object artefacts.
+-- | The directory in 'buildRoot' containing the object artifacts.
 buildDir :: Context -> FilePath
 buildDir context = contextDir context -/- "build"
 
--- | Path to the directory containing build artefacts of a given 'Context'.
+-- | Path to the directory containing build artifacts of a given 'Context'.
 buildPath :: Context -> Action FilePath
 buildPath context = buildRoot <&> (-/- (buildDir context))
 

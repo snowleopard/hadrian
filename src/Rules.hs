@@ -37,8 +37,8 @@ topLevelTargets :: Rules ()
 topLevelTargets = do
     phony "binary-dist" $ do
       -- This is kind of incorrect.  We should not "need" a phony rule.
-      -- Instead we should *need* the libraries and bianries we want to
-      -- put into the bianry distribution.  For now we will just *need*
+      -- Instead we should *need* the libraries and binaries we want to
+      -- put into the binary distribution.  For now we will just *need*
       -- stage2 and package up bin and lib.
       need ["stage2"]
       version <- setting ProjectVersion
@@ -69,7 +69,7 @@ topLevelTargets = do
 -- TODO: Get rid of the @includeGhciLib@ hack.
 -- | Return the list of targets associated with a given 'Stage' and 'Package'.
 -- By setting the Boolean parameter to False it is possible to exclude the GHCi
--- library from the targets, and avoid running @ghc-cabal@ to determine wether
+-- library from the targets, and avoid running @ghc-cabal@ to determine whether
 -- GHCi library needs to be built for this package. We typically want to set
 -- this parameter to True, however it is important to set it to False when
 -- computing 'topLevelTargets', as otherwise the whole build gets sequentialised
@@ -116,7 +116,11 @@ packageRules = do
     Rules.Program.buildProgram readPackageDb
 
     forM_ [Stage0 .. ] $ \stage -> do
-      Rules.Register.registerPackages writePackageDb (Context stage base vanilla) -- base is only a dummy here.
+      -- we create a dummy context, that has the correct state, but contains
+      -- @base@ as a dummy package. The package isn't accessed but the record
+      -- need to be set properly. @undefined@ is not an option as it ends up
+      -- being forced.
+      Rules.Register.registerPackages writePackageDb (Context stage base vanilla)
 
     forM_ vanillaContexts $ mconcat
         [ Rules.PackageData.buildPackageData

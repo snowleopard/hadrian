@@ -42,7 +42,9 @@ class ShakeValue b => Builder b where
     -- | The path to a builder.
     builderPath :: b -> Action FilePath
 
-    -- | Ask the builder for something
+    -- | Ask the builder for information.
+    -- E.g. ask @ghc-pkg@ for package dependencies
+    -- capture the @stdout@ result and return it.
     askBuilderWith :: b -> BuildInfo -> Action String
 
     -- | Make sure a builder exists and rebuild it if out of date.

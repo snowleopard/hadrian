@@ -144,7 +144,7 @@ wrappersCommon = [ (vanillaContext Stage0 ghc   , ghcWrapper)
                  , (vanillaContext Stage2 haddock, haddockWrapper)
                  , (vanillaContext Stage1 iservBin, iservBinWrapper) ]
 
--- | List of wrappers for inplace artefacts
+-- | List of wrappers for inplace artifacts
 inplaceWrappers :: [(Context, Wrapper)]
 inplaceWrappers = wrappersCommon ++
                   [ (vanillaContext Stage0 ghcPkg, inplaceGhcPkgWrapper)

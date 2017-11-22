@@ -23,7 +23,7 @@ archive :: Way -> String -> String
 archive way pkgId = "libHS" ++ pkgId ++ (waySuffix way <.> "a")
 
 -- | Building a library consist of building
--- the artefacts, and copying it somewhere
+-- the artifacts, and copying it somewhere
 -- with cabal, and finally registering it
 -- with the compiler via cabal in the
 -- package database.
