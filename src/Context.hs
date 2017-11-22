@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Context (
     -- * Context
     Context (..), vanillaContext, stageContext,
@@ -50,11 +49,7 @@ getStagedSettingList f = getSettingList . f =<< getStage
 
 -- | Construct an expression that depends on the current package having
 -- a Cabal file. For non haskell contexts it's empty.
-#if !(MIN_VERSION_base(4,11,0))
 withHsPackage :: (Monoid a, Semigroup a) => (Context -> Expr Context b a) -> Expr Context b a
-#else
-withHsPackage :: Monoid a => (Context -> Expr Context b a) -> Expr Context b a
-#endif
 withHsPackage expr = do
     pkg <- getPackage
     ctx <- getContext
