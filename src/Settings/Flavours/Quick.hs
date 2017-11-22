@@ -11,7 +11,7 @@ quickFlavour = defaultFlavour
     , args        = defaultBuilderArgs <> quickArgs <> defaultPackageArgs
     , libraryWays = mconcat
                     [ pure [vanilla]
-                    -- , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
+                    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
                     ] }
 
 quickArgs :: Args

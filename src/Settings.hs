@@ -15,6 +15,7 @@ import Settings.Flavours.Quick
 import Settings.Flavours.Quickest
 import Settings.Flavours.QuickCross
 import Settings.Flavours.QuickCrossNG
+import Settings.Flavours.QuickWithNG
 import UserSettings
 import GHC.Packages
 
@@ -36,7 +37,7 @@ hadrianFlavours :: [Flavour]
 hadrianFlavours =
     [ defaultFlavour, developmentFlavour Stage1, developmentFlavour Stage2
     , performanceFlavour, profiledFlavour, quickFlavour, quickestFlavour
-    , quickCrossFlavour, quickCrossNGFlavour ]
+    , quickCrossFlavour, quickCrossNGFlavour, quickWithNGFlavour ]
 
 flavour :: Action Flavour
 flavour = do

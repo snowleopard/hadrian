@@ -1,9 +1,8 @@
-module Settings.Flavours.QuickCrossNG (quickCrossNGFlavour) where
+module Settings.Flavours.QuickWithNG (quickWithNGFlavour) where
 
 import Expression
 import Types.Flavour
 import {-# SOURCE #-} Settings.Default
-import GHC.Packages
 
 llvmngPackages :: [Package]
 llvmngPackages = [ dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl ]
@@ -53,20 +52,20 @@ llvmngWarningArgs = builder Ghc ?
         ]
 
 -- Please update doc/flavours.md when changing this file.
-quickCrossNGFlavour :: Flavour
-quickCrossNGFlavour = defaultFlavour
-    { name        = "quick-cross-ng"
-    , args        = defaultBuilderArgs <> quickCrossNGArgs <> defaultPackageArgs <> llvmngWarningArgs
-    , integerLibrary = pure integerSimple
-    , libraryWays = pure [vanilla]
+quickWithNGFlavour :: Flavour
+quickWithNGFlavour = defaultFlavour
+    { name        = "quick-with-ng"
+    , args        = defaultBuilderArgs <> quickWithNGArgs <> defaultPackageArgs <> llvmngWarningArgs
+    , libraryWays = mconcat
+                    [ pure [vanilla]
+                    -- , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
+                    ]
     , packages    = \stage -> packages defaultFlavour stage ++ llvmngPackages
     }
 
-quickCrossNGArgs :: Args
-quickCrossNGArgs = sourceArgs SourceArgs
+quickWithNGArgs :: Args
+quickWithNGArgs = sourceArgs SourceArgs
     { hsDefault  = pure ["-O0", "-H64m"]
-    , hsLibrary  = notStage0 ? mconcat [ arg "-O", arg "-fllvmng" ]
-    , hsCompiler = stage0 ? arg "-O"
-    , hsGhc      = mconcat
-                   [ stage0 ? arg "-O"
-                   , stage1 ? mconcat [ arg "-O0", arg "-fllvmng" ] ] }
+    , hsLibrary  = notStage0 ? arg "-O"
+    , hsCompiler =    stage0 ? arg "-O"
+    , hsGhc      =    stage0 ? arg "-O" }

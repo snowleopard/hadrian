@@ -20,7 +20,6 @@ ghcPackages =
     , integerSimple, iservBin, libffi, mtl, parsec, parallel, pretty, primitive
     , process, rts, runGhc, stm, templateHaskell, terminfo, text, time, touchy
     , transformers, unlit, unix, win32, xhtml
-    , dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl
     ]
 
 -- TODO: Optimise by switching to sets of packages.
@@ -36,9 +35,6 @@ cabal               = hsLib  "Cabal"           `setPath` "libraries/Cabal/Cabal"
 compareSizes        = hsUtil "compareSizes"    `setPath` "utils/compare_sizes"
 compiler            = hsTop  "ghc"             `setPath` "compiler"
 containers          = hsLib  "containers"
-dataBitcode         = hsLib  "data-bitcode"
-dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
-dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
 deepseq             = hsLib  "deepseq"
 deriveConstants     = hsUtil "deriveConstants"
 directory           = hsLib  "directory"
