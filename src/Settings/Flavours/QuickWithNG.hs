@@ -3,10 +3,12 @@ module Settings.Flavours.QuickWithNG (quickWithNGFlavour) where
 import Expression
 import Types.Flavour
 import {-# SOURCE #-} Settings.Default
+import GHC.Packages
 
 llvmngPackages :: [Package]
 llvmngPackages = [ dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl ]
 
+dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl :: Package
 dataBitcode         = hsLib  "data-bitcode"
 dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
 dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
@@ -60,7 +62,8 @@ quickWithNGFlavour = defaultFlavour
                     [ pure [vanilla]
                     -- , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
                     ]
-    , packages    = \stage -> packages defaultFlavour stage ++ llvmngPackages
+    , extraPackages = llvmngPackages
+    , packages    = fmap (++ llvmngPackages) . packages defaultFlavour
     }
 
 quickWithNGArgs :: Args

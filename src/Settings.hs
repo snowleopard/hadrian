@@ -39,6 +39,9 @@ hadrianFlavours =
     , performanceFlavour, profiledFlavour, quickFlavour, quickestFlavour
     , quickCrossFlavour, quickCrossNGFlavour, quickWithNGFlavour ]
 
+extraFlavourPackages :: [Package]
+extraFlavourPackages = nub . sort $ concatMap extraPackages hadrianFlavours
+
 flavour :: Action Flavour
 flavour = do
     flavourName <- fromMaybe "default" <$> cmdFlavour
@@ -59,7 +62,7 @@ programContext stage pkg = do
 -- TODO: switch to Set Package as the order of packages should not matter?
 -- Otherwise we have to keep remembering to sort packages from time to time.
 knownPackages :: [Package]
-knownPackages = sort $ ghcPackages ++ userPackages
+knownPackages = sort $ ghcPackages ++ userPackages ++ extraFlavourPackages
 
 -- TODO: Speed up? Switch to Set?
 -- Note: this is slow but we keep it simple as there are just ~50 packages

@@ -29,7 +29,7 @@ registerPackages rs context@Context {..} = do
     root -/- inplacePackageDbPath stage %>
       buildStamp rs context
 
-    root -/- inplacePackageDbPath stage -/- packageDbStamp %> \stamp -> do
+    root -/- inplacePackageDbPath stage -/- packageDbStamp %> \stamp ->
       writeFileLines stamp []
 
     root -/- inplacePackageDbPath stage -/- "*.conf" %> \conf -> do
@@ -40,17 +40,17 @@ registerPackages rs context@Context {..} = do
       let Just pkgName | takeBaseName conf == "rts" = Just "rts"
                        | otherwise = fst <$> parseCabalName (takeBaseName conf)
       let Just pkg = findPackageByName pkgName
-      bootLibs <- filter isLibrary <$> (defaultPackages Stage0)
+      bootLibs <- filter isLibrary <$> stagePackages Stage0
       case stage of
-        Stage0 | not (pkg `elem` bootLibs) -> copyConf rs (context { package = pkg }) conf
-        _                                  -> buildConf rs (context { package = pkg }) conf
+        Stage0 | pkg `notElem` bootLibs -> copyConf rs (context { package = pkg }) conf
+        _                               -> buildConf rs (context { package = pkg }) conf
 
 copyConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 copyConf rs context@Context {..} conf = do
     depPkgIds <- fmap stdOutToPkgIds . askWithResources rs $
       target context (GhcPkg Dependencies stage) [pkgName package] []
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
-    buildWithResources rs $ do
+    buildWithResources rs $
       target context (GhcPkg Clone stage) [pkgName package] [conf]
 
   where

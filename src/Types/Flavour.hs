@@ -17,6 +17,8 @@ data Flavour = Flavour {
     name :: String,
     -- | Use these command line arguments.
     args :: Args,
+    -- | Extra packages, only active in this flavour.
+    extraPackages :: [Package],
     -- | Build these packages.
     packages :: Stage -> Action [Package],
     -- | Either 'integerGmp' or 'integerSimple'.

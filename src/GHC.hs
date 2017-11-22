@@ -7,6 +7,7 @@ module GHC (
     ghcSplit, haddock, haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp,
     integerSimple, iservBin, libffi, mtl, parsec, parallel, pretty, primitive,
     process, rts, runGhc, stm, templateHaskell, terminfo, text, time, touchy,
+    transformers, unlit, unix, win32, xhtml,
     ghcPackages, isGhcPackage, defaultPackages,
 
     -- * Package information

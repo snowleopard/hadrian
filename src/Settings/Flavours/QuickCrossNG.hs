@@ -8,6 +8,7 @@ import GHC.Packages
 llvmngPackages :: [Package]
 llvmngPackages = [ dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl ]
 
+dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl :: Package
 dataBitcode         = hsLib  "data-bitcode"
 dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
 dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
@@ -59,7 +60,8 @@ quickCrossNGFlavour = defaultFlavour
     , args        = defaultBuilderArgs <> quickCrossNGArgs <> defaultPackageArgs <> llvmngWarningArgs
     , integerLibrary = pure integerSimple
     , libraryWays = pure [vanilla]
-    , packages    = \stage -> packages defaultFlavour stage ++ llvmngPackages
+    , extraPackages = llvmngPackages
+    , packages    = fmap (++ llvmngPackages) . packages defaultFlavour
     }
 
 quickCrossNGArgs :: Args

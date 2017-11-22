@@ -102,6 +102,7 @@ defaultFlavour :: Flavour
 defaultFlavour = Flavour
     { name               = "default"
     , args               = defaultArgs
+    , extraPackages      = mempty
     , packages           = defaultPackages
     , integerLibrary     = (\x -> if x then integerSimple else integerGmp) <$> cmdIntegerSimple
     , libraryWays        = defaultLibraryWays
