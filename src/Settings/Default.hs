@@ -50,7 +50,7 @@ data SourceArgs = SourceArgs
 sourceArgs :: SourceArgs -> Args
 sourceArgs SourceArgs {..} = builder Ghc ? mconcat
     [ hsDefault
-    , (not <$> builder (Ghc Settings)) ? getConfiguredCabalData ConfCabal.hcOpts
+    , getConfiguredCabalData ConfCabal.hcOpts
     , libraryPackage   ? hsLibrary
     , package compiler ? hsCompiler
     , package ghc      ? hsGhc ]

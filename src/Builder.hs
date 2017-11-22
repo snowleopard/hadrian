@@ -48,7 +48,7 @@ instance NFData   CcMode
 -- * Compile a C source file.
 -- * Extract source dependencies by passing @-M@ command line argument.
 -- * Link object files & static libraries into an executable.
-data GhcMode = Settings | CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
+data GhcMode = CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
     deriving (Eq, Generic, Show)
 
 instance Binary   GhcMode
@@ -64,7 +64,11 @@ instance Hashable GhcCabalMode
 instance NFData   GhcCabalMode
 
 -- | GhcPkg can initialise a package database and register packages in it.
-data GhcPkgMode = Init | Update | Clone | Dependencies deriving (Eq, Generic, Show)
+data GhcPkgMode = Init         -- initialize a new database.
+                | Update       -- update a package.
+                | Clone        -- clone a package from one pkg database into another. @Copy@ is already taken by GhcCabalMode.
+                | Dependencies -- compute package dependencies.
+                deriving (Eq, Generic, Show)
 
 instance Binary   GhcPkgMode
 instance Hashable GhcPkgMode
@@ -157,21 +161,13 @@ instance H.Builder Builder where
             Make dir      -> need [dir -/- "Makefile"]
             _             -> when (isJust $ builderProvenance builder) $ need [path]
 
-    -- TODO: We would need to encode that asking a builder,
-    --       depending on the "ask" mode, has different return types.
-    --       For now it's the stdout string.
-    --
-    --       This however means that the string -> datatype logic
-    --       needs to reside at the callsite.
+    -- query the builder for some information.
+    -- contrast this with runBuilderWith, which returns @Action ()@
+    -- this returns the @stdout@ from running the builder.
+    -- For now this only implements asking @ghc-pkg@ about pacakge
+    -- dependencies.
     askBuilderWith :: Builder -> BuildInfo -> Action String
     askBuilderWith builder BuildInfo {..} = case builder of
-        Ghc Settings _ -> do
-            needBuilder builder
-            path <- H.builderPath builder
-            need [path]
-            Stdout stdout <- cmd [path] ["--info"]
-            return stdout
-
         GhcPkg Dependencies _ -> do
             let input  = fromSingleton msgIn buildInputs
                 msgIn  = "[askBuilder] Exactly one input file expected."

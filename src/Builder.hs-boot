@@ -7,7 +7,7 @@ import Hadrian.Builder.Tar
 import Development.Shake
 
 data CcMode = CompileC | FindCDependencies
-data GhcMode = Settings | CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
+data GhcMode =  CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
 data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
 data GhcPkgMode = Init | Update | Clone | Dependencies
 data HaddockMode = BuildPackage | BuildIndex
