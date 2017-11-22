@@ -19,8 +19,6 @@ parseCabalName :: String -> Maybe (String, Version)
 parseCabalName = readPToMaybe parse
   where parse = (,) <$> (parsePackageName <* Parse.char '-') <*> parseOptVersion
 
--- | This rule provides rules for copying packges into the
--- boot packages db from the installed compiler.
 -- | Build rules for registering packages and initialising package databases
 -- by running the @ghc-pkg@ utility.
 registerPackages :: [(Resource, Int)] -> Context -> Rules ()
