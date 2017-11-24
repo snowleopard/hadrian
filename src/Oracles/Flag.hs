@@ -8,7 +8,7 @@ import Hadrian.Oracles.TextFile
 import Base
 import Oracles.Setting
 
-data Flag = ArSupportsAtFile
+data Flag = ArSupportsAtFile Stage
           | CrossCompiling
           | GccIsClang
           | GhcUnregisterised
@@ -24,7 +24,8 @@ data Flag = ArSupportsAtFile
 flag :: Flag -> Action Bool
 flag f = do
     let key = case f of
-            ArSupportsAtFile   -> "ar-supports-at-file"
+            ArSupportsAtFile Stage0 -> "system-ar-supports-at-file"
+            ArSupportsAtFile _      -> "ar-supports-at-file"
             CrossCompiling     -> "cross-compiling"
             GccIsClang         -> "gcc-is-clang"
             GhcUnregisterised  -> "ghc-unregisterised"

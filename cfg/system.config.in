@@ -35,6 +35,8 @@ cc-llvm-backend     = @CC_LLVM_BACKEND@
 gcc-is-clang        = @GccIsClang@
 hs-cpp-args         = @HaskellCPPArgs@
 
+system-ar-supports-at-file = @ArSupportsAtFile_STAGE0@
+
 # Build options:
 #===============
 

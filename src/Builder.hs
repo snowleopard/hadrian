@@ -194,10 +194,9 @@ instance H.Builder Builder where
                     Stdout stdout <- cmd [path] buildArgs
                     writeFileChanged output stdout
             case builder of
-                Ar Pack _ -> do
-                    useTempFile <- flag ArSupportsAtFile
-                    if useTempFile then runAr                path buildArgs
-                                   else runArWithoutTempFile path buildArgs
+                Ar Pack stage -> flag (ArSupportsAtFile stage) >>= \case
+                    True  -> runAr                path buildArgs
+                    False -> runArWithoutTempFile path buildArgs
 
                 Ar Unpack _ -> cmd echo [Cwd output] [path] buildArgs
 
