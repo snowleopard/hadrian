@@ -20,6 +20,11 @@ ghcCabalBuilderArgs = mconcat
     path      <- getContextPath
     stage     <- getStage
     mconcat [ arg "configure"
+            -- don't strip libraries when cross compiling.
+            -- XXX we need to set --with-strip= (stripCmdPath :: Action FilePath), and if it's ':' disable
+            --     stripping as well. As it is now, I believe we might have issues with stripping on
+            --     windows, as I can't see a consumre of `stripCmdPath`.
+            , crossCompiling ? pure [ "--disable-executable-stripping", "--disable-library-stripping" ]
             , arg "--cabal-file"
             , arg =<< fromJust . pkgCabalFile <$> getPackage
             , arg "--distdir"
