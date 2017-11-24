@@ -38,7 +38,7 @@ configureEnvironment = do
     ldFlags <- interpretInContext libffiContext ldArgs
     sequence [ builderEnvironment "CC" $ Cc CompileC Stage1
              , builderEnvironment "CXX" $ Cc CompileC Stage1
-             , builderEnvironment "LD" Ld
+             , builderEnvironment "LD" $ Ld Stage1
              , builderEnvironment "AR" (Ar Unpack Stage1)
              , builderEnvironment "NM" Nm
              , builderEnvironment "RANLIB" Ranlib

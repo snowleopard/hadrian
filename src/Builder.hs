@@ -103,7 +103,7 @@ data Builder = Alex
              | Hpc
              | HsCpp
              | Hsc2Hs Stage
-             | Ld
+             | Ld Stage
              | Make FilePath
              | Nm
              | Objdump
@@ -255,7 +255,8 @@ systemBuilderPath builder = case builder of
     GhcPkg _ Stage0 -> fromKey "system-ghc-pkg"
     Happy           -> fromKey "happy"
     HsCpp           -> fromKey "hs-cpp"
-    Ld              -> fromKey "ld"
+    Ld Stage0       -> fromKey "system-ld"
+    Ld _            -> fromKey "ld"
     Make _          -> fromKey "make"
     Nm              -> fromKey "nm"
     Objdump         -> fromKey "objdump"

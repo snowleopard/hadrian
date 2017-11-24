@@ -115,7 +115,7 @@ buildPackageGhciLibrary context@Context {..} = priority 2 $ do
     o %> \obj -> do
         objs <- allObjects context
         need objs
-        build $ target context Ld objs [obj]
+        build $ target context (Ld stage) objs [obj]
 
 allObjects :: Context -> Action [FilePath]
 allObjects context = (++) <$> nonHsObjects context <*> hsObjects context

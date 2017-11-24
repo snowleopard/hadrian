@@ -24,7 +24,7 @@ data Builder = Alex
              | Hpc
              | HsCpp
              | Hsc2Hs Stage
-             | Ld
+             | Ld Stage
              | Make FilePath
              | Nm
              | Objdump

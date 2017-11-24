@@ -36,7 +36,7 @@ ghcCabalBuilderArgs = mconcat
             , configureArgs
             , bootPackageConstraints
             , withStaged $ Cc CompileC
-            , notStage0 ? with Ld
+            , notStage0 ? with (Ld stage)
             , withStaged (Ar Pack)
             , with Alex
             , with Happy
@@ -125,7 +125,7 @@ cppArgs = do
 withBuilderKey :: Builder -> String
 withBuilderKey b = case b of
     Ar _ _     -> "--with-ar="
-    Ld         -> "--with-ld="
+    Ld _       -> "--with-ld="
     Cc  _ _    -> "--with-gcc="
     Ghc _ _    -> "--with-ghc="
     Alex       -> "--with-alex="
