@@ -45,7 +45,7 @@ topLevelTargets = do
       cwd <- liftIO getCurrentDirectory
       binDistDir <- getEnvWithDefault cwd "BINARY_DIST_DIR"
       baseDir <- buildRoot <&> (-/- stageString Stage1)
-      targetPlatform <- setting TargetPlatform
+      targetPlatform <- setting TargetPlatformFull
       buildWithCmdOptions [Cwd baseDir] $
         -- ghc is a fake packge here.
         target (vanillaContext Stage1 ghc) (Tar Create)

@@ -105,7 +105,7 @@ stage2Packages = return [haddock]
 programName :: Context -> Action String
 programName Context {..} = do
     cross <- crossCompiling
-    targetPlatform <- setting TargetPlatform
+    targetPlatform <- setting TargetPlatformFull
     let prefix = if cross then targetPlatform ++ "-" else ""
       in return $ prefix ++ case package of
                               p | p == ghc      -> "ghc"
