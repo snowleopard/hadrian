@@ -11,16 +11,9 @@
 module Hadrian.Builder.Tar (TarMode (..), args) where
 
 import Development.Shake
-import Development.Shake.Classes
-import GHC.Generics
 import Hadrian.Expression
 
--- | Tar can be used to 'Create' an archive or 'Extract' from it.
-data TarMode = Create | Extract deriving (Eq, Generic, Show)
-
-instance Binary   TarMode
-instance Hashable TarMode
-instance NFData   TarMode
+import Hadrian.Builder.Types (TarMode (..))
 
 -- | Default command line arguments for invoking the archiving utility @tar@.
 args :: (ShakeValue c, ShakeValue b) => TarMode -> Args c b
