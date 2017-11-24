@@ -68,11 +68,12 @@ data Setting = BuildArch
              -- Command line for creating a symbolic link
              | LnS
 
-data SettingList = ConfCcArgs Stage
+data SettingList = ConfArArgs Stage
+                 | ConfCcArgs Stage
                  | ConfCppArgs Stage
                  | ConfGccLinkerArgs Stage
                  | ConfLdLinkerArgs Stage
-                 | HsCppArgs
+                 | ConfHsCppArgs
 
 -- | Maps 'Setting's to names in @cfg/system.config.in@.
 setting :: Setting -> Action String
@@ -124,13 +125,16 @@ setting key = lookupValueOrError configFile $ case key of
     InstallData        -> "install-data"
     LnS                -> "ln-s"
 
+-- XXX: see cfg/system.config.in; most of these are only defined for stages
+--      0, 1, and 2. Stage 3 is missing.
 settingList :: SettingList -> Action [String]
 settingList key = fmap words $ lookupValueOrError configFile $ case key of
+    ConfArArgs        stage -> "conf-ar-args-"         ++ stageString stage
     ConfCcArgs        stage -> "conf-cc-args-"         ++ stageString stage
     ConfCppArgs       stage -> "conf-cpp-args-"        ++ stageString stage
     ConfGccLinkerArgs stage -> "conf-gcc-linker-args-" ++ stageString stage
     ConfLdLinkerArgs  stage -> "conf-ld-linker-args-"  ++ stageString stage
-    HsCppArgs               -> "hs-cpp-args"
+    ConfHsCppArgs           -> "conf-hs-cpp-args"
 
 -- | Get a configuration setting.
 getSetting :: Setting -> Expr c b String

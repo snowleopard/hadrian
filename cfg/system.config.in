@@ -18,6 +18,7 @@ ranlib         = @REAL_RANLIB_CMD@
 sphinx-build   = @SPHINXBUILD@
 system-ar      = @AR_STAGE0@
 system-cc      = @CC_STAGE0@
+system-ld      = @LD_STAGE0@
 system-ghc     = @WithGhc@
 system-ghc-pkg = @GhcPkgCmd@
 tar            = @TarCmd@
@@ -33,7 +34,6 @@ ar-supports-at-file = @ArSupportsAtFile@
 cc-clang-backend    = @CC_CLANG_BACKEND@
 cc-llvm-backend     = @CC_LLVM_BACKEND@
 gcc-is-clang        = @GccIsClang@
-hs-cpp-args         = @HaskellCPPArgs@
 
 system-ar-supports-at-file = @ArSupportsAtFile_STAGE0@
 
@@ -88,6 +88,15 @@ project-git-commit-id = @ProjectGitCommitId@
 # Compilation and linking flags:
 #===============================
 
+# XXX: for most of the tools we have only up to
+#      stage2, as such building stage3 is
+#      is essentially impossible to do right now.
+
+conf-ar-args-stage0         = @AR_OPTS_STAGE0@
+conf-ar-args-stage1         = @ArArgs@
+conf-ar-args-stage2         = @ArArgs@
+conf-ar-args-stage3         = @ArArgs@
+
 conf-cc-args-stage0         = @CONF_CC_OPTS_STAGE0@
 conf-cc-args-stage1         = @CONF_CC_OPTS_STAGE1@
 conf-cc-args-stage2         = @CONF_CC_OPTS_STAGE2@
@@ -103,6 +112,8 @@ conf-gcc-linker-args-stage2 = @CONF_GCC_LINKER_OPTS_STAGE2@
 conf-ld-linker-args-stage0  = @CONF_LD_LINKER_OPTS_STAGE0@
 conf-ld-linker-args-stage1  = @CONF_LD_LINKER_OPTS_STAGE1@
 conf-ld-linker-args-stage2  = @CONF_LD_LINKER_OPTS_STAGE2@
+
+conf-hs-cpp-args            = @HaskellCPPArgs@
 
 # Include and library directories:
 #=================================

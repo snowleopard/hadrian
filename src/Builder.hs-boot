@@ -1,9 +1,7 @@
 module Builder where
 
 import Stage
-import Hadrian.Builder.Ar
-import Hadrian.Builder.Sphinx
-import Hadrian.Builder.Tar
+import Hadrian.Builder.Types
 import Development.Shake
 
 data CcMode = CompileC | FindCDependencies
@@ -40,5 +38,6 @@ data Builder = Alex
              | CabalFlags Stage
 
 instance Eq Builder
+instance Show Builder
 
 builderPath' :: Builder -> Action FilePath
