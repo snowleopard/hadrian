@@ -54,7 +54,11 @@ platformSupportsSharedLibs = do
 
 ghcWithSMP :: Action Bool
 ghcWithSMP = do
-    goodArch <- anyTargetArch ["i386", "x86_64", "sparc", "powerpc", "arm"]
+    goodArch <- setting TargetArch >>= \case
+      -- arm is only good from v7 on wards.
+      "arm" -> not <$> matchSetting TargetArchArmISA ["ARMv5", "ARMv6"]
+      arch  -> retrun $ arch `elem` ["i386", "x86_64", "sparc", "powerpc", "arm"]
+
     ghcUnreg <- flag GhcUnregisterised
     return $ goodArch && not ghcUnreg
 

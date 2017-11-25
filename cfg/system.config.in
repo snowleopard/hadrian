@@ -62,6 +62,7 @@ host-vendor           = @HostVendor_CPP@
 target-platform       = @TargetPlatform@
 target-platform-full  = @TargetPlatformFull@
 target-arch           = @TargetArch_CPP@
+target-arch-arm-isa   = @ARM_ISA@
 target-os             = @TargetOS_CPP@
 target-vendor         = @TargetVendor_CPP@
 llvm-target           = @LLVMTarget_CPP@

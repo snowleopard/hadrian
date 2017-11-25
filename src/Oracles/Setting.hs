@@ -102,6 +102,7 @@ setting key = lookupValueOrError configFile $ case key of
     ProjectPatchLevel1 -> "project-patch-level1"
     ProjectPatchLevel2 -> "project-patch-level2"
     TargetArch         -> "target-arch"
+    TargetArchArmISA   -> "target-arch-arm-isa"
     TargetOs           -> "target-os"
     TargetPlatform     -> "target-platform"
     TargetPlatformFull -> "target-platform-full"
