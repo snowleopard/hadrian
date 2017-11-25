@@ -123,6 +123,7 @@ rtsPackageArgs = package rts ? do
           , way `elem` [debug, debugDynamic] ? arg "-DTICKY_TICKY"
           , Profiling `wayUnit` way          ? arg "-DPROFILING"
           , Threaded  `wayUnit` way          ? arg "-DTHREADED_RTS"
+          , notM ghcWithSMP ? arg "-DNOSMP"
 
           , inputs ["//RtsMessages.c", "//Trace.c"] ?
             arg ("-DProjectVersion=" ++ show projectVersion)
@@ -186,6 +187,7 @@ rtsPackageArgs = package rts ? do
 
     mconcat
         [ builder (Cc FindCDependencies) ? cArgs
+        , builder CabalFlags ? not <$> ghcWithSMP ? arg "-smp"
         , builder (Ghc CompileCWithGhc) ? map ("-optc" ++) <$> cArgs
         , builder Ghc ? arg "-Irts"
 
