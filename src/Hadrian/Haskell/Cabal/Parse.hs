@@ -37,6 +37,7 @@ import qualified Distribution.Simple.Program.Db        as Db
 import qualified Distribution.Simple                   as Hooks (simpleUserHooks, autoconfUserHooks)
 import qualified Distribution.Simple.UserHooks         as Hooks
 import qualified Distribution.Simple.Program.Builtin   as C
+import qualified Distribution.Simple.Utils             as C (findHookedPackageDesc)
 import qualified Distribution.Simple.Program.Types     as C (programDefaultArgs, programOverrideArgs)
 import qualified Distribution.Simple.Configure         as C (getPersistBuildConfig)
 import qualified Distribution.Simple.Build             as C (initialBuildSteps)
@@ -213,23 +214,26 @@ parseConfiguredCabal context@Context {..} = do
     --      and "need" them here.
     -- create the cabal_macros.h, ...
     -- Note: the `cPath` is ignored. The path that's used is the `buildDir` path from the local build info (lbi).
-    liftIO $ C.initialBuildSteps cPath pd lbi C.silent
+    pdi <- liftIO $ getHookedBuildInfo (pkgPath package)
+    let pd' = C.updatePackageDescription pdi pd
+        lbi' = lbi { C.localPkgDescr = pd' }
+    liftIO $ C.initialBuildSteps cPath pd' lbi' C.silent
 
-    let extDeps = C.externalPackageDeps lbi
+    let extDeps = C.externalPackageDeps lbi'
         deps    = map (display . snd) extDeps
         dep_direct = map (fromMaybe (error "dep_keys failed")
-                          . PackageIndex.lookupUnitId (C.installedPkgs lbi)
+                          . PackageIndex.lookupUnitId (C.installedPkgs lbi')
                           . fst) extDeps
         dep_ipids = map (display . Installed.installedUnitId) dep_direct
 
-        Just ghcProg = Db.lookupProgram C.ghcProgram (C.withPrograms lbi)
+        Just ghcProg = Db.lookupProgram C.ghcProgram (C.withPrograms lbi')
 
-        dep_pkgs = PackageIndex.topologicalOrder (packageHacks (C.installedPkgs lbi))
+        dep_pkgs = PackageIndex.topologicalOrder (packageHacks (C.installedPkgs lbi'))
         forDeps f = concatMap f dep_pkgs
 
         -- copied from Distribution.Simple.PreProcess.ppHsc2Hs
-        packageHacks = case compilerFlavor (C.compiler lbi) of
-          GHC | C.pkgName (C.package pd) /= (C.mkPackageName "rts") -> hackRtsPackage
+        packageHacks = case compilerFlavor (C.compiler lbi') of
+          GHC | C.pkgName (C.package pd') /= (C.mkPackageName "rts") -> hackRtsPackage
           _   -> id
         -- We don't link in the actual Haskell libraries of our
         -- dependencies, so the -u flags in the ldOptions of the rts
@@ -254,41 +258,53 @@ parseConfiguredCabal context@Context {..} = do
 
       in return $ ConfiguredCabal
       { dependencies = deps
-      , name     = C.unPackageName . C.pkgName . C.package $ pd
-      , version  = C.display . C.pkgVersion . C.package $ pd
+      , name     = C.unPackageName . C.pkgName . C.package $ pd'
+      , version  = C.display . C.pkgVersion . C.package $ pd'
       -- , packageDesc = pd
-      , componentId = C.localCompatPackageKey lbi
-      , modules  = map C.display . snd . biModules $ pd
-      , otherModules = map C.display . C.otherModules . fst . biModules $ pd
-      , synopsis = C.synopsis pd
-      , srcDirs = C.hsSourceDirs . fst . biModules $ pd
+      , componentId = C.localCompatPackageKey lbi'
+      , modules  = map C.display . snd . biModules $ pd'
+      , otherModules = map C.display . C.otherModules . fst . biModules $ pd'
+      , synopsis = C.synopsis pd'
+      , srcDirs = C.hsSourceDirs . fst . biModules $ pd'
       , deps = deps
       , depIpIds = dep_ipids
       , depNames = map (C.display . C.mungedName . snd) extDeps
-      , depCompIds = if C.packageKeySupported (C.compiler lbi)
+      , depCompIds = if C.packageKeySupported (C.compiler lbi')
                      then dep_ipids
                      else deps
-      , includeDirs = C.includeDirs . fst . biModules $ pd
-      , includes    = C.includes . fst . biModules $ pd
-      , installIncludes = C.installIncludes . fst . biModules $ pd
-      , extraLibs = C.extraLibs . fst . biModules $ pd
-      , extraLibDirs = C.extraLibDirs . fst . biModules $ pd
-      , asmSrcs = C.asmSources . fst . biModules $ pd
-      , cSrcs   = C.cSources . fst . biModules $ pd
-      , cmmSrcs = C.cmmSources . fst . biModules $ pd
-      , dataFiles = C.dataFiles pd
+      , includeDirs = C.includeDirs . fst . biModules $ pd'
+      , includes    = C.includes . fst . biModules $ pd'
+      , installIncludes = C.installIncludes . fst . biModules $ pd'
+      , extraLibs = C.extraLibs . fst . biModules $ pd'
+      , extraLibDirs = C.extraLibDirs . fst . biModules $ pd'
+      , asmSrcs = C.asmSources . fst . biModules $ pd'
+      , cSrcs   = C.cSources . fst . biModules $ pd'
+      , cmmSrcs = C.cmmSources . fst . biModules $ pd'
+      , dataFiles = C.dataFiles pd'
       , hcOpts    =    C.programDefaultArgs ghcProg
-                    ++ (C.hcOptions GHC . fst . biModules $ pd)
-                    ++ C.languageToFlags (C.compiler lbi) (C.defaultLanguage . fst . biModules $ pd)
-                    ++ C.extensionsToFlags (C.compiler lbi) (C.usedExtensions . fst . biModules $ pd)
+                    ++ (C.hcOptions GHC . fst . biModules $ pd')
+                    ++ C.languageToFlags (C.compiler lbi') (C.defaultLanguage . fst . biModules $ pd')
+                    ++ C.extensionsToFlags (C.compiler lbi') (C.usedExtensions . fst . biModules $ pd')
                     ++ C.programOverrideArgs ghcProg
-      , asmOpts   = C.asmOptions . fst . biModules $ pd
-      , ccOpts    = C.ccOptions . fst . biModules $ pd
-      , cmmOpts   = C.cmmOptions . fst . biModules $ pd
-      , cppOpts   = C.cppOptions . fst . biModules $ pd
-      , ldOpts    = C.ldOptions . fst . biModules $ pd
+      , asmOpts   = C.asmOptions . fst . biModules $ pd'
+      , ccOpts    = C.ccOptions . fst . biModules $ pd'
+      , cmmOpts   = C.cmmOptions . fst . biModules $ pd'
+      , cppOpts   = C.cppOptions . fst . biModules $ pd'
+      , ldOpts    = C.ldOptions . fst . biModules $ pd'
       , depIncludeDirs = forDeps Installed.includeDirs
       , depCcOpts = forDeps Installed.ccOptions
       , depLdOpts = forDeps Installed.ldOptions
-      , buildGhciLib = C.withGHCiLib lbi
+      , buildGhciLib = C.withGHCiLib lbi'
       }
+
+getHookedBuildInfo :: FilePath -> IO C.HookedBuildInfo
+getHookedBuildInfo baseDir = do
+  -- TODO: We should probably better generate this in the
+  --       build dir, rather then in the base dir? However
+  --       `configure` is run in the baseDir.
+
+  maybe_infoFile <- C.findHookedPackageDesc baseDir
+  case maybe_infoFile of
+    Nothing       -> return C.emptyHookedBuildInfo
+    Just infoFile -> C.readHookedBuildInfo C.silent infoFile
+
