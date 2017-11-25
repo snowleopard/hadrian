@@ -44,6 +44,8 @@ getCFlags = do
     mconcat [ remove ["-O"] (cArgs <> getStagedSettingList ConfCcArgs)
             , getStagedSettingList ConfCppArgs
             , cIncludeArgs
+            , getConfiguredCabalData ConfCabal.ccOpts
+            -- XXX: is cppOpts correct here?
             , getConfiguredCabalData ConfCabal.cppOpts
             , getConfiguredCabalData ConfCabal.depCcOpts
             , cWarnings
