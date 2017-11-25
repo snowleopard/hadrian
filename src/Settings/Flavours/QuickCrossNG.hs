@@ -12,6 +12,9 @@ dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl :: Package
 dataBitcode         = hsLib  "data-bitcode"
 dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
 dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
+network             = hsLib  "network"
+libiserv            = hsLib  "libiserv"
+iservProxy          = hsUtil "iserv-proxy"
 
 llvmngWarningArgs :: Args
 llvmngWarningArgs = builder Ghc ?
