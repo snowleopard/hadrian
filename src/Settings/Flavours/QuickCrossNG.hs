@@ -23,7 +23,9 @@ libiserv            = hsLib  "libiserv"
 iservProxy          = hsUtil "iserv-proxy"
 
 crossTHPackageArgs :: Args
-crossTHPackageArgs = builder CabalFlags ? package libiserv ? crossCompiling ? arg "network" -- apply -fnetwork to libiserv
+crossTHPackageArgs = mconcat
+  [ builder CabalFlags ? package libiserv ? crossCompiling ? arg "network" -- apply -fnetwork to libiserv
+  , builder Ghc ? package network ? pure ["-Wno-overflowed-literals"] ]
 
 llvmngWarningArgs :: Args
 llvmngWarningArgs = builder Ghc ?
