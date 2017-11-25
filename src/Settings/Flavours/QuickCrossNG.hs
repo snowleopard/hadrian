@@ -4,6 +4,7 @@ import Expression
 import Types.Flavour
 import {-# SOURCE #-} Settings.Default
 import GHC.Packages
+import Oracles.Flag (crossCompiling)
 
 llvmngPackages :: [Package]
 llvmngPackages = [ dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl ]
@@ -12,9 +13,17 @@ dataBitcode, dataBitcodeLlvm, dataBitcodeEdsl :: Package
 dataBitcode         = hsLib  "data-bitcode"
 dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
 dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
+
+crossTHPackages :: [Package]
+crossTHPackages = [ network, libiserv, iservProxy ]
+
+network, libiserv, iservProxy :: Package
 network             = hsLib  "network"
 libiserv            = hsLib  "libiserv"
 iservProxy          = hsUtil "iserv-proxy"
+
+crossTHPackageArgs :: Args
+crossTHPackageArgs = builder CabalFlags ? package libiserv ? crossCompiling ? arg "network" -- apply -fnetwork to libiserv
 
 llvmngWarningArgs :: Args
 llvmngWarningArgs = builder Ghc ?
@@ -60,11 +69,11 @@ llvmngWarningArgs = builder Ghc ?
 quickCrossNGFlavour :: Flavour
 quickCrossNGFlavour = defaultFlavour
     { name        = "quick-cross-ng"
-    , args        = defaultBuilderArgs <> quickCrossNGArgs <> defaultPackageArgs <> llvmngWarningArgs
+    , args        = defaultBuilderArgs <> quickCrossNGArgs <> defaultPackageArgs <> llvmngWarningArgs <> crossTHPackageArgs
     , integerLibrary = pure integerSimple
     , libraryWays = pure [vanilla]
-    , extraPackages = llvmngPackages
-    , packages    = fmap (++ llvmngPackages) . packages defaultFlavour
+    , extraPackages = llvmngPackages ++ crossTHPackages
+    , packages    = fmap (++ (llvmngPackages ++ crossTHPackages)) . packages defaultFlavour
     }
 
 quickCrossNGArgs :: Args

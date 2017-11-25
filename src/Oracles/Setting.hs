@@ -3,7 +3,8 @@ module Oracles.Setting (
     getSettingList,  anyTargetPlatform, anyTargetOs, anyTargetArch, anyHostOs,
     ghcWithInterpreter, ghcEnableTablesNextToCode, useLibFFIForAdjustors,
     ghcCanonVersion, cmdLineLengthLimit, iosHost, osxHost, windowsHost,
-    topDirectory, relocatableBuild, installDocDir, installGhcLibDir, libsuf
+    topDirectory, relocatableBuild, installDocDir, installGhcLibDir, libsuf,
+    matchSetting
     ) where
 
 import Hadrian.Expression
@@ -42,6 +43,7 @@ data Setting = BuildArch
              | ProjectPatchLevel1
              | ProjectPatchLevel2
              | TargetArch
+             | TargetArchArmISA
              | TargetOs
              | TargetPlatform
              | TargetPlatformFull
