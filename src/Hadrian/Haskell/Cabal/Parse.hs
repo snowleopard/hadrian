@@ -56,11 +56,11 @@ import Hadrian.Expression
 import Hadrian.Target
 import Types.Cabal ( Cabal( Cabal ) )
 import Types.ConfiguredCabal
+import Types.Flavour (args)
 
 import Settings
 import Oracles.Setting
 
-import Settings.Default
 import Context
 
 import Hadrian.Oracles.TextFile
@@ -104,7 +104,7 @@ parseCabal context@Context {..} = do
     (compiler, Just platform, _pgdb) <- liftIO $ GHC.configure C.silent (Just hcPath) Nothing Db.emptyProgramDb
 
 
-    flagList <- interpret (target context (CabalFlags stage) [] []) defaultPackageArgs
+    flagList <- interpret (target context (CabalFlags stage) [] []) =<< args <$> flavour
     let flags = foldr addFlag mempty flagList
           where addFlag :: String -> C.FlagAssignment -> C.FlagAssignment
                 addFlag ('-':name) = C.insertFlagAssignment (C.mkFlagName name) False
@@ -157,10 +157,10 @@ configurePackage context@Context {..} = do
     case pkgCabalFile package of
       Nothing -> error "No a cabal package!"
       Just _ -> do
-        -- compute the flaglist over the defaultPackageArgs
-        flagList <- interpret (target context (CabalFlags stage) [] []) defaultPackageArgs
-        -- compute the cabal conf args over all the default args
-        argList <- interpret (target context (GhcCabal Conf stage) [] []) defaultArgs
+        -- compute the flaglist
+        flagList <- interpret (target context (CabalFlags stage) [] []) =<< args <$> flavour
+        -- compute the cabal conf args
+        argList <- interpret (target context (GhcCabal Conf stage) [] []) =<< args <$> flavour
         liftIO $ do
           defaultMainWithHooksNoReadArgs hooks gpd (argList ++ ["--flags=" ++ unwords flagList])
 
