@@ -90,7 +90,19 @@ packageArgs = do
                 , builder (Cc CompileC)     ?
                   (not <$> flag GccIsClang) ?
                   input "//cbits/atomic.c"  ? arg "-Wno-sync-nand" ]
+      -- XXX: This should not be *not <$> crossCompiling*, but ensure
+      --      that the bootstrap compiler has the same version as the
+      --      one we are building.
+      -- XXX: In that case we also do not need to build most of the
+      --      stage1 libraries, as we already know that the compiler
+      --      comes with the most recent versions.
+      -- XXX: The use case here is that we want to build ghc-proxy for
+      --      the cross compiler. That one needs to be compiled by the
+      --      bootstrap compiler as it needs to run on the host. and as
+      --      such libiserv needs GHCi.TH, GHCi.Message and GHCi.Run from
+      --      ghci. And those are beind the -fghci flag.
     , package ghci ? notStage0 ? builder CabalFlags ? arg "ghci"
+    , package ghci ? crossCompiling ? stage0 ? builder CabalFlags ? arg "ghci"
     , package haddock ? builder CabalFlags ? arg "in-ghc-tree"
     , package haskeline ? builder CabalFlags ? crossCompiling ? arg "-terminfo"
     , package hsc2hs ? builder CabalFlags ? arg "in-ghc-tree"
