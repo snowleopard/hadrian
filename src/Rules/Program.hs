@@ -49,10 +49,10 @@ buildProgram rs = do
               cross <- crossCompiling
               -- for cross compiler, copy the stage0/bin/<pgm>
               -- into stage1/bin/
-              case (package, cross, stage) of
-                (p, True, s) | s > Stage0 && p `elem` [ghc, ghcPkg, hsc2hs] -> do
-                                 srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
-                                 copyFile (srcDir -/- takeFileName bin) bin
+              case (cross, stage) of
+                (True, s) | s > Stage0 -> do
+                              srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
+                              copyFile (srcDir -/- takeFileName bin) bin
                 _ -> buildBinary rs bin =<< programContext stage package
           -- Rules for the GHC package, which is built 'inplace'
 
