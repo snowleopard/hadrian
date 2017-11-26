@@ -26,7 +26,8 @@ crossTHPackageArgs :: Args
 crossTHPackageArgs = mconcat
   [ builder CabalFlags ? package libiserv ? crossCompiling ? arg "network" -- apply -fnetwork to libiserv
   , builder Ghc ? package network ? pure ["-Wno-overflowed-literals"]
-  , builder Ghc ? package libiserv ? pure ["-Wno-incomplete-patterns"]
+  , builder Ghc ? package libiserv ? pure ["-Wno-incomplete-patterns", "-Wno-unused-imports"]
+  , builder Ghc ? package iservProxy ? pure ["-Wno-unused-imports"]
   ]
 
 llvmngWarningArgs :: Args
