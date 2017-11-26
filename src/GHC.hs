@@ -66,6 +66,7 @@ stage1Packages = do
     win        <- windowsHost
     intLib     <- integerLibrary =<< flavour
     libraries0 <- filter isLibrary <$> stage0Packages
+    cross      <- crossCompiling
     return $ libraries0 -- Build all Stage0 libraries in Stage1
           ++ [ array
              , base
@@ -79,21 +80,21 @@ stage1Packages = do
              , ghcPkg
              , ghcPrim
              , haskeline
-             , hpcBin
              , hsc2hs
              , intLib
              , pretty
              , process
              , rts
-             , runGhc
              , stm
              , time
              , unlit
-             , xhtml
-             , haddock            ]
-          ++ [ iservBin | not win ]
-          ++ [ unix     | not win ]
-          ++ [ win32    | win     ]
+             , xhtml                         ]
+          ++ [ haddock  | not cross          ]
+          ++ [ runGhc   | not cross          ]
+          ++ [ hpcBin   | not cross          ]
+          ++ [ iservBin | not win, not cross ]
+          ++ [ unix     | not win            ]
+          ++ [ win32    | win                ]
 
 stage2Packages :: Action [Package]
 stage2Packages = return [haddock]
