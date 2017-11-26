@@ -54,8 +54,14 @@ topLevelTargets = do
 
     phony "stage2" $ do
       putNormal "Building stage2"
+      (programs, libraries) <- partition isProgram <$> stagePackages Stage1
+      pgmNames <- mapM (g Stage1) programs
+      libNames <- mapM (g Stage1) libraries
+      putNormal . unlines $
+        ["| Building Programs:  " ++ intercalate ", " pgmNames
+        ,"| Building Libraries: " ++ intercalate ", " libNames]
+
       targets <- mapM (f Stage1) =<< stagePackages Stage1
-      liftIO . putStrLn . unlines $ map ("- " ++) targets
       need targets
       where
         -- either the package databae config file for libraries or
@@ -65,6 +71,9 @@ topLevelTargets = do
         f :: Stage -> Package -> Action FilePath
         f stage pkg | isLibrary pkg = pkgConfFile (Context stage pkg (read "v"))
                     | otherwise     = programPath =<< programContext stage pkg
+        g :: Stage -> Package -> Action String
+        g stage pkg | isLibrary pkg = return $ pkgName pkg
+                    | otherwise     = programName (Context stage pkg (read "v"))
 
 -- TODO: Get rid of the @includeGhciLib@ hack.
 -- | Return the list of targets associated with a given 'Stage' and 'Package'.
