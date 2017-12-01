@@ -84,8 +84,8 @@ quickCrossNGFlavour = defaultFlavour
 quickCrossNGArgs :: Args
 quickCrossNGArgs = sourceArgs SourceArgs
     { hsDefault  = pure ["-O0", "-H64m"]
-    , hsLibrary  = notStage0 ? mconcat [ arg "-O", arg "-fllvmng" ]
+    , hsLibrary  = notStage0 ? mconcat [ arg "-O", arg "-fllvmng", arg "-fast-llvm" ]
     , hsCompiler = stage0 ? arg "-O"
     , hsGhc      = mconcat
                    [ stage0 ? arg "-O"
-                   , stage1 ? mconcat [ arg "-O0", arg "-fllvmng" ] ] }
+                   , stage1 ? mconcat [ arg "-O0", arg "-fllvmng", arg "-fast-llvm" ] ] }
