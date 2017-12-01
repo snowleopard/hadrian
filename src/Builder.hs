@@ -90,6 +90,7 @@ instance NFData   HaddockMode
 -- @GhcPkg Stage1@ is the one built in Stage0.
 data Builder = Alex
              | Ar ArMode Stage
+             | Autoreconf FilePath
              | DeriveConstants
              | Cc CcMode Stage
              | Configure FilePath
@@ -156,10 +157,11 @@ instance H.Builder Builder where
     needBuilder builder = do
         path <- H.builderPath builder
         case builder of
-            Configure dir -> need [dir -/- "configure"]
-            Hsc2Hs stage  -> templateHscPath stage >>= \tmpl -> need [path, tmpl]
-            Make dir      -> need [dir -/- "Makefile"]
-            _             -> when (isJust $ builderProvenance builder) $ need [path]
+            Autoreconf dir -> need [dir -/- "configure.ac"]
+            Configure dir  -> need [dir -/- "configure"]
+            Hsc2Hs stage   -> templateHscPath stage >>= \tmpl -> need [path, tmpl]
+            Make dir       -> need [dir -/- "Makefile"]
+            _              -> when (isJust $ builderProvenance builder) $ need [path]
 
     -- query the builder for some information.
     -- contrast this with runBuilderWith, which returns @Action ()@
@@ -199,6 +201,11 @@ instance H.Builder Builder where
                     False -> runArWithoutTempFile path buildArgs
 
                 Ar Unpack _ -> cmd echo [Cwd output] [path] buildArgs
+
+                Autoreconf dir -> do
+                    bash <- bashPath
+                    let env = AddEnv "CONFIG_SHELL" bash
+                    cmd echo env [Cwd dir] ["sh", path] buildOptions buildArgs
 
                 Configure dir -> do
                     -- Inject /bin/bash into `libtool`, instead of /bin/sh,
@@ -247,6 +254,7 @@ systemBuilderPath builder = case builder of
     Alex            -> fromKey "alex"
     Ar _ Stage0     -> fromKey "system-ar"
     Ar _ _          -> fromKey "ar"
+    Autoreconf _    -> fromKey "autoreconf"
     Cc  _  Stage0   -> fromKey "system-cc"
     Cc  _  _        -> fromKey "cc"
     -- We can't ask configure for the path to configure!

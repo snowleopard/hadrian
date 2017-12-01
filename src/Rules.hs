@@ -46,10 +46,17 @@ topLevelTargets = do
       binDistDir <- getEnvWithDefault cwd "BINARY_DIST_DIR"
       baseDir <- buildRoot <&> (-/- stageString Stage1)
       targetPlatform <- setting TargetPlatformFull
+
+      -- prepare binary distribution configure script
+      copyFile (cwd -/- "aclocal.m4") (cwd -/- "distrib" -/- "aclocal.m4")
+      buildWithCmdOptions [Cwd $ cwd -/- "distrib"] $
+        target (vanillaContext Stage1 ghc) (Autoreconf $ cwd -/- "distrib") [] []
+      copyFile (cwd -/- "distrib" -/- "configure") (baseDir -/- "configure")
+
       buildWithCmdOptions [Cwd baseDir] $
         -- ghc is a fake packge here.
         target (vanillaContext Stage1 ghc) (Tar Create)
-               ["bin", "lib"]
+               ["bin", "lib", "configure"]
                [binDistDir -/- "ghc-" ++ version ++ "-" ++ targetPlatform ++ ".tar.xz"]
 
     phony "stage2" $ do
