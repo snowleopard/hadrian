@@ -20,7 +20,7 @@ module Hadrian.Utilities (
     createDirectory, copyDirectory, moveDirectory, removeDirectory,
 
     -- * Diagnostic info
-    UseColour (..), Intensity (..), Colour (..), putColoured,
+    UseColour (..), Colour (..), ANSIColour (..), putColoured,
     BuildProgressColour, mkBuildProgressColour, putBuild,
     SuccessColour, mkSuccessColour, putSuccess,
     ProgressInfo (..), putProgressInfo,
@@ -266,29 +266,26 @@ removeDirectory dir = do
 
 data UseColour = Never | Auto | Always deriving (Eq, Show, Typeable)
 
--- | ANSI colors have 2 intensity options
-data Intensity = Dull | Vivid
-
--- | ANSI colors, and a manual code for the extended 256 color set
+-- | Terminal output colours
 data Colour
-    = Black
-    | Red
-    | Green
-    | Yellow
-    | Blue
-    | Magenta
-    | Cyan
-    | White
-    | Reset
-    | Extended String
+    = Dull ANSIColour   -- ^ 8-bit ANSI colours
+    | Vivid ANSIColour  -- ^ 16-bit vivid ANSI colours
+    | Extended String   -- ^ Extended 256-bit colours, manual code stored
 
--- | Convert intensity names into their associated codes
-intensityCode :: Intensity -> String
-intensityCode Dull = ""
-intensityCode Vivid = ";1"
+-- | ANSI terminal colours
+data ANSIColour
+    = Black     -- ^ ANSI code: 30
+    | Red       -- ^ 31
+    | Green     -- ^ 32
+    | Yellow    -- ^ 33
+    | Blue      -- ^ 34
+    | Magenta   -- ^ 35
+    | Cyan      -- ^ 36
+    | White     -- ^ 37
+    | Reset     -- ^ 0
 
--- | Convert colour names into their associated codes
-colourCode :: Colour -> String
+-- | Convert ANSI colour names into their associated codes
+colourCode :: ANSIColour -> String
 colourCode Black = "30"
 colourCode Red = "31"
 colourCode Green = "32"
@@ -298,13 +295,12 @@ colourCode Magenta = "35"
 colourCode Cyan = "36"
 colourCode White = "37"
 colourCode Reset = "0"
-colourCode (Extended code) = "38;5;" ++ code
 
--- | Create the final ANSI code. Note: intensity does not apply to
--- colours in the extended 256 set.
-mkColour :: Intensity -> Colour -> String
-mkColour _ c@(Extended _) = colourCode c
-mkColour i c = colourCode c ++ intensityCode i
+-- | Create the final ANSI code.
+mkColour :: Colour -> String
+mkColour (Dull c) = colourCode c
+mkColour (Vivid c) = colourCode c ++ ";1"
+mkColour (Extended code) = "38;5;" ++ code
 
 -- | A more colourful version of Shake's 'putNormal'.
 putColoured :: String -> String -> Action ()
@@ -324,13 +320,13 @@ putColoured code msg = do
 newtype BuildProgressColour = BuildProgressColour String
     deriving Typeable
 
--- | Generate an encoded colour for progress output from names
-mkBuildProgressColour :: Intensity -> Colour -> BuildProgressColour
-mkBuildProgressColour i c = BuildProgressColour $ mkColour i c
+-- | Generate an encoded colour for progress output from names.
+mkBuildProgressColour :: Colour -> BuildProgressColour
+mkBuildProgressColour c = BuildProgressColour $ mkColour c
 
 -- | Default 'BuildProgressColour'.
 magenta :: BuildProgressColour
-magenta = mkBuildProgressColour Dull Magenta
+magenta = mkBuildProgressColour (Dull Magenta)
 
 -- | Print a build progress message (e.g. executing a build command).
 putBuild :: String -> Action ()
@@ -342,12 +338,12 @@ newtype SuccessColour = SuccessColour String
     deriving Typeable
 
 -- | Generate an encoded colour for successful output from names
-mkSuccessColour :: Intensity -> Colour -> SuccessColour
-mkSuccessColour i c = SuccessColour $ mkColour i c
+mkSuccessColour :: Colour -> SuccessColour
+mkSuccessColour c = SuccessColour $ mkColour c
 
 -- | Default 'SuccessColour'.
 green :: SuccessColour
-green = mkSuccessColour Dull Green
+green = mkSuccessColour (Dull Green)
 
 -- | Print a success message (e.g. a package is built successfully).
 putSuccess :: String -> Action ()
