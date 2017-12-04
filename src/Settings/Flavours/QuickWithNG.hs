@@ -13,6 +13,8 @@ dataBitcode         = hsLib  "data-bitcode"
 dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
 dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
 
+libiserv            = hsLib  "libiserv"
+
 llvmngWarningArgs :: Args
 llvmngWarningArgs = builder Ghc ?
   mconcat [ package dataBitcode  ? pure [ "-Wno-name-shadowing"
@@ -63,7 +65,7 @@ quickWithNGFlavour = defaultFlavour
                     -- , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
                     ]
     , extraPackages = llvmngPackages
-    , packages    = fmap (++ llvmngPackages) . packages defaultFlavour
+    , packages    = fmap (++ libiserv:llvmngPackages) . packages defaultFlavour
     }
 
 quickWithNGArgs :: Args
