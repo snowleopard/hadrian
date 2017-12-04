@@ -13,6 +13,7 @@ dataBitcode         = hsLib  "data-bitcode"
 dataBitcodeLlvm     = hsLib  "data-bitcode-llvm"
 dataBitcodeEdsl     = hsLib  "data-bitcode-edsl"
 
+libiserv :: Package
 libiserv            = hsLib  "libiserv"
 
 llvmngWarningArgs :: Args
