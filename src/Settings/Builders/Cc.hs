@@ -7,6 +7,9 @@ import Builder ()
 ccBuilderArgs :: Args
 ccBuilderArgs = do
     way <- getWay
+    iconvIncludeDir <- getSetting IconvIncludeDir
+    gmpIncludeDir   <- getSetting GmpIncludeDir
+    ffiIncludeDir   <- getSetting FfiIncludeDir
     builder Cc ? mconcat
         [ getConfiguredCabalData ConfCabal.ccOpts
         , getStagedSettingList ConfCcArgs
@@ -24,5 +27,7 @@ ccBuilderArgs = do
                     , arg "-MM", arg "-MG"
                     , arg "-MF", arg output
                     , arg "-MT", arg $ dropExtension output -<.> "o"
+                    , pure . map ("-I"++) . filter (/= "") $ [iconvIncludeDir, gmpIncludeDir]
+                    , flag UseSystemFfi ? arg ("-I" ++ ffiIncludeDir)
                     , arg "-x", arg "c"
                     , arg =<< getInput ] ]
