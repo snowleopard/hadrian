@@ -25,11 +25,16 @@ cIncludeArgs = do
     path    <- getBuildPath
     incDirs <- getConfiguredCabalData ConfCabal.includeDirs
     depDirs <- getConfiguredCabalData ConfCabal.depIncludeDirs
+    iconvIncludeDir <- getSetting IconvIncludeDir
+    gmpIncludeDir   <- getSetting GmpIncludeDir
+    ffiIncludeDir   <- getSetting FfiIncludeDir
     cross   <- expr crossCompiling
     compilerOrGhc <- package compiler ||^ package ghc
     mconcat [ not (cross && compilerOrGhc) ? arg "-Iincludes"
             , arg $ "-I" ++ root -/- generatedDir
             , arg $ "-I" ++ path
+            , pure . map ("-I"++) . filter (/= "") $ [iconvIncludeDir, gmpIncludeDir]
+            , flag UseSystemFfi ? arg ("-I" ++ ffiIncludeDir)
             , pure [ "-I" ++ pkgPath pkg -/- dir | dir <- incDirs ]
             , pure [ "-I" ++       unifyPath dir | dir <- depDirs ] ]
 

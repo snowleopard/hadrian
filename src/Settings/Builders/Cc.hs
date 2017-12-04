@@ -7,16 +7,13 @@ import Builder ()
 ccBuilderArgs :: Args
 ccBuilderArgs = do
     way <- getWay
-    iconvIncludeDir <- getSetting IconvIncludeDir
-    gmpIncludeDir   <- getSetting GmpIncludeDir
-    ffiIncludeDir   <- getSetting FfiIncludeDir
     builder Cc ? mconcat
         [ getConfiguredCabalData ConfCabal.ccOpts
         , getStagedSettingList ConfCcArgs
-        , cIncludeArgs
 
         , builder (Cc CompileC) ? mconcat
             [ pure ["-Wall", "-Werror"]
+            , cIncludeArgs
             , Dynamic `wayUnit` way ? pure [ "-fPIC", "-DDYNAMIC" ]
             , arg "-c", arg =<< getInput
             , arg "-o", arg =<< getOutput ]
@@ -27,7 +24,6 @@ ccBuilderArgs = do
                     , arg "-MM", arg "-MG"
                     , arg "-MF", arg output
                     , arg "-MT", arg $ dropExtension output -<.> "o"
-                    , pure . map ("-I"++) . filter (/= "") $ [iconvIncludeDir, gmpIncludeDir]
-                    , flag UseSystemFfi ? arg ("-I" ++ ffiIncludeDir)
+                    , cIncludeArgs
                     , arg "-x", arg "c"
                     , arg =<< getInput ] ]
