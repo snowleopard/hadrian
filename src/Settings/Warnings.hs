@@ -29,7 +29,9 @@ warningArgs = builder Ghc ? do
                                       , "-fno-warn-unused-imports" ] ]
         , notStage0 ? mconcat
         [ libraryPackage       ? pure [ "-Wno-deprecated-flags" ]
-        , package base         ? pure [ "-Wno-trustworthy-safe" ]
+        , package base         ? pure [ "-Wno-trustworthy-safe"
+                                      , "-Wno-unused-top-binds" -- this fails on android for libraries/base/GHC/Event/Poll.hsc
+                                      ]
         , package binary       ? pure [ "-Wno-deprecations" ]
         , package bytestring   ? pure [ "-Wno-inline-rule-shadowing" ]
         , package compiler     ? pure [ "-Wcpp-undef" ]
