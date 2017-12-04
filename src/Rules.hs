@@ -53,10 +53,13 @@ topLevelTargets = do
         target (vanillaContext Stage1 ghc) (Autoreconf $ cwd -/- "distrib") [] []
       copyFile (cwd -/- "distrib" -/- "configure") (baseDir -/- "configure")
 
+      -- copy the Makefile from the source of the tree to the bindist dir
+      copyFile (cwd -/- "Makefile") (baseDir -/- "Makefile")
+
       buildWithCmdOptions [Cwd baseDir] $
         -- ghc is a fake packge here.
         target (vanillaContext Stage1 ghc) (Tar Create)
-               ["bin", "lib", "configure"]
+               ["bin", "lib", "configure", "Makefile"]
                [binDistDir -/- "ghc-" ++ version ++ "-" ++ targetPlatform ++ ".tar.xz"]
 
     phony "stage2" $ do
