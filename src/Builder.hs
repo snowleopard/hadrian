@@ -254,7 +254,7 @@ systemBuilderPath builder = case builder of
     Alex            -> fromKey "alex"
     Ar _ Stage0     -> fromKey "system-ar"
     Ar _ _          -> fromKey "ar"
-    Autoreconf _    -> fromKey "autoreconf"
+    Autoreconf _    -> return "autoreconf"
     Cc  _  Stage0   -> fromKey "system-cc"
     Cc  _  _        -> fromKey "cc"
     -- We can't ask configure for the path to configure!

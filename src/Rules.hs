@@ -53,13 +53,25 @@ topLevelTargets = do
         target (vanillaContext Stage1 ghc) (Autoreconf $ cwd -/- "distrib") [] []
       copyFile (cwd -/- "distrib" -/- "configure") (baseDir -/- "configure")
 
-      -- copy the Makefile from the source of the tree to the bindist dir
+      -- copy config.sub, config.guess, install-sh, Makefile files, etc
+      -- from the source of the tree to the bindist dir
       copyFile (cwd -/- "Makefile") (baseDir -/- "Makefile")
+      copyFile (cwd -/- "install-sh") (baseDir -/- "install-sh")
+      copyFile (cwd -/- "config.sub") (baseDir -/- "config.sub")
+      copyFile (cwd -/- "config.guess") (baseDir -/- "config.guess")
+      copyFile (cwd -/- "settings.in") (baseDir -/- "settings.in")
+      copyFile (cwd -/- "mk" -/- "config.mk.in") (baseDir -/- "mk" -/- "config.mk.in")
+      copyFile (cwd -/- "mk" -/- "install.mk.in") (baseDir -/- "mk" -/- "install.mk.in")
+      copyFile (cwd -/- "mk" -/- "custom-settings.mk") (baseDir -/- "mk" -/- "custom-settings.mk")
+      copyFile (cwd -/- "mk" -/- "project.mk") (baseDir -/- "mk" -/- "project.mk")
 
       buildWithCmdOptions [Cwd baseDir] $
         -- ghc is a fake packge here.
         target (vanillaContext Stage1 ghc) (Tar Create)
-               ["bin", "lib", "configure", "Makefile"]
+               [ "bin", "lib", "configure", "config.sub", "config.guess"
+               , "Makefile", "install-sh", "settings.in", "mk/config.mk.in"
+               , "mk/install.mk.in", "mk/project.mk", "mk/custom-settings.mk"
+               ]
                [binDistDir -/- "ghc-" ++ version ++ "-" ++ targetPlatform ++ ".tar.xz"]
 
     phony "stage2" $ do
