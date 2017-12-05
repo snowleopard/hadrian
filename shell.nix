@@ -58,6 +58,6 @@ in
                     nixpkgs.m4
                     nixpkgs.gmp
                     nixpkgs.file
-		    nixpkgs.llvm_5
+                    nixpkgs.llvm_5
 		  ];
   }
