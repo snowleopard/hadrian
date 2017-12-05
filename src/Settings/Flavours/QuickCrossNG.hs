@@ -27,6 +27,7 @@ crossTHPackageArgs = mconcat
   [ builder CabalFlags ? package libiserv ? crossCompiling ? arg "network" -- apply -fnetwork to libiserv
   , builder Ghc ? package network ? pure [ "-Wno-overflowed-literals"
                                          , "-Wno-incomplete-patterns" -- gets triggered by the iOS build
+                                         , "-Wno-unused-imports"      -- also triggered by the iOS build
                                          ]
   , builder Ghc ? package libiserv ? pure ["-Wno-incomplete-patterns", "-Wno-unused-imports"]
   , builder Ghc ? package iservProxy ? pure ["-Wno-unused-imports"]
