@@ -12,7 +12,7 @@ ccBuilderArgs = do
         , getStagedSettingList ConfCcArgs
 
         , builder (Cc CompileC) ? mconcat
-            [ pure ["-Wall", "-Werror"]
+            [ arg "-Wall"
             , cIncludeArgs
             , Dynamic `wayUnit` way ? pure [ "-fPIC", "-DDYNAMIC" ]
             , arg "-c", arg =<< getInput
