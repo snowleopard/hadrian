@@ -46,10 +46,30 @@ topLevelTargets = do
       binDistDir <- getEnvWithDefault cwd "BINARY_DIST_DIR"
       baseDir <- buildRoot <&> (-/- stageString Stage1)
       targetPlatform <- setting TargetPlatformFull
+
+      -- prepare binary distribution configure script
+      copyFile (cwd -/- "aclocal.m4") (cwd -/- "distrib" -/- "aclocal.m4")
+      buildWithCmdOptions [Cwd $ cwd -/- "distrib"] $
+        target (vanillaContext Stage1 ghc) (Autoreconf $ cwd -/- "distrib") [] []
+
+      -- copy config.sub, config.guess, install-sh, Makefile files, etc
+      -- from the source of the tree to the bindist dir
+      copyFile (cwd -/- "distrib" -/- "configure") (baseDir -/- "configure")
+      copyFile (cwd -/- "distrib" -/- "Makefile") (baseDir -/- "Makefile")
+      copyFile (cwd -/- "install-sh") (baseDir -/- "install-sh")
+      copyFile (cwd -/- "config.sub") (baseDir -/- "config.sub")
+      copyFile (cwd -/- "config.guess") (baseDir -/- "config.guess")
+      copyFile (cwd -/- "settings.in") (baseDir -/- "settings.in")
+      copyFile (cwd -/- "mk" -/- "config.mk.in") (baseDir -/- "mk" -/- "config.mk.in")
+      copyFile (cwd -/- "mk" -/- "install.mk.in") (baseDir -/- "mk" -/- "install.mk.in")
+
       buildWithCmdOptions [Cwd baseDir] $
         -- ghc is a fake packge here.
         target (vanillaContext Stage1 ghc) (Tar Create)
-               ["bin", "lib"]
+               [ "bin", "lib", "configure", "config.sub", "config.guess"
+               , "install-sh", "settings.in", "mk/config.mk.in", "mk/install.mk.in"
+               , "Makefile"
+               ]
                [binDistDir -/- "ghc-" ++ version ++ "-" ++ targetPlatform ++ ".tar.xz"]
 
     phony "stage2" $ do

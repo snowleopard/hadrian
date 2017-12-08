@@ -83,6 +83,7 @@ buildConf _ context@Context {..} _conf = do
            , bldPath -/- "ghcautoconf.h"
            , bldPath -/- "ghcplatform.h"
            , bldPath -/- "ghcversion.h"
+           , bldPath -/- "ffi.h"
            ]
 
     when (package == integerGmp) $

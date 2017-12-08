@@ -57,5 +57,7 @@ in
                     nixpkgs.ncurses
                     nixpkgs.m4
                     nixpkgs.gmp
-                    nixpkgs.file ];
+                    nixpkgs.file
+                    nixpkgs.llvm_5
+		  ];
   }
