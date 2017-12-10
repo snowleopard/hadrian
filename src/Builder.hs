@@ -202,10 +202,7 @@ instance H.Builder Builder where
 
                 Ar Unpack _ -> cmd echo [Cwd output] [path] buildArgs
 
-                Autoreconf dir -> do
-                    bash <- bashPath
-                    let env = AddEnv "CONFIG_SHELL" bash
-                    cmd echo env [Cwd dir] ["sh", path] buildOptions buildArgs
+                Autoreconf dir -> cmd echo [Cwd dir] [path] buildOptions buildArgs
 
                 Configure dir -> do
                     -- Inject /bin/bash into `libtool`, instead of /bin/sh,
