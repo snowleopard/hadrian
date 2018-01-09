@@ -167,7 +167,7 @@ userSetting defaultValue = do
     extra <- shakeExtra <$> getShakeOptions
     return $ lookupExtra defaultValue extra
 
-newtype BuildRoot = BuildRoot FilePath deriving Typeable
+newtype BuildRoot = BuildRoot FilePath deriving (Typeable, Show, Eq)
 
 -- | Lookup a user setting in Shake's type-indexed map 'shakeExtra'. If the
 -- setting is not found, return the provided default value instead.
