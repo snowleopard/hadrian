@@ -124,6 +124,7 @@ rtsPackageArgs = package rts ? do
           , Profiling `wayUnit` way          ? arg "-DPROFILING"
           , Threaded  `wayUnit` way          ? arg "-DTHREADED_RTS"
           , notM ghcWithSMP ? arg "-DNOSMP"
+          , useLibFFIForAdjustors ? arg "-DUSE_LIBFFI_FOR_ADJUSTORS"
 
           , inputs ["//RtsMessages.c", "//Trace.c"] ?
             arg ("-DProjectVersion=" ++ show projectVersion)
