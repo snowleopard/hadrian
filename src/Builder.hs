@@ -87,6 +87,7 @@ data Builder = Alex
              | Haddock HaddockMode
              | Happy
              | Hpc
+             | Hp2Ps
              | HsCpp
              | Hsc2Hs
              | Ld
@@ -121,6 +122,7 @@ builderProvenance = \case
     GhcPkg _ _       -> context Stage0 ghcPkg
     Haddock _        -> context Stage2 haddock
     Hpc              -> context Stage1 hpcBin
+    Hp2Ps            -> context Stage0 hp2ps
     Hsc2Hs           -> context Stage0 hsc2hs
     Unlit            -> context Stage0 unlit
     _                -> Nothing

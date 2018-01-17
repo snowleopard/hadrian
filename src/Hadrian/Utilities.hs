@@ -4,7 +4,7 @@ module Hadrian.Utilities (
     fromSingleton, replaceEq, minusOrd, intersectOrd, lookupAll, chunksOfSize,
 
     -- * String manipulation
-    quote, yesNo,
+    quote, yesNo, zeroOne,
 
     -- * FilePath manipulation
     unifyPath, (-/-),
@@ -26,6 +26,8 @@ module Hadrian.Utilities (
     ProgressInfo (..), putProgressInfo,
     renderAction, renderProgram, renderLibrary, renderBox, renderUnicorn,
 
+    -- * Test arguments
+    TestArgs (..), defaultTestArgs,
 
     -- * Miscellaneous
     (<&>), (%%>), cmdLineLengthLimit,
@@ -114,6 +116,11 @@ quote s = "'" ++ s ++ "'"
 yesNo :: Bool -> String
 yesNo True  = "YES"
 yesNo False = "NO"
+
+-- | Pretty-print a `Bool` as a @"1"@ or @"0"@ string
+zeroOne :: Bool -> String
+zeroOne True = "1"
+zeroOne False = "0"
 
 -- | Normalise a path and convert all path separators to @/@, even on Windows.
 unifyPath :: FilePath -> FilePath
@@ -453,3 +460,21 @@ renderUnicorn ls =
     ponyPadding = "                                            "
     boxLines :: [String]
     boxLines = ["", "", ""] ++ (lines . renderBox $ ls)
+
+-- | These arguments are used by the `test` target.
+data TestArgs = TestArgs
+    { testOnly     :: Maybe String
+    , testSkipPerf :: Bool
+    , testSummary  :: Maybe FilePath
+    , testJUnit    :: Maybe FilePath
+    , testConfigs  :: [String] }
+    deriving (Eq, Show)
+
+-- | Default value for `TestArgs`.
+defaultTestArgs :: TestArgs
+defaultTestArgs = TestArgs
+    { testOnly     = Nothing
+    , testSkipPerf = False
+    , testSummary  = Nothing
+    , testJUnit    = Nothing
+    , testConfigs  = [] }

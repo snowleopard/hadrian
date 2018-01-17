@@ -1,7 +1,7 @@
 module Settings (
     getArgs, getLibraryWays, getRtsWays, flavour, knownPackages,
     findPackageByName, getPkgData, getPkgDataList, isLibrary, stagePackages,
-    programContext, getIntegerPackage, getDestDir
+    programContext, getIntegerPackage, getDestDir, getTestArgs
     ) where
 
 import CommandLine
@@ -66,3 +66,7 @@ findPackageByName name = find (\pkg -> pkgName pkg == name) knownPackages
 -- | Install's DESTDIR setting.
 getDestDir :: Action FilePath
 getDestDir = fromMaybe "" <$> cmdInstallDestDir
+
+-- | Arguments to run GHC's test script.
+getTestArgs :: Action TestArgs
+getTestArgs = cmdTestArgs

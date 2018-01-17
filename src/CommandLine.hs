@@ -1,7 +1,7 @@
 module CommandLine (
     optDescrs, cmdLineArgsMap, cmdFlavour, lookupFreeze1, cmdIntegerSimple,
     cmdProgressColour, cmdProgressInfo, cmdConfigure, cmdSplitObjects,
-    cmdInstallDestDir
+    cmdInstallDestDir, cmdTestArgs
     ) where
 
 import Data.Either
@@ -21,7 +21,8 @@ data CommandLineArgs = CommandLineArgs
     , integerSimple  :: Bool
     , progressColour :: UseColour
     , progressInfo   :: ProgressInfo
-    , splitObjects   :: Bool }
+    , splitObjects   :: Bool
+    , testArgs       :: TestArgs }
     deriving (Eq, Show)
 
 -- | Default values for 'CommandLineArgs'.
@@ -34,7 +35,8 @@ defaultCommandLineArgs = CommandLineArgs
     , integerSimple  = False
     , progressColour = Auto
     , progressInfo   = Brief
-    , splitObjects   = False }
+    , splitObjects   = False
+    , testArgs       = defaultTestArgs }
 
 readConfigure :: Either String (CommandLineArgs -> CommandLineArgs)
 readConfigure = Right $ \flags -> flags { configure = True }
@@ -79,6 +81,26 @@ readProgressInfo ms =
 readSplitObjects :: Either String (CommandLineArgs -> CommandLineArgs)
 readSplitObjects = Right $ \flags -> flags { splitObjects = True }
 
+readTestOnly :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestOnly tests = Right $ \flags -> flags { testArgs = (testArgs flags) { testOnly = tests } }
+
+readTestSkipPerf :: Either String (CommandLineArgs -> CommandLineArgs)
+readTestSkipPerf = Right $ \flags -> flags { testArgs = (testArgs flags) { testSkipPerf = True } }
+
+readTestSummary :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestSummary filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
+
+readTestJUnit :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestJUnit filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
+
+readTestConfig :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestConfig config =
+    case config of
+         Nothing -> Right id
+         Just conf -> Right $ \flags ->
+                        let configs = conf : testConfigs (testArgs flags)
+                         in flags { testArgs = (testArgs flags) { testConfigs = configs } }
+
 -- | Standard 'OptDescr' descriptions of Hadrian's command line arguments.
 optDescrs :: [OptDescr (Either String (CommandLineArgs -> CommandLineArgs))]
 optDescrs =
@@ -97,7 +119,17 @@ optDescrs =
     , Option [] ["progress-info"] (OptArg readProgressInfo "STYLE")
       "Progress info style (None, Brief, Normal or Unicorn)."
     , Option [] ["split-objects"] (NoArg readSplitObjects)
-      "Generate split objects (requires a full clean rebuild)." ]
+      "Generate split objects (requires a full clean rebuild)."
+    , Option [] ["test-only"] (OptArg readTestOnly "TEST_CASE")
+      "Test cases to run."
+    , Option [] ["test-skip-perf"] (NoArg readTestSkipPerf)
+      "Skip performance tests."
+    , Option [] ["test-summary"] (OptArg readTestSummary "TEST_SUMMARY")
+      "Where to output the test summary file."
+    , Option [] ["test-junit"] (OptArg readTestJUnit "TEST_JUNIT")
+      "Output testsuite summary in JUnit format."
+    , Option [] ["test-config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
+      "Configurations to run test, in key=value format." ]
 
 -- | A type-indexed map containing Hadrian command line arguments to be passed
 -- to Shake via 'shakeExtra'.
@@ -135,3 +167,6 @@ cmdProgressInfo = progressInfo <$> cmdLineArgs
 
 cmdSplitObjects :: Action Bool
 cmdSplitObjects = splitObjects <$> cmdLineArgs
+
+cmdTestArgs :: Action TestArgs
+cmdTestArgs = testArgs <$> cmdLineArgs

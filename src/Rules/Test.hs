@@ -28,45 +28,116 @@ testRules = do
         tests    <- filterM doesDirectoryExist $ concat
                     [ [ pkgPath pkg -/- "tests", pkgPath pkg -/- "tests-ghc" ]
                     | pkg <- pkgs, isLibrary pkg, pkg /= rts, pkg /= libffi ]
+
+        debugged          <- ghcDebugged <$> flavour
+
+        withNativeCodeGen <- ghcWithNativeCodeGen
+        withInterpreter   <- ghcWithInterpreter
+        unregisterised    <- flag GhcUnregisterised
+
+        withSMP           <- ghcWithSMP
+
         windows  <- windowsHost
+        darwin   <- osxHost
+
+        threads  <- shakeThreads <$> getShakeOptions
+        verbose  <- shakeVerbosity <$> getShakeOptions
+
+        testArgs <- getTestArgs
+        let testOnlyArg = case testOnly testArgs of
+                            Just cases -> map ("--only=" ++) (words cases)
+                            Nothing -> []
+            skipPerfArg = if testSkipPerf testArgs
+                            then Just "--skip-perf-tests"
+                            else Nothing
+            summaryArg = case testSummary testArgs of
+                            Just filepath -> Just $ "--summary-file" ++ quote filepath
+                            Nothing -> Just $ "--summary-file=testsuite_summary.txt"
+            junitArg = case testJUnit testArgs of
+                            Just filepath -> Just $ "--junit " ++ quote filepath
+                            Nothing -> Nothing
+            configArgs = map ("-e " ++) (testConfigs testArgs)
+
+            extraArgs = catMaybes [skipPerfArg, summaryArg, junitArg] ++ configArgs
+
         top      <- topDirectory
         compiler <- builderPath $ Ghc CompileHs Stage2
         ghcPkg   <- builderPath $ GhcPkg Update Stage1
-        haddock  <- builderPath (Haddock BuildPackage)
-        threads  <- shakeThreads <$> getShakeOptions
-        debugged <- ghcDebugged <$> flavour
-        ghcWithNativeCodeGenInt <- fromEnum <$> ghcWithNativeCodeGen
-        ghcWithInterpreterInt   <- fromEnum <$> ghcWithInterpreter
-        ghcUnregisterisedInt    <- fromEnum <$> flag GhcUnregisterised
-        quietly . cmd "python2" $
-            [ "testsuite/driver/runtests.py" ]
-            ++ map ("--rootdir="++) tests ++
-            [ "-e", "windows=" ++ show windows
-            , "-e", "config.speed=2"
-            , "-e", "ghc_compiler_always_flags=" ++ show "-fforce-recomp -dcore-lint -dcmm-lint -dno-debug-output -no-user-package-db -rtsopts"
-            , "-e", "ghc_with_native_codegen=" ++ show ghcWithNativeCodeGenInt
-            , "-e", "ghc_debugged=" ++ show (yesNo debugged)
-            , "-e", "ghc_with_vanilla=1" -- TODO: do we always build vanilla?
-            , "-e", "ghc_with_dynamic=0" -- TODO: support dynamic
-            , "-e", "ghc_with_profiling=0" -- TODO: support profiling
-            , "-e", "ghc_with_interpreter=" ++ show ghcWithInterpreterInt
-            , "-e", "ghc_unregisterised=" ++ show ghcUnregisterisedInt
-            , "-e", "ghc_with_threaded_rts=0" -- TODO: support threaded
-            , "-e", "ghc_with_dynamic_rts=0" -- TODO: support dynamic
-            , "-e", "ghc_dynamic_by_default=False" -- TODO: support dynamic
-            , "-e", "ghc_dynamic=0" -- TODO: support dynamic
-            , "-e", "ghc_with_llvm=0" -- TODO: support LLVM
-            , "-e", "in_tree_compiler=True" -- TODO: when is it equal to False?
-            , "-e", "clean_only=False" -- TODO: do we need to support True?
-            , "--configfile=testsuite/config/ghc"
-            , "--config", "compiler=" ++ show (top -/- compiler)
-            , "--config", "ghc_pkg="  ++ show (top -/- ghcPkg)
-            , "--config", "haddock="  ++ show (top -/- haddock)
-            , "--summary-file", "testsuite_summary.txt"
-            , "--threads=" ++ show threads
+        haddock  <- builderPath $ Haddock BuildPackage
+        hp2ps    <- builderPath $ Hp2Ps
+        hpc      <- builderPath $ Hpc
+
+        let minGhcVersion v = (v <=) <$> ghcCanonVersion
+
+        let ifMinGhcVer v opt = do ver <- ghcCanonVersion
+                                   if v <= v then pure opt
+                                             else pure ""
+
+        -- Prepare extra flags to send to the Haskell compiler.
+        -- TODO: read extra argument for test from command line, like `-fvectorize`.
+        let ghcExtraFlags = if unregisterised               -- Value EXTRA_HC_OPTS should be handled.
+                               then "-optc-fno-builtin"
+                               else ""
+
+        -- Take flags to send to the Haskell compiler from test.mk.
+        -- See: https://github.com/ghc/ghc/blob/cf2c029ccdb967441c85ffb66073974fbdb20c20/testsuite/mk/test.mk#L37-L55
+        ghcFlags <- sequence
+            [ pure "-dcore-lint -dcmm-lint -no-user-package-db -rtsopts"
+            , pure ghcExtraFlags
+            , ifMinGhcVer "711" "-fno-warn-missed-specialisations"
+            , ifMinGhcVer "711" "-fshow-warning-groups"
+            , ifMinGhcVer "801" "-fdiagnostics-color=never"
+            , ifMinGhcVer "801" "-fno-diagnostics-show-caret"
+            , pure "-dno-debug-output"
             ]
 
-            -- , "--config", "hp2ps="    ++ quote ("hp2ps")
-            -- , "--config", "hpc="      ++ quote ("hpc")
-            -- , "--config", "gs=$(call quote_path,$(GS))"
-            -- , "--config", "timeout_prog=$(call quote_path,$(TIMEOUT_PROGRAM))"
+        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L291
+        let timeout_prog = "testsuite/timeout/install-inplace/bin/timeout"
+
+        quietly . cmd "python3" $
+            [ "testsuite/driver/runtests.py" ] ++
+            ["--rootdir=" ++ ("testsuite" -/- "tests")] ++
+            map ("--rootdir=" ++) tests ++
+            extraArgs ++
+            [ "-e", "windows=" ++ show windows
+            , "-e", "darwin=" ++ show darwin
+            , "-e", "config.speed=2"                        -- Use default value in GHC's test.mk
+            , "-e", "config.local=True"
+            , "-e", "config.cleanup=False"                  -- Don't clean up.
+            , "-e", "config.compiler_debugged=" ++ quote (yesNo debugged)
+            , "-e", "ghc_debugged=" ++ quote (yesNo debugged)
+            , "-e", "ghc_with_native_codegen=" ++ zeroOne withNativeCodeGen
+
+            , "-e", "config.have_interp=" ++ show withInterpreter
+            , "-e", "config.unregisterised=" ++ show unregisterised
+
+            , "-e", "ghc_compiler_always_flags=" ++ quote (unwords ghcFlags)
+            , "-e", "ghc_with_vanilla=1"                    -- TODO: do we always build vanilla?
+            , "-e", "ghc_with_dynamic=0"                    -- TODO: support dynamic
+            , "-e", "ghc_with_profiling=0"                  -- TODO: support profiling
+
+            , "-e", "config.have_vanilla=1"                 -- TODO: support other build context
+            , "-e", "config.have_dynamic=0"                 -- TODO: support dynamic
+            , "-e", "config.have_profiling=0"               -- TODO: support profiling
+            , "-e", "ghc_with_smp=" ++ zeroOne withSMP
+            , "-e", "ghc_with_llvm=0"                       -- TODO: support LLVM
+
+            , "-e", "ghc_with_threaded_rts=0"               -- TODO: support threaded
+            , "-e", "ghc_with_dynamic_rts=0"                -- TODO: support dynamic
+            , "-e", "config.ghc_dynamic_by_default=False"   -- TODO: support dynamic
+            , "-e", "config.ghc_dynamic=False"              -- TODO: support dynamic
+
+            , "-e", "config.in_tree_compiler=True"          -- Use default value, see https://github.com/ghc/ghc/blob/master/testsuite/mk/boilerplate.mk
+
+            , "--config-file=testsuite/config/ghc"
+            , "--config", "compiler="     ++ show (top -/- compiler)
+            , "--config", "ghc_pkg="      ++ show (top -/- ghcPkg)
+            , "--config", "haddock="      ++ show (top -/- haddock)
+            , "--config", "hp2ps="        ++ show (top -/- hp2ps)
+            , "--config", "hpc="          ++ show (top -/- hpc)
+            , "--config", "gs=gs"                           -- Use the default value as in test.mk
+            , "--config", "timeout_prog=" ++ show (top -/- timeout_prog)
+            , "--threads=" ++ show threads
+            , "--verbose=" ++ show (fromEnum verbose)
+            ] ++
+            testOnlyArg
