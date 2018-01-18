@@ -52,17 +52,23 @@ topLevelTargets = do
       buildWithCmdOptions [Cwd $ cwd -/- "distrib"] $
         target (vanillaContext Stage1 ghc) (Autoreconf $ cwd -/- "distrib") [] []
 
+      let ghcVersionPretty = "ghc-" ++ version ++ "-" ++ targetPlatform
+          bindistFilesDir  = baseDir -/- ghcVersionPretty
+      createDirectory bindistFilesDir
+
       -- copy config.sub, config.guess, install-sh, Makefile files, etc
       -- from the source of the tree to the bindist dir
-      copyFile (cwd -/- "distrib" -/- "configure") (baseDir -/- "configure")
-      copyFile (cwd -/- "distrib" -/- "Makefile") (baseDir -/- "Makefile")
-      copyFile (cwd -/- "install-sh") (baseDir -/- "install-sh")
-      copyFile (cwd -/- "config.sub") (baseDir -/- "config.sub")
-      copyFile (cwd -/- "config.guess") (baseDir -/- "config.guess")
-      copyFile (cwd -/- "settings.in") (baseDir -/- "settings.in")
-      copyFile (cwd -/- "mk" -/- "config.mk.in") (baseDir -/- "mk" -/- "config.mk.in")
-      copyFile (cwd -/- "mk" -/- "install.mk.in") (baseDir -/- "mk" -/- "install.mk.in")
-      copyDirectory (takeDirectory baseDir -/- "docs") baseDir
+      copyFile (cwd -/- "distrib" -/- "configure") (bindistFilesDir -/- "configure")
+      copyFile (cwd -/- "distrib" -/- "Makefile") (bindistFilesDir -/- "Makefile")
+      copyFile (cwd -/- "install-sh") (bindistFilesDir -/- "install-sh")
+      copyFile (cwd -/- "config.sub") (bindistFilesDir -/- "config.sub")
+      copyFile (cwd -/- "config.guess") (bindistFilesDir -/- "config.guess")
+      copyFile (cwd -/- "settings.in") (bindistFilesDir -/- "settings.in")
+      copyFile (cwd -/- "mk" -/- "config.mk.in") (bindistFilesDir -/- "mk" -/- "config.mk.in")
+      copyFile (cwd -/- "mk" -/- "install.mk.in") (bindistFilesDir -/- "mk" -/- "install.mk.in")
+      copyDirectory (baseDir -/- "bin") bindistFilesDir
+      copyDirectory (baseDir -/- "lib") bindistFilesDir
+      copyDirectory (takeDirectory baseDir -/- "docs") bindistFilesDir
 
       -- TODO: move stage1/bin, stage1/lib and all the files above to some
       --       other (temporary?) directory, and invoke tar there
@@ -71,11 +77,12 @@ topLevelTargets = do
       buildWithCmdOptions [Cwd baseDir] $
         -- ghc is a fake package here.
         target (vanillaContext Stage1 ghc) (Tar Create)
-               [ "bin", "lib", "docs", "configure", "config.sub", "config.guess"
+               [ ghcVersionPretty ]
+               {- [ "bin", "lib", "docs", "configure", "config.sub", "config.guess"
                , "install-sh", "settings.in", "mk/config.mk.in", "mk/install.mk.in"
                , "Makefile"
-               ]
-               [binDistDir -/- "ghc-" ++ version ++ "-" ++ targetPlatform ++ ".tar.xz"]
+               ] -}
+               [binDistDir -/- ghcVersionPretty ++ ".tar.xz"]
 
     phony "stage2" $ do
       putNormal "Building stage2"
