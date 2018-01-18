@@ -40,7 +40,7 @@ topLevelTargets = do
       -- Instead we should *need* the libraries and binaries we want to
       -- put into the binary distribution.  For now we will just *need*
       -- stage2 and package up bin and lib.
-      need ["stage2"]
+      need ["stage2", "docs"]
       version <- setting ProjectVersion
       cwd <- liftIO getCurrentDirectory
       binDistDir <- getEnvWithDefault cwd "BINARY_DIST_DIR"
@@ -62,11 +62,16 @@ topLevelTargets = do
       copyFile (cwd -/- "settings.in") (baseDir -/- "settings.in")
       copyFile (cwd -/- "mk" -/- "config.mk.in") (baseDir -/- "mk" -/- "config.mk.in")
       copyFile (cwd -/- "mk" -/- "install.mk.in") (baseDir -/- "mk" -/- "install.mk.in")
+      copyDirectory (takeDirectory baseDir -/- "docs") baseDir
+
+      -- TODO: move stage1/bin, stage1/lib and all the files above to some
+      --       other (temporary?) directory, and invoke tar there
+      -- TODO: test with another flavour than quick-with-ng
 
       buildWithCmdOptions [Cwd baseDir] $
-        -- ghc is a fake packge here.
+        -- ghc is a fake package here.
         target (vanillaContext Stage1 ghc) (Tar Create)
-               [ "bin", "lib", "configure", "config.sub", "config.guess"
+               [ "bin", "lib", "docs", "configure", "config.sub", "config.guess"
                , "install-sh", "settings.in", "mk/config.mk.in", "mk/install.mk.in"
                , "Makefile"
                ]
