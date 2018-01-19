@@ -97,9 +97,11 @@ data Builder = Alex
              | Patch
              | Perl
              | Ranlib
+             | RunTest
              | Sphinx SphinxMode
              | Tar TarMode
              | Unlit
+             | Validate
              | Xelatex
              deriving (Eq, Generic, Show)
 
@@ -224,6 +226,7 @@ systemBuilderPath builder = case builder of
     Patch           -> fromKey "patch"
     Perl            -> fromKey "perl"
     Ranlib          -> fromKey "ranlib"
+    RunTest         -> fromKey "python"
     Sphinx _        -> fromKey "sphinx-build"
     Tar _           -> fromKey "tar"
     Xelatex         -> fromKey "xelatex"

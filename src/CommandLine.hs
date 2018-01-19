@@ -1,7 +1,7 @@
 module CommandLine (
     optDescrs, cmdLineArgsMap, cmdFlavour, lookupFreeze1, cmdIntegerSimple,
     cmdProgressColour, cmdProgressInfo, cmdConfigure, cmdSplitObjects,
-    cmdInstallDestDir, cmdTestArgs
+    cmdInstallDestDir, cmdTestArgs, TestArgs (..)
     ) where
 
 import Data.Either
@@ -37,6 +37,24 @@ defaultCommandLineArgs = CommandLineArgs
     , progressInfo   = Brief
     , splitObjects   = False
     , testArgs       = defaultTestArgs }
+
+-- | These arguments are used by the `test` target.
+data TestArgs = TestArgs
+    { testOnly     :: Maybe String
+    , testSkipPerf :: Bool
+    , testSummary  :: Maybe FilePath
+    , testJUnit    :: Maybe FilePath
+    , testConfigs  :: [String] }
+    deriving (Eq, Show)
+
+-- | Default value for `TestArgs`.
+defaultTestArgs :: TestArgs
+defaultTestArgs = TestArgs
+    { testOnly     = Nothing
+    , testSkipPerf = False
+    , testSummary  = Nothing
+    , testJUnit    = Nothing
+    , testConfigs  = [] }
 
 readConfigure :: Either String (CommandLineArgs -> CommandLineArgs)
 readConfigure = Right $ \flags -> flags { configure = True }
@@ -120,15 +138,15 @@ optDescrs =
       "Progress info style (None, Brief, Normal or Unicorn)."
     , Option [] ["split-objects"] (NoArg readSplitObjects)
       "Generate split objects (requires a full clean rebuild)."
-    , Option [] ["test-only"] (OptArg readTestOnly "TEST_CASE")
+    , Option [] ["only"] (OptArg readTestOnly "TESTS")
       "Test cases to run."
-    , Option [] ["test-skip-perf"] (NoArg readTestSkipPerf)
+    , Option [] ["skip-perf"] (NoArg readTestSkipPerf)
       "Skip performance tests."
-    , Option [] ["test-summary"] (OptArg readTestSummary "TEST_SUMMARY")
+    , Option [] ["summary"] (OptArg readTestSummary "TEST_SUMMARY")
       "Where to output the test summary file."
-    , Option [] ["test-junit"] (OptArg readTestJUnit "TEST_JUNIT")
+    , Option [] ["summary-junit"] (OptArg readTestJUnit "TEST_SUMMARY_JUNIT")
       "Output testsuite summary in JUnit format."
-    , Option [] ["test-config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
+    , Option [] ["config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
       "Configurations to run test, in key=value format." ]
 
 -- | A type-indexed map containing Hadrian command line arguments to be passed

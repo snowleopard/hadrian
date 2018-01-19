@@ -26,9 +26,6 @@ module Hadrian.Utilities (
     ProgressInfo (..), putProgressInfo,
     renderAction, renderProgram, renderLibrary, renderBox, renderUnicorn,
 
-    -- * Test arguments
-    TestArgs (..), defaultTestArgs,
-
     -- * Miscellaneous
     (<&>), (%%>), cmdLineLengthLimit,
 
@@ -460,21 +457,3 @@ renderUnicorn ls =
     ponyPadding = "                                            "
     boxLines :: [String]
     boxLines = ["", "", ""] ++ (lines . renderBox $ ls)
-
--- | These arguments are used by the `test` target.
-data TestArgs = TestArgs
-    { testOnly     :: Maybe String
-    , testSkipPerf :: Bool
-    , testSummary  :: Maybe FilePath
-    , testJUnit    :: Maybe FilePath
-    , testConfigs  :: [String] }
-    deriving (Eq, Show)
-
--- | Default value for `TestArgs`.
-defaultTestArgs :: TestArgs
-defaultTestArgs = TestArgs
-    { testOnly     = Nothing
-    , testSkipPerf = False
-    , testSummary  = Nothing
-    , testJUnit    = Nothing
-    , testConfigs  = [] }
