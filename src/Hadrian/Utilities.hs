@@ -13,7 +13,7 @@ module Hadrian.Utilities (
     insertExtra, lookupExtra, userSetting,
 
     -- * Paths
-    BuildRoot (..), buildRoot, isGeneratedSource,
+    BuildRoot (..), buildRoot, buildRootRules, isGeneratedSource,
 
     -- * File system operations
     copyFile, copyFileUntracked, fixFile, makeExecutable, moveFile, removeFile,
@@ -172,12 +172,24 @@ userSetting defaultValue = do
     extra <- shakeExtra <$> getShakeOptions
     return $ lookupExtra defaultValue extra
 
+-- | Lookup a user setting in Shake's type-indexed map 'shakeExtra'. If the
+-- setting is not found, return the provided default value instead.
+userSettingRules :: Typeable a => a -> Rules a
+userSettingRules defaultValue = do
+    extra <- shakeExtra <$> getShakeOptionsRules
+    return $ lookupExtra defaultValue extra
+
 newtype BuildRoot = BuildRoot FilePath deriving Typeable
 
 -- | All build results are put into the 'buildRoot' directory.
 buildRoot :: Action FilePath
 buildRoot = do
     BuildRoot path <- userSetting (BuildRoot "")
+    return path
+
+buildRootRules :: Rules FilePath
+buildRootRules = do
+    BuildRoot path <- userSettingRules (BuildRoot "")
     return path
 
 -- | A version of 'fmap' with flipped arguments. Useful for manipulating values

@@ -42,16 +42,17 @@ runTestBuilderArgs = mconcat
                                      if ver <= v then pure opt
                                                  else pure ""
 
-        -- Prepare extra flags to send to the Haskell compiler.
-        -- TODO: read extra argument for test from command line, like `-fvectorize`.
-        let ghcExtraFlags = if unregisterised               -- Value EXTRA_HC_OPTS should be handled.
-                               then "-optc-fno-builtin"
+        -- TODO read environment's ghc flags.
+        --
+        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L28
+        let ghcExtraFlags = if unregisterised
+                               then " -optc-fno-builtin"
                                else ""
 
         -- Take flags to send to the Haskell compiler from test.mk.
-        -- See: https://github.com/ghc/ghc/blob/cf2c029ccdb967441c85ffb66073974fbdb20c20/testsuite/mk/test.mk#L37-L55
-        ghcFlags <- sequence
-            [ pure "-dcore-lint -dcmm-lint -no-user-package-db -rtsopts"
+        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L37
+        ghcFlags <- unwords <$> sequence
+            [ pure " -dcore-lint -dcmm-lint -no-user-package-db -rtsopts"
             , pure ghcExtraFlags
             , ifMinGhcVer "711" "-fno-warn-missed-specialisations"
             , ifMinGhcVer "711" "-fshow-warning-groups"
@@ -60,8 +61,7 @@ runTestBuilderArgs = mconcat
             , pure "-dno-debug-output"
             ]
 
-        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L291
-        let timeout_prog = "testsuite/timeout/install-inplace/bin/timeout"
+        timeout_prog <- (-/- "test" -/- "bin" -/- "timeout") <$> expr buildRoot
 
         mconcat [ arg $ "testsuite/driver/runtests.py"
                 , arg $ "--rootdir=" ++ ("testsuite" -/- "tests")
@@ -78,7 +78,7 @@ runTestBuilderArgs = mconcat
                 , arg "-e", arg $ "config.have_interp=" ++ show withInterpreter
                 , arg "-e", arg $ "config.unregisterised=" ++ show unregisterised
 
-                , arg "-e", arg $ "ghc_compiler_always_flags=" ++ quote (unwords ghcFlags)
+                , arg "-e", arg $ "ghc_compiler_always_flags=" ++ quote ghcFlags
                 , arg "-e", arg $ "ghc_with_vanilla=1"                    -- TODO: do we always build vanilla?
                 , arg "-e", arg $ "ghc_with_dynamic=0"                    -- TODO: support dynamic
                 , arg "-e", arg $ "ghc_with_profiling=0"                  -- TODO: support profiling

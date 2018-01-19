@@ -96,6 +96,7 @@ data Builder = Alex
              | Objdump
              | Patch
              | Perl
+             | Python
              | Ranlib
              | RunTest
              | Sphinx SphinxMode
@@ -225,6 +226,7 @@ systemBuilderPath builder = case builder of
     Objdump         -> fromKey "objdump"
     Patch           -> fromKey "patch"
     Perl            -> fromKey "perl"
+    Python          -> fromKey "python"
     Ranlib          -> fromKey "ranlib"
     RunTest         -> fromKey "python"
     Sphinx _        -> fromKey "sphinx-build"
