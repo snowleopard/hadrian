@@ -1,11 +1,9 @@
-module Rules.Test (testRules) where
+module Rules.Test (testRules, runTestGhcFlags, timeoutProgPath) where
 
 import Base
 import Expression
-import Flavour
 import Oracles.Flag
 import Oracles.Setting
-import Settings
 import Target
 import Utilities
 
@@ -49,36 +47,18 @@ testRules = do
         -- Prepare the timeout program.
         need [ root -/- timeoutProgPath ]
 
+        -- TODO This approach doesn't work.
+        -- Set environment variables for test's Makefile.
+        env <- sequence
+            [ builderEnvironment "MAKE" $ Make ""
+            , builderEnvironment "TEST_HC" $ Ghc CompileHs Stage2
+            , AddEnv "TEST_HC_OPTS" <$> runTestGhcFlags ]
+
         makePath       <- builderPath $ Make ""
         top            <- topDirectory
         ghcPath        <- (top -/-) <$> builderPath (Ghc CompileHs Stage2)
         unregisterised <- flag GhcUnregisterised
-
-        -- Prepare extra flags to send to the Haskell compiler.
-
-        let ifMinGhcVer ver opt = do v <- ghcCanonVersion
-                                     if ver <= v then pure opt
-                                                 else pure ""
-
-        -- Read extra argument for test from command line, like `-fvectorize`.
-        opts <- fromMaybe "" <$> (liftIO $ lookupEnv "EXTRA_HC_OPTS")
-
-        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L28
-        let ghcExtraFlags = opts ++ if unregisterised
-                                       then " -optc-fno-builtin"
-                                       else ""
-
-        -- Take flags to send to the Haskell compiler from test.mk.
-        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L37
-        ghcFlags <- unwords <$> sequence
-            [ pure " -dcore-lint -dcmm-lint -no-user-package-db -rtsopts"
-            , pure ghcExtraFlags
-            , ifMinGhcVer "711" "-fno-warn-missed-specialisations"
-            , ifMinGhcVer "711" "-fshow-warning-groups"
-            , ifMinGhcVer "801" "-fdiagnostics-color=never"
-            , ifMinGhcVer "801" "-fno-diagnostics-show-caret"
-            , pure "-dno-debug-output"
-            ]
+        ghcFlags       <- runTestGhcFlags
 
         -- Set environment variables for test's Makefile.
         liftIO $ do
@@ -87,10 +67,40 @@ testRules = do
             setEnv "TEST_HC_OPTS" ghcFlags
 
         -- Execute the test target.
-        build $ target (vanillaContext Stage2 compiler) RunTest [] []
+        buildWithCmdOptions env $ target (vanillaContext Stage2 compiler) RunTest [] []
+
+-- | Extra flags to send to the Haskell compiler to run tests.
+runTestGhcFlags :: Action String
+runTestGhcFlags = do
+    unregisterised <- flag GhcUnregisterised
+
+    let ifMinGhcVer ver opt = do v <- ghcCanonVersion
+                                 if ver <= v then pure opt
+                                             else pure ""
+
+    -- Read extra argument for test from command line, like `-fvectorize`.
+    ghcOpts <- fromMaybe "" <$> (liftIO $ lookupEnv "EXTRA_HC_OPTS")
+
+    -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L28
+    let ghcExtraFlags = if unregisterised
+                           then "-optc-fno-builtin"
+                           else ""
+
+    -- Take flags to send to the Haskell compiler from test.mk.
+    -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L37
+    unwords <$> sequence
+        [ pure " -dcore-lint -dcmm-lint -no-user-package-db -rtsopts"
+        , pure ghcOpts
+        , pure ghcExtraFlags
+        , ifMinGhcVer "711" "-fno-warn-missed-specialisations"
+        , ifMinGhcVer "711" "-fshow-warning-groups"
+        , ifMinGhcVer "801" "-fdiagnostics-color=never"
+        , ifMinGhcVer "801" "-fno-diagnostics-show-caret"
+        , pure "-dno-debug-output"
+        ]
 
 timeoutPyPath :: FilePath
-timeoutPyPath = "test" -/- "bin" -/- "timeout.py"
+timeoutPyPath = "test/bin/timeout.py"
 
 timeoutProgPath :: FilePath
-timeoutProgPath = "test" -/- "bin" -/- "timeout"  -- TODO: `.exe` suffix for windows.
+timeoutProgPath = "test/bin/timeout"  -- TODO: `.exe` suffix for windows.

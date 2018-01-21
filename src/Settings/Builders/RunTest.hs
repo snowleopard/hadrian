@@ -22,7 +22,6 @@ runTestBuilderArgs = mconcat
         withNativeCodeGen <- expr ghcWithNativeCodeGen
         withInterpreter   <- expr ghcWithInterpreter
         unregisterised    <- expr $ flag GhcUnregisterised
-
         withSMP           <- expr ghcWithSMP
 
         windows  <- expr windowsHost
@@ -38,30 +37,8 @@ runTestBuilderArgs = mconcat
         hp2ps    <- expr $ builderPath $ Hp2Ps
         hpc      <- expr $ builderPath $ Hpc
 
-        let ifMinGhcVer ver opt = do v <- expr ghcCanonVersion
-                                     if ver <= v then pure opt
-                                                 else pure ""
-
-        -- TODO read environment's ghc flags.
-        --
-        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L28
-        let ghcExtraFlags = if unregisterised
-                               then " -optc-fno-builtin"
-                               else ""
-
-        -- Take flags to send to the Haskell compiler from test.mk.
-        -- See: https://github.com/ghc/ghc/blob/master/testsuite/mk/test.mk#L37
-        ghcFlags <- unwords <$> sequence
-            [ pure " -dcore-lint -dcmm-lint -no-user-package-db -rtsopts"
-            , pure ghcExtraFlags
-            , ifMinGhcVer "711" "-fno-warn-missed-specialisations"
-            , ifMinGhcVer "711" "-fshow-warning-groups"
-            , ifMinGhcVer "801" "-fdiagnostics-color=never"
-            , ifMinGhcVer "801" "-fno-diagnostics-show-caret"
-            , pure "-dno-debug-output"
-            ]
-
-        timeout_prog <- (-/- "test" -/- "bin" -/- "timeout") <$> expr buildRoot
+        ghcFlags    <- expr runTestGhcFlags
+        timeoutProg <- expr buildRoot <&> (-/- timeoutProgPath)
 
         mconcat [ arg $ "testsuite/driver/runtests.py"
                 , arg $ "--rootdir=" ++ ("testsuite" -/- "tests")
@@ -103,7 +80,7 @@ runTestBuilderArgs = mconcat
                 , arg "--config", arg $ "hp2ps="        ++ show (top -/- hp2ps)
                 , arg "--config", arg $ "hpc="          ++ show (top -/- hpc)
                 , arg "--config", arg $ "gs=gs"                           -- Use the default value as in test.mk
-                , arg "--config", arg $ "timeout_prog=" ++ show (top -/- timeout_prog)
+                , arg "--config", arg $ "timeout_prog=" ++ show (top -/- timeoutProg)
                 , arg $ "--threads=" ++ show threads
                 , arg $ "--verbose=" ++ show (fromEnum verbose)
                 , getTestArgs -- User-provided arguments from command line.
