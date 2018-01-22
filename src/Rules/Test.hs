@@ -57,7 +57,6 @@ testRules = do
         makePath       <- builderPath $ Make ""
         top            <- topDirectory
         ghcPath        <- (top -/-) <$> builderPath (Ghc CompileHs Stage2)
-        unregisterised <- flag GhcUnregisterised
         ghcFlags       <- runTestGhcFlags
 
         -- Set environment variables for test's Makefile.
