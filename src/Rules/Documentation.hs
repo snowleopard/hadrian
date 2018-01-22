@@ -109,6 +109,11 @@ buildLibraryDocumentation :: Rules ()
 buildLibraryDocumentation = do
     root <- buildRootRules
     root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
+        -- If we omit this, the 'docs' rule fails with an error
+        -- complaining about this file not being there:
+        -- https://gist.github.com/alpmestan/f0709cdf001efe1dd35ed1c7a216fc71
+        -- when running e.g:
+        -- hadrian/build.nix.sh --flavour=quick-with-ng -j3 docs
         need [ root -/- "stage1/lib/llvm-targets" ]
         haddocks <- allHaddocks
         let libDocs = filter (\x -> takeFileName x `notElem` [ "ghc.haddock"
