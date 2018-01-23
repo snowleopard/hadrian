@@ -31,7 +31,7 @@ documentationRules = do
         let html = htmlRoot -/- "index.html"
             archives = map pathArchive docPaths
             pdfs = map pathPdf $ docPaths \\ [ "libraries" ]
-        need $ map (root -/-) $ [html] ++ archives ++ pdfs
+        need $ map (root -/-) $ [html] ++ archives -- ++ pdfs
         need [ root -/- htmlRoot -/- "libraries" -/- "gen_contents_index" ]
         need [ root -/- htmlRoot -/- "libraries" -/- "prologue.txt" ]
         need [manPagePath]
