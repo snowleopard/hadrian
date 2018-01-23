@@ -265,6 +265,7 @@ parseConfiguredCabal context@Context {..} = do
       , modules  = map C.display . snd . biModules $ pd'
       , otherModules = map C.display . C.otherModules . fst . biModules $ pd'
       , synopsis = C.synopsis pd'
+      , description = C.description pd'
       , srcDirs = C.hsSourceDirs . fst . biModules $ pd'
       , deps = deps
       , depIpIds = dep_ipids
