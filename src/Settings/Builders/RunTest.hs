@@ -7,6 +7,7 @@ import Flavour
 import Rules.Test
 import Settings.Builders.Common
 import Settings.Builders.Ghc
+import CommandLine ( TestArgs(..), defaultTestArgs )
 
 -- Arguments to send to the runtest.py script.
 runTestBuilderArgs :: Args
@@ -88,3 +89,23 @@ runTestBuilderArgs = mconcat
 
     -- TODO
     , builder Validate ? pure [] ]
+
+-- | Prepare the command-line arguments to run GHC's test script.
+getTestArgs :: Args
+getTestArgs = do
+    args <- expr $ userSetting defaultTestArgs
+    let testOnlyArg = case testOnly args of
+                        Just cases -> map ("--only=" ++) (words cases)
+                        Nothing -> []
+        skipPerfArg = if testSkipPerf args
+                        then Just "--skip-perf-tests"
+                        else Nothing
+        summaryArg = case testSummary args of
+                        Just filepath -> Just $ "--summary-file" ++ quote filepath
+                        Nothing -> Just $ "--summary-file=testsuite_summary.txt"
+        junitArg = case testJUnit args of
+                        Just filepath -> Just $ "--junit " ++ quote filepath
+                        Nothing -> Nothing
+        configArgs = map ("-e " ++) (testConfigs args)
+
+    pure $ testOnlyArg ++ catMaybes [skipPerfArg, summaryArg, junitArg] ++ configArgs

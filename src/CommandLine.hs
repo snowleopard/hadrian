@@ -1,7 +1,7 @@
 module CommandLine (
     optDescrs, cmdLineArgsMap, cmdFlavour, lookupFreeze1, cmdIntegerSimple,
     cmdProgressColour, cmdProgressInfo, cmdConfigure, cmdSplitObjects,
-    cmdInstallDestDir, cmdTestArgs, TestArgs (..)
+    cmdInstallDestDir, TestArgs(..), defaultTestArgs
     ) where
 
 import Data.Either
@@ -157,6 +157,7 @@ cmdLineArgsMap = do
     let args = foldl (flip id) defaultCommandLineArgs (rights opts)
     return $ insertExtra (progressColour args) -- Accessed by Hadrian.Utilities
            $ insertExtra (progressInfo   args) -- Accessed by Hadrian.Utilities
+           $ insertExtra (testArgs       args) -- Accessed by Settings.Builders.RunTest
            $ insertExtra args Map.empty
 
 cmdLineArgs :: Action CommandLineArgs
@@ -185,6 +186,3 @@ cmdProgressInfo = progressInfo <$> cmdLineArgs
 
 cmdSplitObjects :: Action Bool
 cmdSplitObjects = splitObjects <$> cmdLineArgs
-
-cmdTestArgs :: Action TestArgs
-cmdTestArgs = testArgs <$> cmdLineArgs

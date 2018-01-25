@@ -1,7 +1,7 @@
 module Settings (
     getArgs, getLibraryWays, getRtsWays, flavour, knownPackages,
     findPackageByName, getPkgData, getPkgDataList, isLibrary, stagePackages,
-    programContext, getIntegerPackage, getDestDir, getTestArgs
+    programContext, getIntegerPackage, getDestDir
     ) where
 
 import CommandLine
@@ -66,23 +66,3 @@ findPackageByName name = find (\pkg -> pkgName pkg == name) knownPackages
 -- | Install's DESTDIR setting.
 getDestDir :: Action FilePath
 getDestDir = fromMaybe "" <$> cmdInstallDestDir
-
--- | Arguments to run GHC's test script.
-getTestArgs :: Args
-getTestArgs = do
-    args <- expr cmdTestArgs
-    let testOnlyArg = case testOnly args of
-                        Just cases -> map ("--only=" ++) (words cases)
-                        Nothing -> []
-        skipPerfArg = if testSkipPerf args
-                        then Just "--skip-perf-tests"
-                        else Nothing
-        summaryArg = case testSummary args of
-                        Just filepath -> Just $ "--summary-file" ++ quote filepath
-                        Nothing -> Just $ "--summary-file=testsuite_summary.txt"
-        junitArg = case testJUnit args of
-                        Just filepath -> Just $ "--junit " ++ quote filepath
-                        Nothing -> Nothing
-        configArgs = map ("-e " ++) (testConfigs args)
-
-    pure $ testOnlyArg ++ catMaybes [skipPerfArg, summaryArg, junitArg] ++ configArgs
