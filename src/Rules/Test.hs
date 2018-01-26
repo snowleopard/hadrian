@@ -30,7 +30,7 @@ testRules = do
                 ]
         liftIO $ do
             writeFile (root -/- timeoutProgPath) script
-            cmd "chmod" [ "+x", root -/- timeoutProgPath ]
+        makeExecutable (root -/- timeoutProgPath)
 
     "validate" ~> do
         need inplaceLibCopyTargets
