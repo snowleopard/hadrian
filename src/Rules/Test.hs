@@ -102,4 +102,4 @@ timeoutPyPath :: FilePath
 timeoutPyPath = "test/bin/timeout.py"
 
 timeoutProgPath :: FilePath
-timeoutProgPath = "test/bin/timeout"  -- TODO: `.exe` suffix for windows.
+timeoutProgPath = "test/bin/timeout" <.> exe
