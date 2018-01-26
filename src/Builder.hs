@@ -102,7 +102,6 @@ data Builder = Alex
              | Sphinx SphinxMode
              | Tar TarMode
              | Unlit
-             | Validate
              | Xelatex
              deriving (Eq, Generic, Show)
 
