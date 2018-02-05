@@ -9,6 +9,7 @@ data GhcMode =  CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
 data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
 data GhcPkgMode = Init | Update | Clone | Dependencies
 data HaddockMode = BuildPackage | BuildIndex
+
 data Builder = Alex
              | Ar ArMode Stage
              | Autoreconf FilePath
@@ -23,6 +24,7 @@ data Builder = Alex
              | Haddock HaddockMode
              | Happy
              | Hpc
+             | Hp2Ps
              | HsCpp
              | Hsc2Hs Stage
              | Ld Stage
@@ -31,12 +33,14 @@ data Builder = Alex
              | Objdump
              | Patch
              | Perl
+             | Python
              | Ranlib
+             | RunTest
              | Sphinx SphinxMode
              | Tar TarMode
              | Unlit
              | Xelatex
-             | CabalFlags Stage
+             | CabalFlags Stage 
 
 instance Eq Builder
 instance Show Builder

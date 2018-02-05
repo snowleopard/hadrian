@@ -136,11 +136,11 @@ configurePackage context@Context {..} = do
 
     -- figure out what hooks we need.
     hooks <- case C.buildType (C.flattenPackageDescription gpd) of
-          Just C.Configure -> pure Hooks.autoconfUserHooks
+          C.Configure -> pure Hooks.autoconfUserHooks
           -- time has a "Custom" Setup.hs, but it's actually Configure
           -- plus a "./Setup test" hook. However, Cabal is also
           -- "Custom", but doesn't have a configure script.
-          Just C.Custom ->
+          C.Custom ->
               do configureExists <- doesFileExist (replaceFileName (unsafePkgCabalFile package) "configure")
                  if configureExists
                      then pure Hooks.autoconfUserHooks

@@ -7,7 +7,6 @@ import Rules.Documentation
 import Settings.Builders.Common
 import Settings.Builders.Ghc
 import Types.ConfiguredCabal as ConfCabal
-import qualified Types.Context
 
 -- | Given a version string such as "2.16.2" produce an integer equivalent.
 versionToInt :: String -> Int
@@ -19,7 +18,6 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
         output <- getOutput
         inputs <- getInputs
         root   <- getBuildRoot
-        stg    <- Types.Context.stage <$> getContext
         mconcat
             [ arg $ "-B" ++ root -/- "stage1" -/- "lib"
             , arg $ "--lib=" ++ root -/- "lib"
@@ -37,7 +35,6 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
         pkg      <- getPackage
         path     <- getBuildPath
         root     <- getBuildRoot
-        stg      <- Types.Context.stage <$> getContext
         Just version  <- expr $ pkgVersion  ctx
         Just synopsis <- expr $ pkgSynopsis ctx
         deps     <- getConfiguredCabalData ConfCabal.depNames

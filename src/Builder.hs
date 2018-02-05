@@ -102,6 +102,7 @@ data Builder = Alex
              | Haddock HaddockMode
              | Happy
              | Hpc
+             | Hp2Ps
              | HsCpp
              | Hsc2Hs Stage
              | Ld Stage
@@ -110,7 +111,9 @@ data Builder = Alex
              | Objdump
              | Patch
              | Perl
+             | Python
              | Ranlib
+             | RunTest
              | Sphinx SphinxMode
              | Tar TarMode
              | Unlit
@@ -138,6 +141,7 @@ builderProvenance = \case
     GhcPkg _ _       -> context Stage0 ghcPkg
     Haddock _        -> context Stage1 haddock
     Hpc              -> context Stage0 hpcBin
+    Hp2Ps            -> context Stage0 hp2ps
     Hsc2Hs _         -> context Stage0 hsc2hs
     Unlit            -> context Stage0 unlit
     _                -> Nothing
@@ -267,7 +271,9 @@ systemBuilderPath builder = case builder of
     Objdump         -> fromKey "objdump"
     Patch           -> fromKey "patch"
     Perl            -> fromKey "perl"
+    Python          -> fromKey "python"
     Ranlib          -> fromKey "ranlib"
+    RunTest         -> fromKey "python"
     Sphinx _        -> fromKey "sphinx-build"
     Tar _           -> fromKey "tar"
     Xelatex         -> fromKey "xelatex"
