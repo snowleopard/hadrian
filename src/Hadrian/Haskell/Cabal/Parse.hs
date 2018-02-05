@@ -26,7 +26,7 @@ import Data.List.Extra
 import Development.Shake                                      hiding (doesFileExist)
 import qualified Distribution.Package                  as C
 import qualified Distribution.PackageDescription       as C
-import qualified Distribution.PackageDescription.Parse as C
+import qualified Distribution.PackageDescription.Parsec as C
 import qualified Distribution.PackageDescription.Configuration as C
 import qualified Distribution.Text                     as C
 import qualified Distribution.Types.MungedPackageId    as C (mungedName)
@@ -41,6 +41,7 @@ import qualified Distribution.Simple.Utils             as C (findHookedPackageDe
 import qualified Distribution.Simple.Program.Types     as C (programDefaultArgs, programOverrideArgs)
 import qualified Distribution.Simple.Configure         as C (getPersistBuildConfig)
 import qualified Distribution.Simple.Build             as C (initialBuildSteps)
+import qualified Distribution.Types.ComponentRequestedSpec as C (defaultComponentRequestedSpec)
 import qualified Distribution.InstalledPackageInfo as Installed
 import qualified Distribution.Simple.PackageIndex as PackageIndex
 import qualified Distribution.Types.LocalBuildInfo as C
@@ -97,7 +98,7 @@ parseCabal context@Context {..} = do
     let (Just file) = pkgCabalFile package
 
     -- read the package description from the cabal file
-    gpd <- liftIO $ C.readGenericPackageDescription C.silent file
+    gpd <- liftIO $ C.readGenericPackageDescription C.verbose file
 
     -- configure the package with the ghc compiler for this stage.
     hcPath <- builderPath' (Ghc CompileHs stage)
@@ -114,7 +115,7 @@ parseCabal context@Context {..} = do
     let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
     -- depPkgs are all those packages that are needed. These should be found in
     -- the known build packages.  Even if they are not build in this stage.
-    let depPkgs = map (findPackageByName' . C.unPackageName . C.depPkgName) . C.buildDepends $ pd
+    let depPkgs = map (findPackageByName' . C.unPackageName . C.depPkgName) . flip C.enabledBuildDepends C.defaultComponentRequestedSpec $ pd
           where findPackageByName' p = case findPackageByName p of
                   Just p' -> p'
                   Nothing -> error $ "Failed to find package: " ++ show p
