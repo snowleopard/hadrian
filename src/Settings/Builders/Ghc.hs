@@ -3,7 +3,6 @@ module Settings.Builders.Ghc (ghcBuilderArgs, haddockGhcArgs) where
 import Hadrian.Haskell.Cabal
 
 import Types.Flavour
-import Rules.Gmp
 import Settings.Builders.Common
 import Types.ConfiguredCabal as ConfCabal
 import Settings.Warnings
@@ -49,17 +48,11 @@ compileC = builder (Ghc CompileCWithGhc) ? do
 
 ghcLinkArgs :: Args
 ghcLinkArgs = builder (Ghc LinkHs) ? do
-    stage   <- getStage
     way     <- getWay
     pkg     <- getPackage
     libs    <- pkg == hp2ps ? pure ["m"]
     intLib  <- getIntegerPackage
-    gmpLibs <- if stage > Stage0 && intLib == integerGmp
-               then do -- TODO: get this data more gracefully
-                   let strip = fromMaybe "" . stripPrefix "extra-libraries: "
-                   buildInfo <- expr $ readFileLines gmpBuildInfoPath
-                   return $ concatMap (words . strip) buildInfo
-               else return []
+    gmpLibs <- notStage0 ? intLib == integerGmp ? pure ["gmp"]
     mconcat [ (Dynamic `wayUnit` way) ?
               pure [ "-shared", "-dynamic", "-dynload", "deploy" ]
             , arg "-no-auto-link-packages"

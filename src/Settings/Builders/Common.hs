@@ -35,6 +35,11 @@ cIncludeArgs = do
             , arg $ "-I" ++ path
             , pure . map ("-I"++) . filter (/= "") $ [iconvIncludeDir, gmpIncludeDir]
             , flag UseSystemFfi ? arg ("-I" ++ ffiIncludeDir)
+            -- add the build path with include dirs in case we generated
+            -- some files with autoconf, which will end up in the build directory.
+            , pure [ "-I" ++ path        -/- dir | dir <- incDirs ]
+            -- add the package directory with include dirs, for includes
+            -- shipped with the package
             , pure [ "-I" ++ pkgPath pkg -/- dir | dir <- incDirs ]
             , pure [ "-I" ++       unifyPath dir | dir <- depDirs ] ]
 

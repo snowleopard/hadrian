@@ -1,5 +1,5 @@
 module Rules.Gmp (
-    gmpRules, gmpBuildPath, gmpObjectsDir, gmpLibraryH, gmpBuildInfoPath
+    gmpRules, gmpBuildPath, gmpObjectsDir, gmpLibraryH
     ) where
 
 import Base
@@ -24,7 +24,7 @@ gmpContext = vanillaContext Stage1 integerGmp
 
 -- | Build directory for in-tree GMP library.
 gmpBuildPath :: Action FilePath
-gmpBuildPath = buildRoot <&> (-/- stageString (stage gmpContext) -/- "gmp")
+gmpBuildPath = buildRoot <&> (-/- buildDir gmpContext -/- "gmp")
 
 -- | GMP library header, relative to 'gmpBuildPath'.
 gmpLibraryH :: FilePath
@@ -33,10 +33,6 @@ gmpLibraryH = "include/ghc-gmp.h"
 -- | Directory for GMP library object files, relative to 'gmpBuildPath'.
 gmpObjectsDir :: FilePath
 gmpObjectsDir = "objs"
-
--- | Path to the GMP library buildinfo file.
-gmpBuildInfoPath :: FilePath
-gmpBuildInfoPath = pkgPath integerGmp -/- "integer-gmp.buildinfo"
 
 configureEnvironment :: Action [CmdOption]
 configureEnvironment = sequence [ builderEnvironment "CC" $ Cc CompileC Stage1
@@ -49,7 +45,7 @@ gmpRules = do
     root <- buildRootRules
     root <//> gmpLibraryH %> \header -> do
         windows  <- windowsHost
-        configMk <- readFile' $ gmpBase -/- "config.mk"
+        configMk <- readFile' =<< (gmpBuildPath <&> (-/- "config.mk"))
         if not windows && -- TODO: We don't use system GMP on Windows. Fix?
            any (`isInfixOf` configMk) [ "HaveFrameworkGMP = YES", "HaveLibGmp = YES" ]
         then do
@@ -78,7 +74,7 @@ gmpRules = do
         need [gmpPath -/- gmpLibraryH]
 
     -- This causes integerGmp package to be configured, hence creating the files
-    [gmpBase -/- "config.mk", gmpBuildInfoPath] &%> \_ -> do
+    root <//> "gmp/config.mk" %> \_ -> do
         -- setup-config, triggers `ghc-cabal configure`
         -- everything of a package should depend on that
         -- in the first place.
