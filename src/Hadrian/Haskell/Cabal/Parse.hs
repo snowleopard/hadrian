@@ -179,7 +179,6 @@ copyPackage context@Context {..} = do
         copyHooks = userHooks
         hooks = copyHooks
 
-    -- we would need `withCurrentDirectory (pkgPath package)`
     liftIO $ defaultMainWithHooksNoReadArgs hooks gpd ["copy", "--builddir", ctxPath, "--target-package-db", pkgDbPath]
 
 registerPackage :: Context -> Action ()
@@ -190,7 +189,8 @@ registerPackage context@Context {..} = do
     let userHooks = Hooks.autoconfUserHooks
         regHooks = userHooks
 
-    liftIO $ defaultMainWithHooksNoReadArgs regHooks gpd ["register", "--builddir", ctxPath]
+    liftIO $
+      defaultMainWithHooksNoReadArgs regHooks gpd ["register", "--builddir", ctxPath]
 
 -- | Parse a ConfiguredCabal file.
 parseConfiguredCabal :: Context -> Action ConfiguredCabal
