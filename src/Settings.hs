@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Settings (
     getArgs, getLibraryWays, getRtsWays, flavour, knownPackages,
     findPackageByName, isLibrary, stagePackages,
@@ -14,10 +15,12 @@ import Settings.Flavours.Profiled
 import Settings.Flavours.Quick
 import Settings.Flavours.Quickest
 import Settings.Flavours.QuickCross
-import Settings.Flavours.QuickCrossNG
-import Settings.Flavours.QuickWithNG
 import UserSettings
 import GHC.Packages
+#if defined(LLVMNG)
+import Settings.Flavours.QuickCrossNG
+import Settings.Flavours.QuickWithNG
+#endif
 
 getArgs :: Args
 getArgs = expr flavour >>= args
@@ -37,7 +40,15 @@ hadrianFlavours :: [Flavour]
 hadrianFlavours =
     [ defaultFlavour, developmentFlavour Stage1, developmentFlavour Stage2
     , performanceFlavour, profiledFlavour, quickFlavour, quickestFlavour
-    , quickCrossFlavour, quickCrossNGFlavour, quickWithNGFlavour ]
+    , quickCrossFlavour
+    -- TODO: if we have flavours that refer to packages
+    --       we incorrectly eagerly load those packages
+    --       and cabal files; which will fail if said
+    --       package does not exist.
+#if defined(LLVMNG)
+    , quickCrossNGFlavour, quickWithNGFlavour
+#endif
+    ]
 
 extraFlavourPackages :: [Package]
 extraFlavourPackages = nub . sort $ concatMap extraPackages hadrianFlavours
