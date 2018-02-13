@@ -92,6 +92,7 @@ stage1Packages = do
           ++ [ haddock  | not cross          ]
           ++ [ runGhc   | not cross          ]
           ++ [ hpcBin   | not cross          ]
+          ++ [ libiserv | not win, not cross ]
           ++ [ iservBin | not win, not cross ]
           ++ [ unix     | not win            ]
           ++ [ win32    | win                ]
