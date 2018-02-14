@@ -120,4 +120,6 @@ packageArgs = do
                   , arg ("--gcc-options="             ++ includeGmp) ] ]
     , package runGhc
       ? builder Ghc ? input "//Main.hs" ? pure ["-cpp", "-DVERSION=" ++ show version]
+    , package rts
+      ? builder CabalFlags ? (profiling `elem` rtsWays) ? arg "profiling"
     ]

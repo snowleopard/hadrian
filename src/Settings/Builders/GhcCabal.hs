@@ -65,6 +65,7 @@ ghcCabalBuilderArgs = mconcat
 
 -- TODO: Isn't vanilla always built? If yes, some conditions are redundant.
 -- TODO: Need compiler_stage1_CONFIGURE_OPTS += --disable-library-for-ghci?
+-- TODO: should `elem` be `wayUnit`?
 libraryArgs :: Args
 libraryArgs = do
     ways        <- getLibraryWays
