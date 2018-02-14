@@ -61,7 +61,7 @@ packageArgs = do
                   , flag GhcUnregisterised ? arg "--ghc-option=-DNO_REGS"
                   , notM ghcWithSMP ? arg "--ghc-option=-DNOSMP"
                   , notM ghcWithSMP ? arg "--ghc-option=-optc-DNOSMP"
-                  , (threaded `elem` rtsWays) ?
+                  , (any (wayUnit Threaded) rtsWays) ?
                     notStage0 ? arg "--ghc-option=-optc-DTHREADED_RTS"
                   , ghcWithInterpreter ?
                     ghcEnableTablesNextToCode ?
@@ -121,5 +121,5 @@ packageArgs = do
     , package runGhc
       ? builder Ghc ? input "//Main.hs" ? pure ["-cpp", "-DVERSION=" ++ show version]
     , package rts
-      ? builder CabalFlags ? (profiling `elem` rtsWays) ? arg "profiling"
+      ? builder CabalFlags ? (any (wayUnit Profiling) rtsWays) ? arg "profiling"
     ]

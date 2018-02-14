@@ -388,7 +388,7 @@ generateConfigHs = do
         , "cLibFFI               :: Bool"
         , "cLibFFI               = " ++ show cLibFFI
         , "cGhcThreaded :: Bool"
-        , "cGhcThreaded = " ++ show (threaded `elem` rtsWays)
+        , "cGhcThreaded = " ++ show (any (wayUnit Threaded) rtsWays)
         , "cGhcDebugged :: Bool"
         , "cGhcDebugged = " ++ show debugged
         , "cGhcRtsWithLibdw :: Bool"
