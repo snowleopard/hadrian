@@ -10,7 +10,7 @@ import qualified Hadrian.Builder.Tar
 
 import CommandLine
 import Expression
-import Types.Flavour
+import Flavour
 import Oracles.Flag
 import Settings
 import Settings.Builders.Alex
@@ -33,7 +33,7 @@ import Settings.Packages
 import Settings.Packages.Rts
 import Settings.Warnings
 
-import Types.ConfiguredCabal as ConfCabal
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
 
 import {-# SOURCE #-} Builder
 import GHC.Packages

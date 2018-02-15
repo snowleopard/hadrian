@@ -5,17 +5,17 @@ module Rules.Generate (
 
 import Base
 import Expression
-import Types.Flavour
+import Flavour
+import GHC.Packages
 import Oracles.Flag
 import Oracles.ModuleFiles
 import Oracles.Setting
 import Rules.Gmp
 import Rules.Libffi
-import Target
 import Settings
 import Settings.Packages.Rts
+import Target
 import Utilities
-import GHC.Packages
 
 -- | Track this file to rebuild generated files whenever it changes.
 trackGenerateHs :: Expr ()

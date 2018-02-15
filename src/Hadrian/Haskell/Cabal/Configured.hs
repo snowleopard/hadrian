@@ -1,7 +1,7 @@
-module Types.ConfiguredCabal where
+module Hadrian.Haskell.Cabal.Configured where
 
 import Development.Shake.Classes
-import Types.Package
+import Hadrian.Package.Type
 import GHC.Generics
 
 data ConfiguredCabal = ConfiguredCabal

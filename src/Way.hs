@@ -9,7 +9,7 @@ module Way (
     wayPrefix, waySuffix, hisuf, osuf, hcsuf, obootsuf, hibootsuf, ssuf
     ) where
 
-import Types.Way
+import Way.Type
 
 -- | Various combinations of RTS only ways.
 threadedDebug, threadedProfiling, threadedLogging, threadedDynamic,

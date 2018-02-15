@@ -1,9 +1,9 @@
 module Settings.Flavours.Quick (quickFlavour) where
 
 import Expression
-import Types.Flavour
-import {-# SOURCE #-} Settings.Default
+import Flavour
 import Oracles.Flag (platformSupportsSharedLibs)
+import {-# SOURCE #-} Settings.Default
 
 -- Please update doc/flavours.md when changing this file.
 quickFlavour :: Flavour

@@ -1,10 +1,10 @@
 module Settings.Builders.Hsc2Hs (hsc2hsBuilderArgs) where
 
-import Settings.Builders.Common
-import Types.ConfiguredCabal as ConfCabal
-import GHC (autogenPath)
-import Hadrian.Builder (getBuilderPath)
 import Builder ()
+import GHC (autogenPath)
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Builder (getBuilderPath)
+import Settings.Builders.Common
 
 hsc2hsBuilderArgs :: Args
 hsc2hsBuilderArgs = builder Hsc2Hs ? do

@@ -26,8 +26,11 @@ executable hadrian
                        , CommandLine
                        , Context
                        , Context.Paths
+                       , Context.Type
                        , Environment
                        , Expression
+                       , Expression.Type
+                       , Flavour
                        , GHC
                        , GHC.Packages
                        , Hadrian.Builder
@@ -37,12 +40,15 @@ executable hadrian
                        , Hadrian.Builder.Types
                        , Hadrian.Expression
                        , Hadrian.Haskell.Cabal
+                       , Hadrian.Haskell.Cabal.Configured
                        , Hadrian.Haskell.Cabal.Parse
+                       , Hadrian.Haskell.Cabal.Type
                        , Hadrian.Oracles.ArgsHash
                        , Hadrian.Oracles.DirectoryContents
                        , Hadrian.Oracles.Path
                        , Hadrian.Oracles.TextFile
                        , Hadrian.Package
+                       , Hadrian.Package.Type
                        , Hadrian.Target
                        , Hadrian.Utilities
                        , Oracles.Flag
@@ -95,18 +101,12 @@ executable hadrian
                        , Settings.Packages.Rts
                        , Settings.Warnings
                        , Stage
-                       , Types.Context
-                       , Types.Package
-                       , Types.Stage
-                       , Types.Cabal
-                       , Types.ConfiguredCabal
-                       , Types.Expression
-                       , Types.Flavour
-                       , Types.Way
+                       , Stage.Type
                        , Target
                        , UserSettings
                        , Utilities
                        , Way
+                       , Way.Type
     if flag(llvmng)
       other-modules:     Settings.Flavours.QuickWithNG
                        , Settings.Flavours.QuickCrossNG

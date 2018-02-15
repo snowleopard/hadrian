@@ -1,8 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module GHC.Packages where
 
-import Types.Package
-
 import Hadrian.Package
 import Hadrian.Utilities
 

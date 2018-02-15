@@ -1,4 +1,5 @@
-module Types.Way where
+module Way.Type where
+
 import Development.Shake.Classes
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as Set

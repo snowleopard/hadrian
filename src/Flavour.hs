@@ -1,9 +1,9 @@
-module Types.Flavour (Flavour (..)) where
+module Flavour (Flavour (..)) where
 
-import Types.Expression
-import Types.Stage
-import Types.Package
 import Development.Shake
+import Expression.Type
+import Hadrian.Package.Type
+import Stage.Type
 
 -- Please update doc/{flavours.md, user-settings.md} when changing this file.
 -- | 'Flavour' is a collection of build settings that fully define a GHC build.

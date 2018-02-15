@@ -1,8 +1,8 @@
-module Types.Context where
+module Context.Type where
 
-import Types.Stage
-import Types.Package
-import Way
+import Hadrian.Package.Type
+import Stage.Type
+import Way.Type
 
 import GHC.Generics
 import Development.Shake.Classes
@@ -18,4 +18,3 @@ data Context = Context
 instance Binary   Context
 instance Hashable Context
 instance NFData   Context
-

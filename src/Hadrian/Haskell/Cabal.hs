@@ -13,11 +13,11 @@ module Hadrian.Haskell.Cabal (
     pkgVersion, pkgIdentifier, pkgDependencies, pkgSynopsis
     ) where
 
-import Types.Context
-import Types.Cabal           as C
-import Types.ConfiguredCabal as CC
 import Development.Shake
 
+import Context.Type
+import Hadrian.Haskell.Cabal.Type       as C
+import Hadrian.Haskell.Cabal.Configured as CC
 import Hadrian.Package
 import Hadrian.Oracles.TextFile
 

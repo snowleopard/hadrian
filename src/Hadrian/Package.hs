@@ -26,9 +26,8 @@ module Hadrian.Package (
 import Data.Maybe
 import Development.Shake.FilePath
 import GHC.Stack
+import Hadrian.Package.Type
 import Hadrian.Utilities
-
-import Types.Package
 
 -- | Construct a C library package.
 cLibrary :: PackageName -> FilePath -> Package

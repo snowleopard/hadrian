@@ -19,11 +19,11 @@ module GHC (
 
 import Base
 import Context
+import Flavour (integerLibrary)
+import GHC.Packages
 import Oracles.Flag
 import Oracles.Setting
-import Types.Flavour (integerLibrary)
 import Settings (flavour)
-import GHC.Packages
 
 -- | Packages that are built by default. You can change this in "UserSettings".
 defaultPackages :: Stage -> Action [Package]

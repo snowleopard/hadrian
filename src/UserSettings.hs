@@ -7,11 +7,8 @@ module UserSettings (
     buildProgressColour, successColour, stage1Only
     ) where
 
-import Hadrian.Utilities
-
-import Types.Flavour
-import Types.Package
 import Expression
+import Flavour
 import {-# SOURCE #-} Settings.Default
 
 -- See doc/user-settings.md for instructions.
