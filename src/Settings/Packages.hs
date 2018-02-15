@@ -1,12 +1,12 @@
 module Settings.Packages (packageArgs) where
 
 import Expression
-import Settings
-import Types.Flavour
+import Flavour
+import GHC.Packages
 import Oracles.Setting
 import Oracles.Flag
-import GHC.Packages
 import Rules.Gmp
+import Settings
 
 packageArgs :: Args
 packageArgs = do

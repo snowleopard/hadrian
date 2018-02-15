@@ -1,13 +1,12 @@
 module Settings.Builders.Ghc (ghcBuilderArgs, haddockGhcArgs) where
 
-import Hadrian.Haskell.Cabal
-
-import Types.Flavour
-import Settings.Builders.Common
-import Types.ConfiguredCabal as ConfCabal
-import Settings.Warnings
-import GHC.Packages
+import Flavour
 import GHC
+import Settings.Builders.Common
+import Settings.Warnings
+
+import Hadrian.Haskell.Cabal
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
 
 ghcBuilderArgs :: Args
 ghcBuilderArgs = mconcat [compileAndLinkHs, compileC, findHsDependencies]

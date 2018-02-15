@@ -19,11 +19,10 @@ module Hadrian.Haskell.Cabal.Parse ( ConfiguredCabal (..)
 
                                    ) where
 
-import Types.Context
-import {-# SOURCE #-} Builder hiding (Builder)
--- import Hadrian.Builder as H
 import Data.List.Extra
+import Data.Maybe (maybeToList, fromMaybe )
 import Development.Shake                                      hiding (doesFileExist)
+import qualified Distribution.ModuleName               as ModuleName
 import qualified Distribution.Package                  as C
 import qualified Distribution.PackageDescription       as C
 import qualified Distribution.PackageDescription.Parsec as C
@@ -48,25 +47,19 @@ import qualified Distribution.Types.LocalBuildInfo as C
 import Distribution.Text (display)
 import Distribution.Simple (defaultMainWithHooksNoReadArgs, compilerFlavor, CompilerFlavor( GHC ))
 import Distribution.Simple.Compiler (compilerInfo)
-import Hadrian.Package
-import Hadrian.Utilities
-import qualified Distribution.ModuleName as ModuleName
-import Data.Maybe (maybeToList, fromMaybe )
-import GHC.Packages (rts)
-import Hadrian.Expression
-import Hadrian.Target
-import Types.Cabal ( Cabal( Cabal ) )
-import Types.ConfiguredCabal
-import Types.Flavour (args)
-
-import Settings
-import Oracles.Setting
-
-import Context
-
-import Hadrian.Oracles.TextFile
 
 import Base
+import Builder hiding (Builder)
+import Context
+import Flavour (args)
+import GHC.Packages (rts)
+import Hadrian.Expression
+import Hadrian.Haskell.Cabal.Type ( Cabal( Cabal ) )
+import Hadrian.Haskell.Cabal.Configured
+import Hadrian.Oracles.TextFile
+import Hadrian.Target
+import Settings
+import Oracles.Setting
 
 -- TODO: Use fine-grain tracking instead of tracking the whole Cabal file.
 -- | Haskell package metadata extracted from a Cabal file.

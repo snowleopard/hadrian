@@ -1,6 +1,6 @@
 module Stage (Stage (..), stageString) where
 
-import Types.Stage
+import Stage.Type
 
 -- | Prettyprint a 'Stage'.
 stageString :: Stage -> String

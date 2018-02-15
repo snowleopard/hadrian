@@ -6,15 +6,16 @@ module Rules.Documentation (
     haddockDependencies
     ) where
 
+import qualified Hadrian.Haskell.Cabal.Configured as ConfCabal
+
 import Base
 import Context
 import Expression (getConfiguredCabalData, interpretInContext)
+import Flavour
 import GHC
 import Oracles.ModuleFiles
 import Settings
 import Target
-import qualified Types.ConfiguredCabal as ConfCabal
-import Types.Flavour
 import Utilities
 
 -- | Build all documentation

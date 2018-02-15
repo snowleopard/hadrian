@@ -1,12 +1,11 @@
 module Settings.Builders.Haddock (haddockBuilderArgs) where
 
-import Hadrian.Utilities
 import Hadrian.Haskell.Cabal
-
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Utilities
 import Rules.Documentation
 import Settings.Builders.Common
 import Settings.Builders.Ghc
-import Types.ConfiguredCabal as ConfCabal
 
 -- | Given a version string such as "2.16.2" produce an integer equivalent.
 versionToInt :: String -> Int

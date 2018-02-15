@@ -16,11 +16,11 @@ module Hadrian.Oracles.TextFile (
     readCabalFile, readConfiguredCabalFile, textFileOracle
     ) where
 
-import Stage
-import Types.Context
-import Types.Cabal
-import Types.ConfiguredCabal
+import Context.Type
+import Hadrian.Haskell.Cabal.Type
+import Hadrian.Haskell.Cabal.Configured
 import Hadrian.Package
+import Stage
 
 import Control.Monad
 import qualified Data.HashMap.Strict as Map

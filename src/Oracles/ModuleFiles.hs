@@ -8,9 +8,9 @@ import qualified Data.HashMap.Strict as Map
 import Base
 import Builder
 import Context
-import GHC
 import Expression
-import Types.ConfiguredCabal as ConfCabal
+import GHC
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
 
 newtype ModuleFiles = ModuleFiles (Stage, Package)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)

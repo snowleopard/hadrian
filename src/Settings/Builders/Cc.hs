@@ -1,8 +1,8 @@
 module Settings.Builders.Cc (ccBuilderArgs) where
 
-import Settings.Builders.Common
-import Types.ConfiguredCabal as ConfCabal
 import Builder ()
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Settings.Builders.Common
 
 ccBuilderArgs :: Args
 ccBuilderArgs = do

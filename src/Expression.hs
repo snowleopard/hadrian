@@ -22,15 +22,13 @@ module Expression (
     module Context,
     ) where
 
-import Hadrian.Expression hiding (Expr, Predicate, Args)
-import Types.ConfiguredCabal (ConfiguredCabal)
-import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
-
-import Types.Expression
-
 import Base
 import {-# SOURCE #-} Builder
 import Context hiding (stage, package, way)
+import Expression.Type
+import Hadrian.Expression hiding (Expr, Predicate, Args)
+import Hadrian.Haskell.Cabal.Configured (ConfiguredCabal)
+import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
 
 -- | Get values from a configured cabal stage.
 getConfiguredCabalData :: (ConfiguredCabal -> a) -> Expr a

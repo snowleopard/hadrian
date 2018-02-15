@@ -16,7 +16,7 @@ import Settings
 import UserSettings
 import GHC.Packages
 
-import Types.ConfiguredCabal as ConfCabal
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
 
 cIncludeArgs :: Args
 cIncludeArgs = do

@@ -13,13 +13,12 @@ module Context (
     pkgGhciLibraryFile, pkgConfFile, objectPath, pkgId
     ) where
 
-import Hadrian.Expression
-import Hadrian.Haskell.Cabal
-
-import Types.Context
-import Context.Paths
 
 import Base
+import Context.Paths
+import Context.Type
+import Hadrian.Expression
+import Hadrian.Haskell.Cabal
 import Oracles.Setting
 
 -- | Most targets are built only one way, hence the notion of 'vanillaContext'.

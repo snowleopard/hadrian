@@ -1,7 +1,7 @@
-module Types.Expression where
+module Expression.Type where
 
-import Types.Context
-import Types.Way
+import Context.Type
+import Way.Type
 
 import {-# SOURCE #-} Builder
 import qualified Hadrian.Expression as H
@@ -15,4 +15,3 @@ type Expr a = H.Expr Context Builder a
 type Predicate = H.Predicate Context Builder
 type Args      = H.Args      Context Builder
 type Ways      = Expr [Way]
-

@@ -4,17 +4,16 @@ module Utilities (
     topsortPackages, ask, askWithResources, cabalDependencies
     ) where
 
-import qualified Hadrian.Builder as H
-import Hadrian.Haskell.Cabal
-import Hadrian.Utilities
-
 import Context
 import Expression hiding (stage)
+import GHC.Packages
+import Hadrian.Haskell.Cabal
+import Oracles.Setting (windowsHost)
 import Settings
 import Target
-import Types.ConfiguredCabal as ConfCabal
-import Oracles.Setting (windowsHost)
-import GHC.Packages
+
+import qualified Hadrian.Builder as H
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
 
 build :: Target -> Action ()
 build target = H.build target getArgs

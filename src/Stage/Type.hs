@@ -1,4 +1,4 @@
-module Types.Stage where
+module Stage.Type where
 
 import Development.Shake.Classes
 import GHC.Generics
@@ -25,4 +25,3 @@ data Stage = Stage0 | Stage1 | Stage2 | Stage3
 instance Binary   Stage
 instance Hashable Stage
 instance NFData   Stage
-

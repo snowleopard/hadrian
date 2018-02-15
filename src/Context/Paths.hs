@@ -1,9 +1,8 @@
 module Context.Paths where
 
 import Base
-
+import Context.Type
 import Hadrian.Expression
-import Types.Context
 
 -- | The directory to the current stage
 stageDir :: Context -> FilePath

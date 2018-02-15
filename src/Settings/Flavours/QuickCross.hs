@@ -1,10 +1,10 @@
 module Settings.Flavours.QuickCross (quickCrossFlavour) where
 
 import Expression
-import Types.Flavour
+import Flavour
+import GHC.Packages
 import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
-import GHC.Packages
 
 -- Please update doc/flavours.md when changing this file.
 quickCrossFlavour :: Flavour

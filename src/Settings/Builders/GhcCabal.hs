@@ -2,15 +2,15 @@ module Settings.Builders.GhcCabal (
     ghcCabalBuilderArgs
     ) where
 
-import Hadrian.Haskell.Cabal
-
-import Context
-import Types.Flavour
-import Settings.Builders.Common
 import Data.Maybe (fromJust)
-import Hadrian.Builder (getBuilderPath, needBuilder )
+
 import Builder ( ArMode ( Pack ) )
+import Context
+import Flavour
 import GHC.Packages
+import Hadrian.Builder (getBuilderPath, needBuilder )
+import Hadrian.Haskell.Cabal
+import Settings.Builders.Common
 
 ghcCabalBuilderArgs :: Args
 ghcCabalBuilderArgs = mconcat

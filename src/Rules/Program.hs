@@ -1,19 +1,18 @@
 module Rules.Program (buildProgram) where
 
 import Hadrian.Haskell.Cabal
-import Types.ConfiguredCabal as ConfCabal
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
 
 import Base
 import Context
 import Expression hiding (stage, way)
+import GHC
 import Oracles.ModuleFiles
 import Oracles.Flag (crossCompiling)
 import Settings
 import Settings.Packages.Rts
 import Target
 import Utilities
-import GHC.Packages
-import GHC
 
 -- | TODO: Drop code duplication
 buildProgram :: [(Resource, Int)] -> Rules ()

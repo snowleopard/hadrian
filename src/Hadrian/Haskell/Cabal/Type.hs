@@ -1,9 +1,9 @@
-module Types.Cabal where
+module Hadrian.Haskell.Cabal.Type where
 
 import Development.Shake.Classes
-import Types.Package
-import GHC.Generics
 import Distribution.PackageDescription (GenericPackageDescription, PackageDescription)
+import GHC.Generics
+import Hadrian.Package.Type
 
 data Cabal = Cabal
     { name         :: PackageName
