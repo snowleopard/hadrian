@@ -12,9 +12,9 @@
 -- functions that can be used to invoke builders.
 -----------------------------------------------------------------------------
 module Hadrian.Builder (
-    Builder (..), BuildInfo (..), runBuilder, runBuilderWithCmdOptions,
-    build, buildWithResources, buildWithCmdOptions, getBuilderPath,
-    builderEnvironment, ask, askWithResources
+    Builder (..), BuildInfo (..), needBuilder, runBuilder,
+    runBuilderWithCmdOptions, build, buildWithResources, buildWithCmdOptions,
+    getBuilderPath, builderEnvironment, ask, askWithResources
     ) where
 
 import Data.List
@@ -47,11 +47,10 @@ class ShakeValue b => Builder b where
     -- capture the @stdout@ result and return it.
     askBuilderWith :: b -> BuildInfo -> Action String
 
-    -- | Make sure a builder exists and rebuild it if out of date.
-    needBuilder :: b -> Action ()
-    needBuilder builder = do
-        path <- builderPath builder
-        need [path]
+    -- | Runtime dependencies of a builder. For example, on Windows GHC requires
+    -- the utility @touchy.exe@ to be avilable on a specific path.
+    runtimeDependencies :: b -> Action [FilePath]
+    runtimeDependencies _ = return []
 
     -- | Run a builder with a given 'BuildInfo'. Also see 'runBuilder'.
     runBuilderWith :: b -> BuildInfo -> Action ()
@@ -62,6 +61,13 @@ class ShakeValue b => Builder b where
         let msg = if null args then "" else " (" ++ intercalate ", " args ++ ")"
         putBuild $ "| Run " ++ show builder ++ msg
         quietly $ cmd (buildOptions buildInfo) [path] args
+
+-- | Make sure a builder and its runtime dependencies are up-to-date.
+needBuilder :: Builder b => b -> Action ()
+needBuilder builder = do
+    path <- builderPath builder
+    deps <- runtimeDependencies builder
+    need (path : deps)
 
 -- | Run a builder with a specified list of command line arguments, reading a
 -- list of input files and writing a list of output files. A lightweight version

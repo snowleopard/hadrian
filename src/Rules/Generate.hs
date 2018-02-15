@@ -16,7 +16,6 @@ import Settings
 import Settings.Packages.Rts
 import Utilities
 import GHC.Packages
-import GHC
 
 -- | Track this file to rebuild generated files whenever it changes.
 trackGenerateHs :: Expr ()

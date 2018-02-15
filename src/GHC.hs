@@ -7,14 +7,14 @@ module GHC (
     ghcSplit, haddock, haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp,
     integerSimple, iservBin, libffi, mtl, parsec, parallel, pretty, primitive,
     process, rts, runGhc, stm, templateHaskell, terminfo, text, time, touchy,
-    transformers, unlit, unix, win32, xhtml,
-    ghcPackages, isGhcPackage, defaultPackages,
+    transformers, unlit, unix, win32, xhtml, ghcPackages, isGhcPackage,
+    defaultPackages,
 
     -- * Package information
     programName, nonCabalContext, nonHsMainPackage, autogenPath, installStage,
 
     -- * Miscellaneous
-    programPath, ghcSplitPath, stripCmdPath
+    programPath, stripCmdPath, buildDll0
     ) where
 
 import Base
@@ -157,11 +157,6 @@ autogenPath context@Context {..}
   where
     autogen dir = contextPath context <&> (-/- dir -/- "autogen")
 
--- | @ghc-split@ is a Perl script used by GHC with @-split-objs@ flag. It is
--- generated in "Rules.Generators.GhcSplit".
-ghcSplitPath :: FilePath
-ghcSplitPath = inplaceLibBinPath -/- "ghc-split"
-
 -- ref: mk/config.mk
 -- | Command line tool for stripping.
 stripCmdPath :: Action FilePath
@@ -174,3 +169,8 @@ stripCmdPath = do
         "arm-unknown-linux" ->
              return ":" -- HACK: from the make-based system, see the ref above
         _ -> return "strip"
+
+buildDll0 :: Context -> Action Bool
+buildDll0 Context {..} = do
+    windows <- windowsHost
+    return $ windows && stage == Stage1 && package == compiler

@@ -33,7 +33,6 @@ hsc2hsBuilderArgs = builder Hsc2Hs ? do
             , notStage0 ? arg ("--cflag=-D" ++ tOs   ++ "_HOST_OS=1"  )
             , arg $ "--cflag=-D__GLASGOW_HASKELL__=" ++ version
             , arg $ "--template=" ++ tmpl
-            , arg $ "-I" ++ top -/- "inplace/lib/include/"
             , arg =<< getInput
             , arg "-o", arg =<< getOutput ]
 

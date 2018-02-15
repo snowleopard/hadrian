@@ -25,7 +25,7 @@ module Base (
     generatedDir, generatedPath, inplaceBinPath, inplaceLibBinPath, inplaceLibPath,
     stageBinPath, stageLibPath,
     ghcDeps, templateHscPath,
-    inplacePackageDbPath, packageDbPath, packageDbStamp
+    inplacePackageDbPath, packageDbPath, packageDbStamp, ghcSplitPath
     ) where
 
 import Control.Applicative
@@ -75,6 +75,18 @@ ghcVersionH = generatedPath <&> (-/- "ghcversion.h")
 shakeFilesDir :: FilePath
 shakeFilesDir = "hadrian"
 
+-- | Directory for binaries that are built "in place".
+inplaceBinPath :: FilePath
+inplaceBinPath = "inplace/bin"
+
+-- | Directory for libraries that are built "in place".
+inplaceLibPath :: FilePath
+inplaceLibPath = "inplace/lib"
+
+-- | Directory for binary wrappers, and auxiliary binaries such as @touchy@.
+inplaceLibBinPath :: FilePath
+inplaceLibBinPath = inplaceLibPath -/- "bin"
+
 -- | The directory in 'buildRoot' containing generated source files that are not
 -- package-specific, e.g. @ghcplatform.h@.
 generatedDir :: FilePath
@@ -95,18 +107,6 @@ packageDbPath stage  = buildRoot <&> (-/- inplacePackageDbPath stage)
 packageDbStamp :: FilePath
 packageDbStamp = ".stamp"
 
--- | Directory for binaries that are built "in place".
-inplaceBinPath :: FilePath
-inplaceBinPath = "inplace/bin"
-
--- | Directory for libraries that are built "in place".
-inplaceLibPath :: FilePath
-inplaceLibPath = "inplace/lib"
-
--- | Directory for binary wrappers, and auxiliary binaries such as @touchy@.
-inplaceLibBinPath :: FilePath
-inplaceLibBinPath = "inplace/lib/bin"
-
 stageBinPath :: Stage -> Action FilePath
 stageBinPath stage = buildRoot <&> (-/- stageString stage -/- "bin")
 
@@ -125,3 +125,8 @@ ghcDeps stage = mapM (\f -> stageLibPath stage <&> (-/- f))
 -- | Path to hsc2hs template.
 templateHscPath :: Stage -> Action FilePath
 templateHscPath stage = stageLibPath stage <&> (-/- "/template-hsc.h")
+
+-- | @ghc-split@ is a Perl script used by GHC when run with @-split-objs@ flag.
+-- It is generated in "Rules.Generate".
+ghcSplitPath :: FilePath
+ghcSplitPath = inplaceLibBinPath -/- "ghc-split"
