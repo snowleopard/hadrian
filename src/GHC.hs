@@ -34,9 +34,9 @@ ghcPackages =
     , deepseq, deriveConstants, directory, filepath, genapply, genprimopcode
     , ghc, ghcBoot, ghcBootTh, ghcCabal, ghcCompact, ghci, ghcPkg, ghcPrim
     , ghcTags, haddock, haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp
-    , integerSimple, iservBin, libffi, mtl, parsec, parallel, pretty, primitive
-    , process, rts, runGhc, stm, templateHaskell, terminfo, text, time, touchy
-    , transformers, unlit, unix, win32, xhtml ]
+    , integerSimple, iservBin, iservLib, libffi, mtl, parsec, parallel, pretty
+    , primitive, process, rts, runGhc, stm, templateHaskell, terminfo, text
+    , time, touchy, transformers, unlit, unix, win32, xhtml ]
 
 -- TODO: Optimise by switching to sets of packages.
 isGhcPackage :: Package -> Bool
@@ -160,9 +160,9 @@ stage0Packages = do
              , templateHaskell
              , text
              , transformers
-             , unlit                       ]
+             , unlit ]
           ++ [ terminfo | not win, not ios, not cross ]
-          ++ [ touchy   | win              ]
+          ++ [ touchy   | win ]
 
 stage1Packages :: Action [Package]
 stage1Packages = do
