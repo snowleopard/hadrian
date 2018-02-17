@@ -13,8 +13,14 @@
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalFile, textFileOracle
+    readCabalFile, readConfiguredCabalFile, textFileOracle
     ) where
+
+import Context.Type
+import Hadrian.Haskell.Cabal.Type
+import Hadrian.Haskell.Cabal.Configured
+import Hadrian.Package
+import Stage
 
 import Control.Monad
 import qualified Data.HashMap.Strict as Map
@@ -23,16 +29,20 @@ import Development.Shake
 import Development.Shake.Classes
 import Development.Shake.Config
 
-import Hadrian.Haskell.Cabal.Parse
+import {-# SOURCE #-} Hadrian.Haskell.Cabal.Parse
 import Hadrian.Utilities
 
 newtype TextFile = TextFile FilePath
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult TextFile = String
 
-newtype CabalFile = CabalFile FilePath
+newtype CabalFile = CabalFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult CabalFile = Cabal
+type instance RuleResult CabalFile = Maybe Cabal
+
+newtype ConfiguredCabalFile = ConfiguredCabalFile Context
+    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
+type instance RuleResult ConfiguredCabalFile = Maybe ConfiguredCabal
 
 newtype KeyValue = KeyValue (FilePath, String)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -90,8 +100,11 @@ lookupDependencies depFile file = do
         Just (source : files) -> return (source, files)
 
 -- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalFile :: FilePath -> Action Cabal
+readCabalFile :: Context -> Action (Maybe Cabal)
 readCabalFile = askOracle . CabalFile
+
+readConfiguredCabalFile :: Context -> Action (Maybe ConfiguredCabal)
+readConfiguredCabalFile = askOracle . ConfiguredCabalFile
 
 -- | This oracle reads and parses text files to answer 'readTextFile' and
 -- 'lookupValue' queries, as well as their derivatives, tracking the results.
@@ -116,8 +129,22 @@ textFileOracle = do
         return $ Map.fromList [ (key, values) | (key:values) <- contents ]
     void $ addOracle $ \(KeyValues (file, key)) -> Map.lookup key <$> kvs file
 
-    cabal <- newCache $ \file -> do
-        need [file]
-        putLoud $ "| CabalFile oracle: reading " ++ quote file ++ "..."
-        liftIO $ parseCabal file
-    void $ addOracle $ \(CabalFile file) -> cabal file
+    cabal <- newCache $ \(ctx@Context {..}) -> do
+        case pkgCabalFile package of
+          Just file -> do
+            need [file]
+            putLoud $ "| CabalFile oracle: reading " ++ quote file ++ " (Stage: " ++ stageString stage ++ ")..."
+            Just <$> parseCabal ctx
+          Nothing -> return Nothing
+
+    void $ addOracle $ \(CabalFile ctx) -> cabal ctx
+
+    confCabal <- newCache $ \(ctx@Context {..}) -> do
+        case pkgCabalFile package of
+          Just file -> do
+            need [file]
+            putLoud $ "| ConfiguredCabalFile oracle: reading " ++ quote file ++ " (Stage: " ++ stageString stage ++ ")..."
+            Just <$> parseConfiguredCabal ctx
+          Nothing -> return Nothing
+
+    void $ addOracle $ \(ConfiguredCabalFile ctx) -> confCabal ctx

@@ -11,19 +11,10 @@
 module Hadrian.Builder.Sphinx (SphinxMode (..), args) where
 
 import Development.Shake
-import Development.Shake.Classes
-import GHC.Generics
 import Hadrian.Expression
 import Hadrian.Utilities
 
--- | Sphinx can be used in three different modes to convert reStructuredText
--- documents into HTML, LaTeX or Man pages.
-data SphinxMode = Html | Latex | Man deriving (Eq, Generic, Show)
-
-instance Binary   SphinxMode
-instance Hashable SphinxMode
-instance NFData   SphinxMode
-
+import Hadrian.Builder.Types (SphinxMode (..))
 -- | Default command line arguments for invoking the archiving utility @tar@.
 args :: (ShakeValue c, ShakeValue b) => SphinxMode -> Args c b
 args mode = do

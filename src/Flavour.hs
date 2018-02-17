@@ -1,6 +1,9 @@
 module Flavour (Flavour (..)) where
 
-import Expression
+import Development.Shake
+import Expression.Type
+import Hadrian.Package.Type
+import Stage.Type
 
 -- Please update doc/{flavours.md, user-settings.md} when changing this file.
 -- | 'Flavour' is a collection of build settings that fully define a GHC build.
@@ -14,6 +17,8 @@ data Flavour = Flavour {
     name :: String,
     -- | Use these command line arguments.
     args :: Args,
+    -- | Extra packages, only active in this flavour.
+    extraPackages :: [Package],
     -- | Build these packages.
     packages :: Stage -> Action [Package],
     -- | Either 'integerGmp' or 'integerSimple'.

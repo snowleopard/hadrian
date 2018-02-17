@@ -8,6 +8,8 @@ import Base
 import Expression
 import Oracles.Setting
 import Settings
+import GHC.Packages
+import GHC (installStage)
 
 -- | Wrapper is an expression depending on (i) the 'FilePath' to the library and
 -- (ii) the name of the wrapped binary.
@@ -49,15 +51,16 @@ installRunGhcWrapper WrappedBinary{..} = do
 inplaceGhcPkgWrapper :: WrappedBinary -> Expr String
 inplaceGhcPkgWrapper WrappedBinary{..} = do
     expr $ need [sourcePath -/- "Rules/Wrappers.hs"]
-    top <- expr topDirectory
+    stage <- succ <$> getStage
     -- The wrapper is generated in StageN, but used in StageN+1. Therefore, we
     -- always use the inplace package database, located at 'inplacePackageDbPath',
     -- which is used in Stage1 and later.
     bash <- expr bashPath
+    path <- expr buildRoot
     return $ unlines
         [ "#!" ++ bash
         , "exec " ++ (binaryLibPath -/- "bin" -/- binaryName) ++
-          " --global-package-db " ++ top -/- inplacePackageDbPath ++ " ${1+\"$@\"}" ]
+          " --global-package-db " ++ path -/- inplacePackageDbPath stage ++ " ${1+\"$@\"}" ]
 
 installGhcPkgWrapper :: WrappedBinary -> Expr String
 installGhcPkgWrapper WrappedBinary{..} = do
@@ -141,7 +144,7 @@ wrappersCommon = [ (vanillaContext Stage0 ghc   , ghcWrapper)
                  , (vanillaContext Stage2 haddock, haddockWrapper)
                  , (vanillaContext Stage1 iservBin, iservBinWrapper) ]
 
--- | List of wrappers for inplace artefacts
+-- | List of wrappers for inplace artifacts
 inplaceWrappers :: [(Context, Wrapper)]
 inplaceWrappers = wrappersCommon ++
                   [ (vanillaContext Stage0 ghcPkg, inplaceGhcPkgWrapper)

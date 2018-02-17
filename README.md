@@ -104,7 +104,7 @@ use `hadrian/UserSettings.hs` for the same purpose, see [documentation](doc/user
 
 #### Clean and full rebuild
 
-* `build clean` removes all build artefacts.
+* `build clean` removes all build artifacts.
 
 * `build -B` forces Shake to rerun all rules, even if the previous build results are
 are still up-to-date.

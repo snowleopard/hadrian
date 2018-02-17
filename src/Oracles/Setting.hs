@@ -3,7 +3,8 @@ module Oracles.Setting (
     getSettingList,  anyTargetPlatform, anyTargetOs, anyTargetArch, anyHostOs,
     ghcWithInterpreter, ghcEnableTablesNextToCode, useLibFFIForAdjustors,
     ghcCanonVersion, cmdLineLengthLimit, iosHost, osxHost, windowsHost,
-    topDirectory, relocatableBuild, installDocDir, installGhcLibDir, libsuf
+    topDirectory, relocatableBuild, installDocDir, installGhcLibDir, libsuf,
+    matchSetting
     ) where
 
 import Hadrian.Expression
@@ -42,6 +43,7 @@ data Setting = BuildArch
              | ProjectPatchLevel1
              | ProjectPatchLevel2
              | TargetArch
+             | TargetArchArmISA
              | TargetOs
              | TargetPlatform
              | TargetPlatformFull
@@ -68,11 +70,12 @@ data Setting = BuildArch
              -- Command line for creating a symbolic link
              | LnS
 
-data SettingList = ConfCcArgs Stage
+data SettingList = ConfArArgs Stage
+                 | ConfCcArgs Stage
                  | ConfCppArgs Stage
                  | ConfGccLinkerArgs Stage
                  | ConfLdLinkerArgs Stage
-                 | HsCppArgs
+                 | ConfHsCppArgs
 
 -- | Maps 'Setting's to names in @cfg/system.config.in@.
 setting :: Setting -> Action String
@@ -101,6 +104,7 @@ setting key = lookupValueOrError configFile $ case key of
     ProjectPatchLevel1 -> "project-patch-level1"
     ProjectPatchLevel2 -> "project-patch-level2"
     TargetArch         -> "target-arch"
+    TargetArchArmISA   -> "target-arch-arm-isa"
     TargetOs           -> "target-os"
     TargetPlatform     -> "target-platform"
     TargetPlatformFull -> "target-platform-full"
@@ -124,13 +128,16 @@ setting key = lookupValueOrError configFile $ case key of
     InstallData        -> "install-data"
     LnS                -> "ln-s"
 
+-- XXX: see cfg/system.config.in; most of these are only defined for stages
+--      0, 1, and 2. Stage 3 is missing.
 settingList :: SettingList -> Action [String]
 settingList key = fmap words $ lookupValueOrError configFile $ case key of
+    ConfArArgs        stage -> "conf-ar-args-"         ++ stageString stage
     ConfCcArgs        stage -> "conf-cc-args-"         ++ stageString stage
     ConfCppArgs       stage -> "conf-cpp-args-"        ++ stageString stage
     ConfGccLinkerArgs stage -> "conf-gcc-linker-args-" ++ stageString stage
     ConfLdLinkerArgs  stage -> "conf-ld-linker-args-"  ++ stageString stage
-    HsCppArgs               -> "hs-cpp-args"
+    ConfHsCppArgs           -> "conf-hs-cpp-args"
 
 -- | Get a configuration setting.
 getSetting :: Setting -> Expr c b String

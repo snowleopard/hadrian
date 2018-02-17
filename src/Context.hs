@@ -7,29 +7,19 @@ module Context (
     withHsPackage,
 
     -- * Paths
-    contextDir, buildPath, pkgInplaceConfig, pkgDataFile, pkgSetupConfigFile,
-    pkgHaddockFile, pkgLibraryFile, pkgLibraryFile0, pkgGhciLibraryFile,
-    pkgConfFile, objectPath
+    stageDir, stagePath, getStagePath, buildDir, contextPath, getContextPath,
+    contextDir, libDir, libPath, buildPath, pkgInplaceConfig, pkgDataFile,
+    pkgSetupConfigFile, pkgHaddockFile, pkgLibraryFile, pkgLibraryFile0,
+    pkgGhciLibraryFile, pkgConfFile, objectPath, pkgId
     ) where
 
-import GHC.Generics
-import Hadrian.Expression
-import Hadrian.Haskell.Cabal
 
 import Base
+import Context.Paths
+import Context.Type
+import Hadrian.Expression
+import Hadrian.Haskell.Cabal
 import Oracles.Setting
-
--- | Build context for a currently built 'Target'. We generate potentially
--- different build rules for each 'Context'.
-data Context = Context
-    { stage   :: Stage   -- ^ Currently build Stage
-    , package :: Package -- ^ Currently build Package
-    , way     :: Way     -- ^ Currently build Way (usually 'vanilla')
-    } deriving (Eq, Generic, Show)
-
-instance Binary   Context
-instance Hashable Context
-instance NFData   Context
 
 -- | Most targets are built only one way, hence the notion of 'vanillaContext'.
 vanillaContext :: Stage -> Package -> Context
@@ -56,54 +46,52 @@ getWay = way <$> getContext
 getStagedSettingList :: (Stage -> SettingList) -> Args Context b
 getStagedSettingList f = getSettingList . f =<< getStage
 
--- | Construct an expression that depends on the Cabal file of the current
--- package and is empty in a non-Haskell context.
-withHsPackage :: (Monoid a, Semigroup a) => (FilePath -> Expr Context b a) -> Expr Context b a
+-- | Construct an expression that depends on the current package having
+-- a Cabal file. For non haskell contexts it's empty.
+withHsPackage :: (Monoid a, Semigroup a) => (Context -> Expr Context b a) -> Expr Context b a
 withHsPackage expr = do
     pkg <- getPackage
+    ctx <- getContext
     case pkgCabalFile pkg of
-        Just file -> expr file
-        Nothing   -> mempty
+        Just _  -> expr ctx
+        Nothing -> mempty
 
--- | The directory in 'buildRoot' containing build artefacts of a given 'Context'.
-contextDir :: Context -> FilePath
-contextDir Context {..} = stageString stage -/- pkgPath package
+pkgId :: Context -> Action FilePath
+pkgId context@Context {..} = case pkgCabalFile package of
+    Just _  -> pkgIdentifier context
+    Nothing -> return (pkgName package) -- Non-Haskell packages, e.g. rts
 
--- | Path to the directory containing build artefacts of a given 'Context'.
-buildPath :: Context -> Action FilePath
-buildPath context = buildRoot <&> (-/- contextDir context)
+-- | The directroy in 'buildRoot' that will hold the final install artifact for a given 'Context'.
+libDir :: Context -> FilePath
+libDir Context {..} = stageString stage -/- "lib"
 
--- | Get the build path of the current 'Context'.
-getBuildPath :: Expr Context b FilePath
-getBuildPath = expr . buildPath =<< getContext
+-- | Path to the directory containg the final artifact in a given 'Context'
+libPath :: Context -> Action FilePath
+libPath context = buildRoot <&> (-/- libDir context)
 
-pkgId :: Package -> Action FilePath
-pkgId package = case pkgCabalFile package of
-    Just file -> pkgIdentifier file
-    Nothing   -> return (pkgName package) -- Non-Haskell packages, e.g. rts
 
 pkgFile :: Context -> String -> String -> Action FilePath
 pkgFile context@Context {..} prefix suffix = do
     path <- buildPath context
-    pid  <- pkgId package
+    pid  <- pkgId context
     return $ path -/- prefix ++ pid ++ suffix
 
 -- | Path to inplace package configuration file of a given 'Context'.
 pkgInplaceConfig :: Context -> Action FilePath
 pkgInplaceConfig context = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- "inplace-pkg-config"
 
 -- | Path to the @package-data.mk@ of a given 'Context'.
 pkgDataFile :: Context -> Action FilePath
 pkgDataFile context = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- "package-data.mk"
 
 -- | Path to the @setup-config@ of a given 'Context'.
 pkgSetupConfigFile :: Context -> Action FilePath
 pkgSetupConfigFile context = do
-    path <- buildPath context
+    path <- contextPath context
     return $ path -/- "setup-config"
 
 -- | Path to the haddock file of a given 'Context', e.g.:
@@ -135,12 +123,10 @@ pkgGhciLibraryFile context = pkgFile context "HS" ".o"
 
 -- | Path to the configuration file of a given 'Context'.
 pkgConfFile :: Context -> Action FilePath
-pkgConfFile Context {..} = do
+pkgConfFile context@Context {..} = do
     root  <- buildRoot
-    pid   <- pkgId package
-    let dbDir | stage == Stage0 = root -/- stage0PackageDbDir
-              | otherwise       = inplacePackageDbPath
-    return $ dbDir -/- pid <.> "conf"
+    pid   <- pkgId context
+    return $ root -/- inplacePackageDbPath stage -/- pid <.> "conf"
 
 -- | Given a 'Context' and a 'FilePath' to a source file, compute the 'FilePath'
 -- to its object file. For example:

@@ -1,12 +1,16 @@
+{-# LANGUAGE CPP #-}
 module Settings (
     getArgs, getLibraryWays, getRtsWays, flavour, knownPackages,
-    findPackageByName, getPkgData, getPkgDataList, isLibrary, stagePackages,
+    findPackageByName, isLibrary, stagePackages,
     programContext, getIntegerPackage, getDestDir
     ) where
 
 import CommandLine
 import Expression
 import Flavour
+import GHC.Packages
+import UserSettings
+
 import {-# SOURCE #-} Settings.Default
 import Settings.Flavours.Development
 import Settings.Flavours.Performance
@@ -14,7 +18,11 @@ import Settings.Flavours.Profiled
 import Settings.Flavours.Quick
 import Settings.Flavours.Quickest
 import Settings.Flavours.QuickCross
-import UserSettings
+#if defined(LLVMNG)
+import Settings.Flavours.QuickCrossNG
+import Settings.Flavours.QuickWithNG
+#endif
+
 
 getArgs :: Args
 getArgs = expr flavour >>= args
@@ -34,7 +42,18 @@ hadrianFlavours :: [Flavour]
 hadrianFlavours =
     [ defaultFlavour, developmentFlavour Stage1, developmentFlavour Stage2
     , performanceFlavour, profiledFlavour, quickFlavour, quickestFlavour
-    , quickCrossFlavour ]
+    , quickCrossFlavour
+    -- TODO: if we have flavours that refer to packages
+    --       we incorrectly eagerly load those packages
+    --       and cabal files; which will fail if said
+    --       package does not exist.
+#if defined(LLVMNG)
+    , quickCrossNGFlavour, quickWithNGFlavour
+#endif
+    ]
+
+extraFlavourPackages :: [Package]
+extraFlavourPackages = nub . sort $ concatMap extraPackages hadrianFlavours
 
 flavour :: Action Flavour
 flavour = do
@@ -56,7 +75,7 @@ programContext stage pkg = do
 -- TODO: switch to Set Package as the order of packages should not matter?
 -- Otherwise we have to keep remembering to sort packages from time to time.
 knownPackages :: [Package]
-knownPackages = sort $ ghcPackages ++ userPackages
+knownPackages = sort $ ghcPackages ++ userPackages ++ extraFlavourPackages
 
 -- TODO: Speed up? Switch to Set?
 -- Note: this is slow but we keep it simple as there are just ~50 packages

@@ -20,22 +20,19 @@ module Hadrian.Builder.Ar (ArMode (..), args, runAr, runArWithoutTempFile) where
 
 import Control.Monad
 import Development.Shake
-import Development.Shake.Classes
-import GHC.Generics
-import Hadrian.Expression
 import Hadrian.Utilities
+import Settings.Builders.Common
+import Context (getStagedSettingList)
+import Oracles.Setting ( SettingList ( ConfArArgs ) )
 
--- | We support packing and unpacking archives with @ar@.
-data ArMode = Pack | Unpack deriving (Eq, Generic, Show)
-
-instance Binary   ArMode
-instance Hashable ArMode
-instance NFData   ArMode
+import Hadrian.Builder.Types (ArMode (..))
 
 -- NOTE: Make sure to appropriately update 'arFlagsCount' when changing 'args'.
 -- | Default command line arguments for invoking the archiving utility @ar@.
-args :: (ShakeValue c, ShakeValue b) => ArMode -> Args c b
-args Pack   = mconcat [ arg "q", arg =<< getOutput, getInputs ]
+-- args :: (ShakeValue c, ShakeValue b) => SphinxMode -> Args c b
+args :: ArMode -> Args
+args Pack   = mconcat [ getStagedSettingList ConfArArgs
+                      , arg =<< getOutput, getInputs ]
 args Unpack = mconcat [ arg "x", arg =<< getInput ]
 
 -- This count includes "q" and the output file argumentes in 'args'. This is

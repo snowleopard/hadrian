@@ -10,6 +10,9 @@ category:            Development
 build-type:          Simple
 cabal-version:       >=1.10
 
+flag llvmng
+    default: false
+
 source-repository head
     type:     git
     location: https://github.com/snowleopard/hadrian
@@ -22,28 +25,35 @@ executable hadrian
                        , Builder
                        , CommandLine
                        , Context
+                       , Context.Paths
+                       , Context.Type
                        , Environment
                        , Expression
+                       , Expression.Type
                        , Flavour
                        , GHC
+                       , GHC.Packages
                        , Hadrian.Builder
                        , Hadrian.Builder.Ar
                        , Hadrian.Builder.Sphinx
                        , Hadrian.Builder.Tar
+                       , Hadrian.Builder.Types
                        , Hadrian.Expression
                        , Hadrian.Haskell.Cabal
+                       , Hadrian.Haskell.Cabal.Configured
                        , Hadrian.Haskell.Cabal.Parse
+                       , Hadrian.Haskell.Cabal.Type
                        , Hadrian.Oracles.ArgsHash
                        , Hadrian.Oracles.DirectoryContents
                        , Hadrian.Oracles.Path
                        , Hadrian.Oracles.TextFile
                        , Hadrian.Package
+                       , Hadrian.Package.Type
                        , Hadrian.Target
                        , Hadrian.Utilities
                        , Oracles.Flag
                        , Oracles.Setting
                        , Oracles.ModuleFiles
-                       , Oracles.PackageData
                        , Rules
                        , Rules.Clean
                        , Rules.Compile
@@ -87,25 +97,21 @@ executable hadrian
                        , Settings.Flavours.Quick
                        , Settings.Flavours.QuickCross
                        , Settings.Flavours.Quickest
-                       , Settings.Packages.Base
-                       , Settings.Packages.Cabal
-                       , Settings.Packages.Compiler
-                       , Settings.Packages.Ghc
-                       , Settings.Packages.GhcCabal
-                       , Settings.Packages.Ghci
-                       , Settings.Packages.GhcPkg
-                       , Settings.Packages.GhcPrim
-                       , Settings.Packages.Haddock
-                       , Settings.Packages.Haskeline
-                       , Settings.Packages.IntegerGmp
+                       , Settings.Packages
                        , Settings.Packages.Rts
-                       , Settings.Packages.RunGhc
                        , Settings.Warnings
                        , Stage
+                       , Stage.Type
                        , Target
                        , UserSettings
                        , Utilities
                        , Way
+                       , Way.Type
+    if flag(llvmng)
+      other-modules:     Settings.Flavours.QuickWithNG
+                       , Settings.Flavours.QuickCrossNG
+      cpp-options:     -DLLVMNG
+
     default-language:    Haskell2010
     default-extensions:  DeriveFunctor
                        , DeriveGeneric

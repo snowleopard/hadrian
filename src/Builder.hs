@@ -1,8 +1,10 @@
 {-# LANGUAGE InstanceSigs #-}
 module Builder (
     -- * Data types
-    ArMode (..), CcMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
+    ArMode (..), CcMode (..), GhcCabalMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
     SphinxMode (..), TarMode (..), Builder (..),
+
+    builderPath',
 
     -- * Builder properties
     builderProvenance, systemBuilderPath, builderPath, isSpecified, needBuilder,
@@ -53,8 +55,20 @@ instance Binary   GhcMode
 instance Hashable GhcMode
 instance NFData   GhcMode
 
+-- | GHC cabal mode. Can configure, copy and register pacakges.
+data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
+    deriving (Eq, Generic, Show)
+
+instance Binary   GhcCabalMode
+instance Hashable GhcCabalMode
+instance NFData   GhcCabalMode
+
 -- | GhcPkg can initialise a package database and register packages in it.
-data GhcPkgMode = Init | Update deriving (Eq, Generic, Show)
+data GhcPkgMode = Init         -- initialize a new database.
+                | Update       -- update a package.
+                | Clone        -- clone a package from one pkg database into another. @Copy@ is already taken by GhcCabalMode.
+                | Dependencies -- compute package dependencies.
+                deriving (Eq, Generic, Show)
 
 instance Binary   GhcPkgMode
 instance Hashable GhcPkgMode
@@ -76,21 +90,22 @@ instance NFData   HaddockMode
 -- @GhcPkg Stage1@ is the one built in Stage0.
 data Builder = Alex
              | Ar ArMode Stage
+             | Autoreconf FilePath
              | DeriveConstants
              | Cc CcMode Stage
              | Configure FilePath
              | GenApply
              | GenPrimopCode
              | Ghc GhcMode Stage
-             | GhcCabal
+             | GhcCabal GhcCabalMode Stage
              | GhcPkg GhcPkgMode Stage
              | Haddock HaddockMode
              | Happy
              | Hpc
              | Hp2Ps
              | HsCpp
-             | Hsc2Hs
-             | Ld
+             | Hsc2Hs Stage
+             | Ld Stage
              | Make FilePath
              | Nm
              | Objdump
@@ -103,6 +118,8 @@ data Builder = Alex
              | Tar TarMode
              | Unlit
              | Xelatex
+             | CabalFlags Stage -- ^ a virtual builder to use the Arg predicate logic
+                                --   to collect cabal flags. +x, -x
              deriving (Eq, Generic, Show)
 
 instance Binary   Builder
@@ -119,17 +136,20 @@ builderProvenance = \case
     GenPrimopCode    -> context Stage0 genprimopcode
     Ghc _ Stage0     -> Nothing
     Ghc _ stage      -> context (pred stage) ghc
-    GhcCabal         -> context Stage0 ghcCabal
+    GhcCabal _ _     -> context Stage1 ghcCabal
     GhcPkg _ Stage0  -> Nothing
     GhcPkg _ _       -> context Stage0 ghcPkg
-    Haddock _        -> context Stage2 haddock
-    Hpc              -> context Stage1 hpcBin
+    Haddock _        -> context Stage1 haddock
+    Hpc              -> context Stage0 hpcBin
     Hp2Ps            -> context Stage0 hp2ps
-    Hsc2Hs           -> context Stage0 hsc2hs
+    Hsc2Hs _         -> context Stage0 hsc2hs
     Unlit            -> context Stage0 unlit
     _                -> Nothing
   where
     context s p = Just $ vanillaContext s p
+
+builderPath' :: Builder -> Action FilePath
+builderPath' = builderPath
 
 instance H.Builder Builder where
     builderPath :: Builder -> Action FilePath
@@ -139,6 +159,7 @@ instance H.Builder Builder where
 
     runtimeDependencies :: Builder -> Action [FilePath]
     runtimeDependencies = \case
+        Autoreconf dir -> return [dir -/- "configure.ac"]
         Configure dir -> return [dir -/- "configure"]
 
         Ghc _ Stage0 -> return []
@@ -147,18 +168,29 @@ instance H.Builder Builder where
             touchyPath <- programPath (vanillaContext Stage0 touchy)
             unlitPath  <- builderPath Unlit
             return $ [ ghcSplitPath -- TODO: Make conditional on --split-objects
-                     , inplaceLibPath -/- "ghc-usage.txt"
-                     , inplaceLibPath -/- "ghci-usage.txt"
-                     , inplaceLibPath -/- "llvm-targets"
-                     , inplaceLibPath -/- "platformConstants"
-                     , inplaceLibPath -/- "settings"
                      , unlitPath ]
                   ++ [ touchyPath | win ]
 
-        Haddock _ -> return [haddockHtmlResourcesStamp]
-        Hsc2Hs    -> return [templateHscPath]
+        Hsc2Hs stage   -> pure <$> templateHscPath stage
         Make dir  -> return [dir -/- "Makefile"]
         _         -> return []
+
+    -- query the builder for some information.
+    -- contrast this with runBuilderWith, which returns @Action ()@
+    -- this returns the @stdout@ from running the builder.
+    -- For now this only implements asking @ghc-pkg@ about pacakge
+    -- dependencies.
+    askBuilderWith :: Builder -> BuildInfo -> Action String
+    askBuilderWith builder BuildInfo {..} = case builder of
+        GhcPkg Dependencies _ -> do
+            let input  = fromSingleton msgIn buildInputs
+                msgIn  = "[askBuilder] Exactly one input file expected."
+            needBuilder builder
+            path <- H.builderPath builder
+            need [path]
+            Stdout stdout <- cmd [path] ["--no-user-package-db", "field", input, "depends"]
+            return stdout
+        _ -> error $ "Builder " ++ show builder ++ " can not be asked!"
 
     runBuilderWith :: Builder -> BuildInfo -> Action ()
     runBuilderWith builder BuildInfo {..} = do
@@ -176,12 +208,13 @@ instance H.Builder Builder where
                     Stdout stdout <- cmd [path] buildArgs
                     writeFileChanged output stdout
             case builder of
-                Ar Pack _ -> do
-                    useTempFile <- flag ArSupportsAtFile
-                    if useTempFile then runAr                path buildArgs
-                                   else runArWithoutTempFile path buildArgs
+                Ar Pack stage -> flag (ArSupportsAtFile stage) >>= \case
+                    True  -> runAr                path buildArgs
+                    False -> runArWithoutTempFile path buildArgs
 
                 Ar Unpack _ -> cmd echo [Cwd output] [path] buildArgs
+
+                Autoreconf dir -> cmd echo [Cwd dir] [path] buildOptions buildArgs
 
                 Configure dir -> do
                     -- Inject /bin/bash into `libtool`, instead of /bin/sh,
@@ -208,7 +241,12 @@ instance H.Builder Builder where
                     unit $ cmd [Cwd output] [path]        buildArgs
                     unit $ cmd [Cwd output] [path]        buildArgs
 
-                _  -> cmd echo [path] buildArgs
+                GhcPkg Clone _ -> do
+                    -- input is "virtual" here. it's essentially a package name
+                    Stdout pkgDesc <- cmd [path] ["--expand-pkgroot", "--no-user-package-db", "describe", input ]
+                    cmd (Stdin pkgDesc) [path] (buildArgs ++ ["-"])
+
+                _  -> cmd echo [path] buildOptions buildArgs
 
 -- TODO: Some builders are required only on certain platforms. For example,
 -- 'Objdump' is only required on OpenBSD and AIX. Add support for platform
@@ -225,6 +263,7 @@ systemBuilderPath builder = case builder of
     Alex            -> fromKey "alex"
     Ar _ Stage0     -> fromKey "system-ar"
     Ar _ _          -> fromKey "ar"
+    Autoreconf _    -> return "autoreconf"
     Cc  _  Stage0   -> fromKey "system-cc"
     Cc  _  _        -> fromKey "cc"
     -- We can't ask configure for the path to configure!
@@ -233,7 +272,8 @@ systemBuilderPath builder = case builder of
     GhcPkg _ Stage0 -> fromKey "system-ghc-pkg"
     Happy           -> fromKey "happy"
     HsCpp           -> fromKey "hs-cpp"
-    Ld              -> fromKey "ld"
+    Ld Stage0       -> fromKey "system-ld"
+    Ld _            -> fromKey "ld"
     Make _          -> fromKey "make"
     Nm              -> fromKey "nm"
     Objdump         -> fromKey "objdump"

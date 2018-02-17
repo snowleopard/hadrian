@@ -13,43 +13,29 @@ module Expression (
     interpret, interpretInContext,
 
     -- * Convenient accessors
-    getBuildRoot, getContext, getPkgData, getPkgDataList, getOutputs, getInputs,
-    getInput, getOutput,
+    getBuildRoot, getContext, getOutputs, getInputs,
+    getInput, getOutput, getConfiguredCabalData,
 
     -- * Re-exports
     module Base,
     module Builder,
     module Context,
-    module GHC
     ) where
 
-import qualified Hadrian.Expression as H
-import Hadrian.Expression hiding (Expr, Predicate, Args)
-
 import Base
-import Builder
-import GHC
+import {-# SOURCE #-} Builder
 import Context hiding (stage, package, way)
-import Oracles.PackageData
+import Expression.Type
+import Hadrian.Expression hiding (Expr, Predicate, Args)
+import Hadrian.Haskell.Cabal.Configured (ConfiguredCabal)
+import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
 
--- | @Expr a@ is a computation that produces a value of type @Action a@ and can
--- read parameters of the current build 'Target'.
-type Expr a = H.Expr Context Builder a
-
--- | The following expressions are used throughout the build system for
--- specifying conditions ('Predicate'), lists of arguments ('Args'), 'Ways'
--- and 'Packages'.
-type Predicate = H.Predicate Context Builder
-type Args      = H.Args      Context Builder
-type Ways      = Expr [Way]
-
--- | Get a value from the @package-data.mk@ file of the current context.
-getPkgData :: (FilePath -> PackageData) -> Expr String
-getPkgData key = expr . pkgData . key =<< getBuildPath
-
--- | Get a list of values from the @package-data.mk@ file of the current context.
-getPkgDataList :: (FilePath -> PackageDataList) -> Expr [String]
-getPkgDataList key = expr . pkgDataList . key =<< getBuildPath
+-- | Get values from a configured cabal stage.
+getConfiguredCabalData :: (ConfiguredCabal -> a) -> Expr a
+getConfiguredCabalData key = do
+  ctx   <- getContext
+  Just cabal <- expr (readConfiguredCabalFile ctx)
+  return $ key cabal
 
 -- | Is the build currently in the provided stage?
 stage :: Stage -> Predicate

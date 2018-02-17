@@ -3,8 +3,8 @@ module Settings.Default (
     defaultArgs, defaultLibraryWays, defaultRtsWays, defaultFlavour, defaultSplitObjects
     ) where
 
+import Expression.Type
 import Flavour
-import Expression
 
 data SourceArgs = SourceArgs
     { hsDefault  :: Args

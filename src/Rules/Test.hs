@@ -6,6 +6,7 @@ import Oracles.Flag
 import Oracles.Setting
 import Target
 import Utilities
+import GHC.Packages
 
 import System.Environment
 
@@ -37,7 +38,7 @@ testRules = do
         needBuilder $ GhcPkg Update Stage1
         needBuilder Hp2Ps
         needBuilder Hpc
-        needBuilder Hsc2Hs
+        needBuilder $ Hsc2Hs Stage1
         build $ target (vanillaContext Stage2 compiler) (Make "testsuite/tests") [] []
 
     "test" ~> do

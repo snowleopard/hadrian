@@ -4,6 +4,7 @@ import Expression
 import Oracles.Flag
 import Oracles.Setting
 import Settings
+import GHC.Packages
 
 -- See @mk/warnings.mk@ for warning-related arguments in the Make build system.
 
@@ -28,7 +29,9 @@ warningArgs = builder Ghc ? do
                                       , "-fno-warn-unused-imports" ] ]
         , notStage0 ? mconcat
         [ libraryPackage       ? pure [ "-Wno-deprecated-flags" ]
-        , package base         ? pure [ "-Wno-trustworthy-safe" ]
+        , package base         ? pure [ "-Wno-trustworthy-safe"
+                                      , "-Wno-unused-top-binds" -- this fails on android for libraries/base/GHC/Event/Poll.hsc
+                                      ]
         , package binary       ? pure [ "-Wno-deprecations" ]
         , package bytestring   ? pure [ "-Wno-inline-rule-shadowing" ]
         , package compiler     ? pure [ "-Wcpp-undef" ]
@@ -53,4 +56,7 @@ warningArgs = builder Ghc ? do
                                       , "-Wno-redundant-constraints"
                                       , "-Wno-orphans" ]
         , package win32        ? pure [ "-Wno-trustworthy-safe" ]
-        , package xhtml        ? pure [ "-Wno-unused-imports" ] ] ]
+        , package xhtml        ? pure [ "-Wno-unused-imports" ]
+        , package unix         ? pure [ "-Wno-incomplete-patterns"
+                                      , "-Wno-unused-top-binds" ] ]
+        ]
