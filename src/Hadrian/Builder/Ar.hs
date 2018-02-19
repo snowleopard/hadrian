@@ -20,9 +20,17 @@ module Hadrian.Builder.Ar (ArMode (..), args, runAr, runArWithoutTempFile) where
 
 import Control.Monad
 import Development.Shake
-import Hadrian.Builder.Mode
+import Development.Shake.Classes
+import GHC.Generics
 import Hadrian.Expression
 import Hadrian.Utilities
+
+-- | We support packing and unpacking archives with @ar@.
+data ArMode = Pack | Unpack deriving (Eq, Generic, Show)
+
+instance Binary   ArMode
+instance Hashable ArMode
+instance NFData   ArMode
 
 -- NOTE: Make sure to appropriately update 'arFlagsCount' when changing 'args'.
 -- | Default command line arguments for invoking the archiving utility @ar@.

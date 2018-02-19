@@ -30,7 +30,6 @@ executable hadrian
                        , GHC
                        , Hadrian.Builder
                        , Hadrian.Builder.Ar
-                       , Hadrian.Builder.Mode
                        , Hadrian.Builder.Sphinx
                        , Hadrian.Builder.Tar
                        , Hadrian.Expression
