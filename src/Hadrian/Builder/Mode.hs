@@ -1,4 +1,4 @@
-module Hadrian.Builder.Type where
+module Hadrian.Builder.Mode where
 
 import GHC.Generics
 import Development.Shake.Classes

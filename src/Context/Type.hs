@@ -1,8 +1,8 @@
 module Context.Type where
 
 import Hadrian.Package.Type
-import Stage.Type
-import Way
+import Stage
+import Way.Type
 
 import GHC.Generics
 import Development.Shake.Classes

@@ -20,7 +20,7 @@ module Hadrian.Builder.Ar (ArMode (..), args, runAr, runArWithoutTempFile) where
 
 import Control.Monad
 import Development.Shake
-import Hadrian.Builder.Type
+import Hadrian.Builder.Mode
 import Hadrian.Expression
 import Hadrian.Utilities
 

@@ -30,9 +30,9 @@ executable hadrian
                        , GHC
                        , Hadrian.Builder
                        , Hadrian.Builder.Ar
+                       , Hadrian.Builder.Mode
                        , Hadrian.Builder.Sphinx
                        , Hadrian.Builder.Tar
-                       , Hadrian.Builder.Type
                        , Hadrian.Expression
                        , Hadrian.Haskell.Cabal
                        , Hadrian.Haskell.Cabal.Parse
@@ -107,7 +107,6 @@ executable hadrian
                        , Settings.Packages.RunGhc
                        , Settings.Warnings
                        , Stage
-                       , Stage.Type
                        , Target
                        , UserSettings
                        , Utilities

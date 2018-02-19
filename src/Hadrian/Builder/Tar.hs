@@ -11,9 +11,7 @@
 module Hadrian.Builder.Tar (TarMode (..), args) where
 
 import Development.Shake
-import Development.Shake.Classes
-import GHC.Generics
-import Hadrian.Builder.Type
+import Hadrian.Builder.Mode
 import Hadrian.Expression
 
 -- | Default command line arguments for invoking the archiving utility @tar@.
