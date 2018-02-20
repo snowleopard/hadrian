@@ -75,7 +75,7 @@ hpc                 = hsLib  "hpc"
 hpcBin              = hsUtil "hpc-bin"         `setPath` "utils/hpc"
 integerGmp          = hsLib  "integer-gmp"
 integerSimple       = hsLib  "integer-simple"
--- iservBin         = hsUtil "iserv" -- See https://phabricator.haskell.org/D4377
+-- iservBin         = hsUtil "iserv" -- FIXME: See #507
 iservBin            = hsPrg  "iserv-bin"       `setPath` "iserv"
 iservLib            = hsLib  "libiserv"
 libffi              = cTop   "libffi"
@@ -194,7 +194,7 @@ stage1Packages = do
              , time
              , xhtml              ]
           ++ [ iservBin | not win ]
-          -- ++ [ iservLib | not win ] -- See https://phabricator.haskell.org/D4377
+          -- ++ [ iservLib | not win ] -- FIXME: See #507
           ++ [ unix     | not win ]
           ++ [ win32    | win     ]
 
