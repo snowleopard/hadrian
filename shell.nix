@@ -50,7 +50,6 @@ let
         extra = self.callHackage "extra" "1.6.4" {};
         QuickCheck = self.callHackage "QuickCheck" "2.10" {};
         Cabal = localPackage "Cabal" ./../libraries/Cabal/Cabal ;
-        cabal-install = localPackage "cabal-install" ./../../cabal/cabal-install;
         filepath = localPackage "filepath" ./../libraries/filepath ;
         text = localPackage "text" ./../libraries/text  ;
         hpc = localPackage"hpc" ./../libraries/hpc ;
