@@ -43,9 +43,9 @@ in
   nixpkgs.lib.overrideDerivation nixpkgs.haskell.packages.ghcHEAD.ghc
     (drv: {
       name = "ghc-dev";
-      buildInputs = drv.buildInputs ++ [
-                    hadrianPackages.hadrian
-                    nixpkgs.arcanist
-                    ];
+      nativeBuildInputs = drv.nativeBuildInputs ++ 
+        [ hadrianPackages.hadrian
+          nixpkgs.arcanist
+        ];
     })
 
