@@ -63,6 +63,7 @@ isCPackage _ = False
 -- | Is this a Haskell package?
 isHsPackage :: Package -> Bool
 isHsPackage (Package Haskell _ _ _) = True
+isHsPackage (Package _ _ "rts" _)   = True
 isHsPackage _ = False
 
 -- | The path to the Cabal file of a Haskell package, e.g. @ghc/ghc-bin.cabal@,

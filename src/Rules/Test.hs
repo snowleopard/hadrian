@@ -2,6 +2,7 @@ module Rules.Test (testRules, runTestGhcFlags, timeoutProgPath) where
 
 import Base
 import Expression
+import GHC.Packages
 import Oracles.Flag
 import Oracles.Setting
 import Target
@@ -37,7 +38,7 @@ testRules = do
         needBuilder $ GhcPkg Update Stage1
         needBuilder Hp2Ps
         needBuilder Hpc
-        needBuilder Hsc2Hs
+        needBuilder (Hsc2Hs Stage1)
         build $ target (vanillaContext Stage2 compiler) (Make "testsuite/tests") [] []
 
     "test" ~> do

@@ -1,5 +1,5 @@
-module Rules.Install (installRules) where
-
+module Rules.Install () where
+{-
 import Hadrian.Oracles.DirectoryContents
 import qualified System.Directory as IO
 
@@ -347,3 +347,4 @@ installDocs = do
     forM_ ["Haddock", "libraries", "users_guide"] $ \dirname -> do
         let dir = root -/- "docs/html" -/- dirname
         whenM (doesDirectoryExist dir) $ copyDirectory dir htmlDocDir
+-}

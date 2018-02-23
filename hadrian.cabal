@@ -22,18 +22,21 @@ executable hadrian
                        , Builder
                        , CommandLine
                        , Context
+                       , Context.Paths
                        , Context.Type
                        , Environment
                        , Expression
                        , Expression.Type
                        , Flavour
                        , GHC
+                       , GHC.Packages
                        , Hadrian.Builder
                        , Hadrian.Builder.Ar
                        , Hadrian.Builder.Sphinx
                        , Hadrian.Builder.Tar
                        , Hadrian.Expression
                        , Hadrian.Haskell.Cabal
+                       , Hadrian.Haskell.Cabal.Configured
                        , Hadrian.Haskell.Cabal.Parse
                        , Hadrian.Haskell.Cabal.Type
                        , Hadrian.Oracles.ArgsHash
@@ -47,7 +50,6 @@ executable hadrian
                        , Oracles.Flag
                        , Oracles.Setting
                        , Oracles.ModuleFiles
-                       , Oracles.PackageData
                        , Rules
                        , Rules.Clean
                        , Rules.Compile
@@ -91,19 +93,8 @@ executable hadrian
                        , Settings.Flavours.Quick
                        , Settings.Flavours.QuickCross
                        , Settings.Flavours.Quickest
-                       , Settings.Packages.Base
-                       , Settings.Packages.Cabal
-                       , Settings.Packages.Compiler
-                       , Settings.Packages.Ghc
-                       , Settings.Packages.GhcCabal
-                       , Settings.Packages.Ghci
-                       , Settings.Packages.GhcPkg
-                       , Settings.Packages.GhcPrim
-                       , Settings.Packages.Haddock
-                       , Settings.Packages.Haskeline
-                       , Settings.Packages.IntegerGmp
+                       , Settings.Packages
                        , Settings.Packages.Rts
-                       , Settings.Packages.RunGhc
                        , Settings.Warnings
                        , Stage
                        , Target

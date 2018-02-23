@@ -6,6 +6,8 @@ import Hadrian.Oracles.Path
 
 import Base
 import Expression
+import GHC (installStage)
+import GHC.Packages
 import Oracles.Setting
 import Settings
 
@@ -49,15 +51,16 @@ installRunGhcWrapper WrappedBinary{..} = do
 inplaceGhcPkgWrapper :: WrappedBinary -> Expr String
 inplaceGhcPkgWrapper WrappedBinary{..} = do
     expr $ need [sourcePath -/- "Rules/Wrappers.hs"]
-    top <- expr topDirectory
+    stage <- succ <$> getStage
     -- The wrapper is generated in StageN, but used in StageN+1. Therefore, we
     -- always use the inplace package database, located at 'inplacePackageDbPath',
     -- which is used in Stage1 and later.
     bash <- expr bashPath
+    path <- expr buildRoot
     return $ unlines
         [ "#!" ++ bash
         , "exec " ++ (binaryLibPath -/- "bin" -/- binaryName) ++
-          " --global-package-db " ++ top -/- inplacePackageDbPath ++ " ${1+\"$@\"}" ]
+          " --global-package-db " ++ path -/- relativePackageDbPath stage ++ " ${1+\"$@\"}" ]
 
 installGhcPkgWrapper :: WrappedBinary -> Expr String
 installGhcPkgWrapper WrappedBinary{..} = do

@@ -7,8 +7,6 @@ module UserSettings (
     buildProgressColour, successColour, stage1Only
     ) where
 
-import Hadrian.Utilities
-
 import Flavour
 import Expression
 import {-# SOURCE #-} Settings.Default
@@ -18,7 +16,7 @@ import {-# SOURCE #-} Settings.Default
 
 -- | All build results are put into the 'buildRoot' directory.
 userBuildRoot :: BuildRoot
-userBuildRoot = BuildRoot "_build"
+userBuildRoot = error "build root not set" -- BuildRoot "_build"
 
 -- | User-defined build flavours. See 'userFlavour' as an example.
 userFlavours :: [Flavour]

@@ -72,7 +72,7 @@ data SettingList = ConfCcArgs Stage
                  | ConfCppArgs Stage
                  | ConfGccLinkerArgs Stage
                  | ConfLdLinkerArgs Stage
-                 | HsCppArgs
+                 | ConfHsCppArgs
 
 -- | Maps 'Setting's to names in @cfg/system.config.in@.
 setting :: Setting -> Action String
@@ -130,7 +130,7 @@ settingList key = fmap words $ lookupValueOrError configFile $ case key of
     ConfCppArgs       stage -> "conf-cpp-args-"        ++ stageString stage
     ConfGccLinkerArgs stage -> "conf-gcc-linker-args-" ++ stageString stage
     ConfLdLinkerArgs  stage -> "conf-ld-linker-args-"  ++ stageString stage
-    HsCppArgs               -> "hs-cpp-args"
+    ConfHsCppArgs           -> "conf-hs-cpp-args"
 
 -- | Get a configuration setting.
 getSetting :: Setting -> Expr c b String

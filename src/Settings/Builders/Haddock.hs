@@ -1,20 +1,18 @@
 module Settings.Builders.Haddock (haddockBuilderArgs) where
 
-import Hadrian.Utilities
 import Hadrian.Haskell.Cabal
-
+import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Utilities
 import Rules.Documentation
 import Settings.Builders.Common
 import Settings.Builders.Ghc
 
 -- | Given a version string such as "2.16.2" produce an integer equivalent.
 versionToInt :: String -> Int
-versionToInt s = case map read . words $ replaceEq '.' ' ' s of
-    [major, minor, patch] -> major * 1000 + minor * 10 + patch
-    _                     -> error "versionToInt: cannot parse version."
+versionToInt = read . dropWhile (=='0') . filter (/='.')
 
 haddockBuilderArgs :: Args
-haddockBuilderArgs = withHsPackage $ \cabalFile -> mconcat
+haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
     [ builder (Haddock BuildIndex) ? do
         output <- getOutput
         inputs <- getInputs
@@ -32,11 +30,11 @@ haddockBuilderArgs = withHsPackage $ \cabalFile -> mconcat
         output   <- getOutput
         pkg      <- getPackage
         path     <- getBuildPath
-        version  <- expr $ pkgVersion  cabalFile
-        synopsis <- expr $ pkgSynopsis cabalFile
-        deps     <- getPkgDataList DepNames
+        Just version  <- expr $ pkgVersion  ctx
+        Just synopsis <- expr $ pkgSynopsis ctx
+        deps     <- getConfiguredCabalData ConfCabal.depNames
         haddocks <- expr . haddockDependencies =<< getContext
-        hVersion <- expr $ pkgVersion (unsafePkgCabalFile haddock) -- TODO: improve
+        Just hVersion <- expr $ pkgVersion ctx
         ghcOpts  <- haddockGhcArgs
         mconcat
             [ arg "--verbosity=0"
@@ -52,7 +50,7 @@ haddockBuilderArgs = withHsPackage $ \cabalFile -> mconcat
             , arg $ "--prologue=" ++ path -/- "haddock-prologue.txt"
             , arg $ "--optghc=-D__HADDOCK_VERSION__="
                     ++ show (versionToInt hVersion)
-            , map ("--hide=" ++) <$> getPkgDataList HiddenModules
+            , map ("--hide=" ++) <$> getConfiguredCabalData ConfCabal.otherModules
             , pure [ "--read-interface=../" ++ dep
                      ++ ",../" ++ dep ++ "/src/%{MODULE}.html#%{NAME},"
                      ++ haddock | (dep, haddock) <- zip deps haddocks ]
