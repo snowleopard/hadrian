@@ -46,6 +46,7 @@ in
       nativeBuildInputs = drv.nativeBuildInputs ++ 
         [ hadrianPackages.hadrian
           nixpkgs.arcanist
+          nixpkgs.python3Packages.sphinx
         ];
     })
 
