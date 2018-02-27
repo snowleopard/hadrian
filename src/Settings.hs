@@ -18,6 +18,7 @@ import Settings.Flavours.Profiled
 import Settings.Flavours.Quick
 import Settings.Flavours.Quickest
 import Settings.Flavours.QuickCross
+import Settings.Flavours.QuickCrossNCG
 #if defined(LLVMNG)
 import Settings.Flavours.QuickCrossNG
 import Settings.Flavours.QuickWithNG
@@ -42,7 +43,7 @@ hadrianFlavours :: [Flavour]
 hadrianFlavours =
     [ defaultFlavour, developmentFlavour Stage1, developmentFlavour Stage2
     , performanceFlavour, profiledFlavour, quickFlavour, quickestFlavour
-    , quickCrossFlavour
+    , quickCrossFlavour, quickCrossNCGFlavour
     -- TODO: if we have flavours that refer to packages
     --       we incorrectly eagerly load those packages
     --       and cabal files; which will fail if said

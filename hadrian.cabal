@@ -96,6 +96,7 @@ executable hadrian
                        , Settings.Flavours.Profiled
                        , Settings.Flavours.Quick
                        , Settings.Flavours.QuickCross
+                       , Settings.Flavours.QuickCrossNCG
                        , Settings.Flavours.Quickest
                        , Settings.Packages
                        , Settings.Packages.Rts
