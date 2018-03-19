@@ -21,12 +21,13 @@ import qualified Hadrian.Haskell.Cabal.Configured as ConfCabal
 -- | Build all documentation
 documentationRules :: Rules ()
 documentationRules = do
+    root <- buildRootRules
     buildHtmlDocumentation
     buildPdfDocumentation
     buildDocumentationArchives
     buildManPage
-    "//docs//gen_contents_index" %> copyFile "libraries/gen_contents_index"
-    "//docs//prologue.txt" %> copyFile "libraries/prologue.txt"
+    root -/- htmlRoot -/- "libraries/gen_contents_index" %> copyFile "libraries/gen_contents_index"
+    root -/- htmlRoot -/- "libraries/prologue.txt" %> copyFile "libraries/prologue.txt"
     "docs" ~> do
         root <- buildRoot
         let html = htmlRoot -/- "index.html"
@@ -35,10 +36,10 @@ documentationRules = do
         need $ map (root -/-) $ [html] ++ archives ++ pdfs
         need [ root -/- htmlRoot -/- "libraries" -/- "gen_contents_index" ]
         need [ root -/- htmlRoot -/- "libraries" -/- "prologue.txt" ]
-        need [manPagePath]
+        need [ root -/- manPagePath ]
 
 manPagePath :: FilePath
-manPagePath = "_build/docs/users_guide/build-man/ghc.1"
+manPagePath = "docs/users_guide/build-man/ghc.1"
 
 -- TODO: Add support for Documentation Packages so we can
 -- run the builders without this hack.
@@ -114,7 +115,7 @@ buildLibraryDocumentation = do
         let libDocs = filter
                 (\x -> takeFileName x `notElem` ["ghc.haddock", "rts.haddock"])
                 haddocks
-            context = vanillaContext Stage2 docPackage
+            context = vanillaContext Stage1 docPackage
         need libDocs
         build $ target context (Haddock BuildIndex) libDocs [file]
 
@@ -208,7 +209,8 @@ buildArchive path = do
 -- | build man page
 buildManPage :: Rules ()
 buildManPage = do
-    manPagePath %> \file -> do
+    root <- buildRootRules
+    root -/- manPagePath %> \file -> do
         need ["docs/users_guide/ghc.rst"]
         let context = vanillaContext Stage0 docPackage
         withTempDir $ \dir -> do
