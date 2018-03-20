@@ -43,13 +43,5 @@ data ConfiguredCabal = ConfiguredCabal
 
 instance Binary ConfiguredCabal
 
-instance Hashable ConfiguredCabal where
-    hashWithSalt salt = hashWithSalt salt . show
-
-instance NFData ConfiguredCabal where
-    rnf (ConfiguredCabal a b c d e f g h i j k l m n o p q r s t u v w x z y
-          aa ab ac ad ae af)
-      = a `seq` b `seq` c `seq` d `seq` e `seq` f `seq` g `seq` h `seq` i `seq` j
-        `seq` k `seq` l `seq` m `seq` n `seq` o `seq` p `seq` q `seq` r `seq` s `seq` t
-        `seq` u `seq` v `seq` w `seq` x `seq` y `seq` z `seq` aa `seq` ab `seq` ac `seq` ad
-        `seq` ae `seq` af `seq` ()
+instance Hashable ConfiguredCabal
+instance NFData ConfiguredCabal

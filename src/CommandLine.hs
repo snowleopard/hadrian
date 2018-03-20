@@ -38,7 +38,7 @@ defaultCommandLineArgs = CommandLineArgs
     , progressColour = Auto
     , progressInfo   = Brief
     , splitObjects   = False
-    , buildRoot      = UserSettings.userBuildRoot
+    , buildRoot      = BuildRoot "_build"
     , testArgs       = defaultTestArgs }
 
 -- | These arguments are used by the `test` target.

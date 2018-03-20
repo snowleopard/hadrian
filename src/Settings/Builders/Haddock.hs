@@ -19,7 +19,7 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
         root   <- getBuildRoot
         mconcat
             [ arg $ "-B" ++ root -/- "stage1" -/- "lib"
-            , arg $ "--lib=" ++ root -/- "lib"
+            , arg $ "--lib=" ++ root -/- "docs"
             , arg "--gen-index"
             , arg "--gen-contents"
             , arg "-o", arg $ takeDirectory output
@@ -41,9 +41,9 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
         Just hVersion <- expr $ pkgVersion ctx
         ghcOpts  <- haddockGhcArgs
         mconcat
-            [ arg $ "-B" ++ root -/- "stage1" -/- "lib"
-            , arg $ "--lib=" ++ root -/- "lib"
-            , arg "--verbosity=0"
+            [ arg "--verbosity=0"
+            , arg $ "-B" ++ root -/- "stage1" -/- "lib"
+            , arg $ "--lib=" ++ root -/- "docs"
             , arg $ "--odir=" ++ takeDirectory output
             , arg "--no-tmp-comp-dir"
             , arg $ "--dump-interface=" ++ output

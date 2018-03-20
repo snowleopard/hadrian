@@ -24,7 +24,7 @@ module Base (
     hadrianPath, configPath, configFile, sourcePath, shakeFilesDir,
     generatedDir, generatedPath,
     stageBinPath, stageLibPath,
-templateHscPath, ghcDeps,
+    templateHscPath, ghcDeps,
     relativePackageDbPath, packageDbPath, packageDbStamp, ghcSplitPath
     ) where
 
@@ -83,11 +83,13 @@ generatedDir = "generated"
 generatedPath :: Action FilePath
 generatedPath = buildRoot <&> (-/- generatedDir)
 
--- | Path to the inplace package database used in 'Stage1' and later.
+-- | Path to the package database for the given stage of GHC,
+--   relative to the build root.
 relativePackageDbPath :: Stage -> FilePath
 relativePackageDbPath stage = stageString stage -/- "lib" -/- "package.conf.d"
 
--- | Path to the package database used in a given 'Stage'.
+-- | Path to the package database used in a given 'Stage', including
+--   the build root.
 packageDbPath :: Stage -> Action FilePath
 packageDbPath stage = buildRoot <&> (-/- relativePackageDbPath stage)
 
@@ -95,9 +97,11 @@ packageDbPath stage = buildRoot <&> (-/- relativePackageDbPath stage)
 packageDbStamp :: FilePath
 packageDbStamp = ".stamp"
 
+-- | @bin@ directory for the given 'Stage' (including the build root)
 stageBinPath :: Stage -> Action FilePath
 stageBinPath stage = buildRoot <&> (-/- stageString stage -/- "bin")
 
+-- | @lib@ directory for the given 'Stage' (including the build root)
 stageLibPath :: Stage -> Action FilePath
 stageLibPath stage = buildRoot <&> (-/- stageString stage -/- "lib")
 

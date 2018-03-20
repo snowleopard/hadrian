@@ -100,7 +100,7 @@ buildSphinxHtml path = do
     root <- buildRootRules
     root -/- htmlRoot -/- path -/- "index.html" %> \file -> do
         let dest = takeDirectory file
-            context = vanillaContext Stage0 docPackage
+            context = vanillaContext Stage1 docPackage
         build $ target context (Sphinx Html) [pathPath path] [dest]
 
 -----------------------------
@@ -110,13 +110,20 @@ buildSphinxHtml path = do
 buildLibraryDocumentation :: Rules ()
 buildLibraryDocumentation = do
     root <- buildRootRules
+
+    -- Js and Css files for haddock output
+    root -/- haddockHtmlLib %> \d -> do
+        let dir = takeDirectory d
+        liftIO $ removeFiles dir ["//*"]
+        copyDirectory "utils/haddock/haddock-api/resources/html" dir
+
     root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
         haddocks <- allHaddocks
         let libDocs = filter
                 (\x -> takeFileName x `notElem` ["ghc.haddock", "rts.haddock"])
                 haddocks
             context = vanillaContext Stage1 docPackage
-        need libDocs
+        need (root -/- haddockHtmlLib : libDocs)
         build $ target context (Haddock BuildIndex) libDocs [file]
 
 allHaddocks :: Action [FilePath]
@@ -125,8 +132,8 @@ allHaddocks = do
     sequence [ pkgHaddockFile $ vanillaContext Stage1 pkg
              | pkg <- pkgs, isLibrary pkg, isHsPackage pkg ]
 
-haddockHtmlLib :: FilePath -> FilePath
-haddockHtmlLib root = root -/- "lib/html/haddock-bundle.min.js"
+haddockHtmlLib ::FilePath
+haddockHtmlLib = "docs/html/haddock-bundle.min.js"
 
 -- | Find the haddock files for the dependencies of the current library
 haddockDependencies :: Context -> Action [FilePath]
@@ -142,12 +149,6 @@ buildPackageDocumentation :: Context -> Rules ()
 buildPackageDocumentation context@Context {..} = when (stage == Stage1 && package /= rts) $ do
     root <- buildRootRules
 
-    -- Js and Css files for haddock output
-    when (package == haddock) $ haddockHtmlLib root %> \_ -> do
-        let dir = takeDirectory (haddockHtmlLib root)
-        liftIO $ removeFiles dir ["//*"]
-        copyDirectory "utils/haddock/haddock-api/resources/html" dir
-
     -- Per-package haddocks
     root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt" %> \file -> do
       -- this is how ghc-cabal produces "haddock-prologue.txt" files
@@ -162,7 +163,7 @@ buildPackageDocumentation context@Context {..} = when (stage == Stage1 && packag
       need [ root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt" ]
       haddocks <- haddockDependencies context
       srcs <- hsSources context
-      need $ srcs ++ haddocks ++ [haddockHtmlLib root]
+      need $ srcs ++ haddocks ++ [root -/- haddockHtmlLib]
 
       -- Build Haddock documentation
       -- TODO: pass the correct way from Rules via Context
@@ -183,7 +184,7 @@ buildSphinxPdf :: FilePath -> Rules ()
 buildSphinxPdf path = do
     root <- buildRootRules
     root -/- pdfRoot -/- path <.> "pdf" %> \file -> do
-        let context = vanillaContext Stage0 docPackage
+        let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do
             build $ target context (Sphinx Latex) [pathPath path] [dir]
             build $ target context Xelatex [path <.> "tex"] [dir]
@@ -201,7 +202,7 @@ buildArchive path = do
     root <- buildRootRules
     root -/- pathArchive path %> \file -> do
         root <- buildRoot
-        let context = vanillaContext Stage0 docPackage
+        let context = vanillaContext Stage1 docPackage
             src = root -/- pathIndex path
         need [src]
         build $ target context (Tar Create) [takeDirectory src] [file]
@@ -212,7 +213,7 @@ buildManPage = do
     root <- buildRootRules
     root -/- manPagePath %> \file -> do
         need ["docs/users_guide/ghc.rst"]
-        let context = vanillaContext Stage0 docPackage
+        let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do
             build $ target context (Sphinx Man) ["docs/users_guide"] [dir]
             copyFileUntracked (dir -/- "ghc.1") file
