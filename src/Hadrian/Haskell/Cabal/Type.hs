@@ -20,5 +20,4 @@ instance Binary Cabal
 instance Hashable Cabal where
     hashWithSalt salt = hashWithSalt salt . show
 
-instance NFData Cabal where
-    rnf (Cabal a b c d e f) = a `seq` b `seq` c `seq` d `seq` e `seq` f `seq` ()
+instance NFData Cabal

@@ -132,7 +132,3 @@ oracleRules = do
     Hadrian.Oracles.Path.pathOracle
     Hadrian.Oracles.TextFile.textFileOracle
     Oracles.ModuleFiles.moduleFilesOracle
-
--- programsStage1Only :: [Package]
--- programsStage1Only = [ deriveConstants, genapply, genprimopcode, ghc, ghcCabal
---                      , ghcPkg, hp2ps, hpc, hsc2hs, runGhc ]
