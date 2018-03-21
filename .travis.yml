@@ -2,7 +2,7 @@ sudo: true
 matrix:
     include:
         - os: linux
-          env: MODE="--flavour=quickest inplace/bin/ghc-stage1"
+          env: MODE="--flavour=quickest _build/stage0/bin/ghc"
           compiler: "GHC 8.0.2"
           addons:
               apt:
@@ -17,14 +17,17 @@ matrix:
               - PATH="/opt/cabal/2.0/bin:$PATH"
 
           script:
+              # boot and configure ghc's source tree
+              - ./boot --hadrian && ./configure
+
               # Run internal Hadrian tests
-              - ./build.sh -c selftest
+              - hadrian/build.sh selftest
 
               # Build GHC
-              - ./build.sh -j -c $MODE --no-progress --progress-colour=never --profile=-
+              - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
 
         - os: linux
-          env: MODE="--flavour=quickest --integer-simple"
+          env: MODE="--flavour=quickest --integer-simple stage2"
           compiler: "GHC 8.2.1"
           addons:
               apt:
@@ -39,24 +42,29 @@ matrix:
               - PATH="/opt/cabal/1.22/bin:$PATH"
 
           script:
+              # boot and configure ghc's source tree
+              - ./boot --hadrian && ./configure
+
               # Build GHC
-              - ./build.sh -j -c $MODE --no-progress --progress-colour=never --profile=-
+              - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
 
               # Test GHC binary
-              - cd ..
-              - inplace/bin/ghc-stage2 -e 1+2
+              - _build/stage1/bin/ghc -e 1+2
 
         - os: osx
           osx_image: xcode8
-          env: MODE="--flavour=quickest --integer-simple inplace/bin/ghc-stage1"
+          env: MODE="--flavour=quickest --integer-simple _build/stage0/bin/ghc"
           before_install:
               - brew update
               - brew install ghc cabal-install python3
 
           script:
+              # boot and configure ghc's source tree
+              - ./boot --hadrian && ./configure
+
               # Due to timeout limit of OS X build on Travis CI,
               # we will ignore selftest and build only stage1
-              - ./build.sh -j -c $MODE --no-progress --progress-colour=never --profile=-
+              - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
 
 install:
     # Add Cabal to PATH
@@ -83,8 +91,7 @@ install:
     # to ./ghc/hadrian -- one way to do it is to move the .git directory
     # and perform a hard reset in order to regenerate Hadrian files
     - mv .git ghc/hadrian
-    - cd ghc/hadrian
-    - git reset --hard HEAD
+    - cd ghc/hadrian && git reset --hard HEAD && cd ..
 
 cache:
     directories:
