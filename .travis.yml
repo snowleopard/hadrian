@@ -2,7 +2,7 @@ sudo: true
 matrix:
     include:
         - os: linux
-          env: MODE="--flavour=quickest _build/stage0/bin/ghc"
+          env: MODE="--flavour=quickest stage2"
           compiler: "GHC 8.2.2"
           addons:
               apt:
