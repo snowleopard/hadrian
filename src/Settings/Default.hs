@@ -89,9 +89,9 @@ defaultRtsWays = do
     mconcat
         [ pure [ logging, debug, threaded, threadedDebug, threadedLogging ]
         , (profiling `elem` ways) ? pure [threadedProfiling]
-        , (dynamic `elem` ways) ?
+        {- , (dynamic `elem` ways) ?
           pure [ dynamic, debugDynamic, threadedDynamic, threadedDebugDynamic
-               , loggingDynamic, threadedLoggingDynamic ]
+               , loggingDynamic, threadedLoggingDynamic ] -}
         ]
 
 -- Please update doc/flavours.md when changing the default build flavour.
