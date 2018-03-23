@@ -22,6 +22,25 @@ matrix:
 
               # Run internal Hadrian tests
               - hadrian/build.sh selftest
+ 
+        - os: linux
+          env: MODE="--flavour=quickest stage2"
+          compiler: "GHC 8.2.2"
+          addons:
+              apt:
+                  packages:
+                      - ghc-8.2.2
+                      - cabal-install-2.0
+                      - zlib1g-dev
+                  sources: hvr-ghc
+
+          before_install:
+              - PATH="/opt/ghc/8.2.2/bin:$PATH"
+              - PATH="/opt/cabal/2.0/bin:$PATH"
+
+          script:
+              # boot and configure ghc's source tree
+              - ./boot --hadrian && ./configure
 
               # Build GHC
               - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
@@ -53,10 +72,12 @@ matrix:
 
         - os: osx
           osx_image: xcode8
-          env: MODE="--flavour=quickest --integer-simple _build/stage0/bin/ghc"
+          env: MODE="--flavour=quickest --integer-simple stage2"
           before_install:
               - brew update
-              - brew install ghc cabal-install python3
+              - brew install ghc cabal-install
+              # do we really need python3?
+              # - brew upgrade python
 
           script:
               # boot and configure ghc's source tree
