@@ -20,4 +20,4 @@ quickestArgs = sourceArgs SourceArgs
     , hsGhc      = stage0 ? arg "-O" }
 
 quickestRtsWays :: Ways
-quickestRtsWays = pure [vanilla, threaded]
+quickestRtsWays = pure [debug, vanilla, threaded]
