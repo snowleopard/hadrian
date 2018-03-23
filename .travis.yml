@@ -86,6 +86,9 @@ matrix:
               # we will ignore selftest and build only stage1
               - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
 
+              # Test GHC binary
+              - _build/stage1/bin/ghc -e 1+2
+
 install:
     # Add Cabal to PATH
     - PATH="$HOME/.cabal/bin:$PATH"
