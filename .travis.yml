@@ -2,7 +2,7 @@ sudo: true
 matrix:
     include:
         - os: linux
-          env: MODE="--flavour=quickest stage2"
+          env: MODE="selftest"
           compiler: "GHC 8.2.2"
           addons:
               apt:
@@ -76,8 +76,7 @@ matrix:
           before_install:
               - brew update
               - brew install ghc cabal-install
-              # do we really need python3?
-              # - brew upgrade python
+              - brew upgrade python
 
           script:
               # boot and configure ghc's source tree
