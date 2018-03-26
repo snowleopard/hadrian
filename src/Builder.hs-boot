@@ -8,7 +8,7 @@ import Development.Shake
 
 data CcMode = CompileC | FindCDependencies
 data GhcMode =  CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
-data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
+data GhcCabalMode = Conf | HsColour | Check | Sdist
 data GhcPkgMode = Init | Update | Clone | Dependencies
 data HaddockMode = BuildPackage | BuildIndex
 

@@ -50,20 +50,7 @@ ghcCabalBuilderArgs = mconcat
                    , "--configure-option=--disable-option-checking"
                    ]
             ]
-  , builder (GhcCabal Copy) ? do
-      mconcat [ arg "copy"
-              , getInputs
-              ]
-  , builder (GhcCabal Reg) ? do
-      top       <- expr topDirectory
-      path      <- getContextPath
-      mconcat [ arg "register"
-              , arg =<< pkgPath <$> getPackage
-              , arg $ top -/- path
-              , stagedBuilderPath (Ghc CompileHs)
-              , stagedBuilderPath (GhcPkg Update)
-              , getInputs
-              ]]
+  ]
 
 
 -- TODO: Isn't vanilla always built? If yes, some conditions are redundant.

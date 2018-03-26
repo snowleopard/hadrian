@@ -56,7 +56,7 @@ instance Hashable GhcMode
 instance NFData   GhcMode
 
 -- | GHC cabal mode. Can configure, copy and register pacakges.
-data GhcCabalMode = Conf | Copy | Reg | HsColour | Check | Sdist
+data GhcCabalMode = Conf | HsColour | Check | Sdist
     deriving (Eq, Generic, Show)
 
 instance Binary   GhcCabalMode
