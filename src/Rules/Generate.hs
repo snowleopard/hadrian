@@ -180,9 +180,10 @@ generateRules = do
     priority 2.0 $ (root -/- generatedDir -/- "ghcplatform.h") <~ generateGhcPlatformH
     priority 2.0 $ (root -/- generatedDir -/-  "ghcversion.h") <~ generateGhcVersionH
 
-    ghcSplitPath %> \_ -> do
-        generate ghcSplitPath emptyTarget generateGhcSplit
-        makeExecutable ghcSplitPath
+    forM_ [Stage0 ..] $ \stage ->
+      root -/- ghcSplitPath stage %> \path -> do
+        generate path emptyTarget generateGhcSplit
+        makeExecutable path
 
     -- TODO: simplify, get rid of fake rts context
     root -/- generatedDir ++ "//*" %> \file -> do

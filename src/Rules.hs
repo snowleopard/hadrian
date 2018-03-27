@@ -42,7 +42,7 @@ topLevelTargets = do
       targets <- mapM (f Stage1) =<< stagePackages Stage1
       need targets
       where
-        -- either the package databae config file for libraries or
+        -- either the package database config file for libraries or
         -- the programPath for programs. However this still does
         -- not support multiple targets, where a cabal package has
         -- a library /and/ a program.

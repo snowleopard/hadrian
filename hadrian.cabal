@@ -59,7 +59,6 @@ executable hadrian
                        , Rules.Documentation
                        , Rules.Generate
                        , Rules.Gmp
-                       , Rules.Install
                        , Rules.Libffi
                        , Rules.Library
                        , Rules.Program
@@ -67,7 +66,6 @@ executable hadrian
                        , Rules.Selftest
                        , Rules.SourceDist
                        , Rules.Test
-                       , Rules.Wrappers
                        , Settings
                        , Settings.Builders.Alex
                        , Settings.Builders.Common

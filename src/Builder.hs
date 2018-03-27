@@ -163,11 +163,12 @@ instance H.Builder Builder where
 
         Ghc _ Stage0 -> return []
         Ghc _ stage -> do
+            root <- buildRoot
             win <- windowsHost
             touchyPath <- programPath (vanillaContext Stage0 touchy)
             unlitPath  <- builderPath Unlit
             ghcdeps <- ghcDeps stage
-            return $ [ ghcSplitPath -- TODO: Make conditional on --split-objects
+            return $ [ root -/- ghcSplitPath stage -- TODO: Make conditional on --split-objects
                      , unlitPath ]
                   ++ ghcdeps
                   ++ [ touchyPath | win ]
