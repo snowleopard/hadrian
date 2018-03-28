@@ -29,8 +29,7 @@ allStages = [minBound .. maxBound]
 -- | This rule calls 'need' on all top-level build targets, respecting the
 -- 'Stage1Only' flag.
 topLevelTargets :: Rules ()
-topLevelTargets = do
-    phony "stage2" $ do
+topLevelTargets = action $ do
       (programs, libraries) <- partition isProgram <$> stagePackages Stage1
       pgmNames <- mapM (g Stage1) programs
       libNames <- mapM (g Stage1) libraries
