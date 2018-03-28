@@ -16,7 +16,7 @@ module Hadrian.Package (
     Package (..), PackageName, PackageLanguage, PackageType,
 
     -- * Construction and properties
-    cLibrary, cProgram, hsLibrary, hsProgram,
+    cLibrary, cProgram, hsLibrary, hsProgram, dummyPackage,
     isLibrary, isProgram, isCPackage, isHsPackage,
 
     -- * Package directory structure
@@ -44,6 +44,13 @@ hsLibrary = Package Haskell Library
 -- | Construct a Haskell program package.
 hsProgram :: PackageName -> FilePath -> Package
 hsProgram = Package Haskell Program
+
+-- | A dummy package, which we never try to build
+--   but just use as a better @undefined@ in code
+--   where we need a 'Package' to set up a Context
+--   but will not really operate over one.
+dummyPackage :: Package
+dummyPackage = hsLibrary "dummy" "dummy/path/"
 
 -- | Is this a library package?
 isLibrary :: Package -> Bool

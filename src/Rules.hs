@@ -108,10 +108,10 @@ packageRules = do
 
     forM_ [Stage0 .. ] $ \stage -> do
       -- we create a dummy context, that has the correct state, but contains
-      -- @base@ as a dummy package. The package isn't accessed but the record
+      -- @dummyPackage@ as a... dummy package. The package isn't accessed but the record
       -- need to be set properly. @undefined@ is not an option as it ends up
       -- being forced.
-      Rules.Register.registerPackages writePackageDb (Context stage base vanilla)
+      Rules.Register.registerPackages writePackageDb (Context stage dummyPackage vanilla)
 
     forM_ vanillaContexts $ mconcat
         [ Rules.PackageData.buildPackageData
