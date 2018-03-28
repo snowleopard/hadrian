@@ -12,7 +12,7 @@ module Settings.Builders.Common (
 import Base
 import Expression
 import GHC.Packages
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 import Oracles.Flag
 import Oracles.Setting
 import Settings
@@ -23,8 +23,8 @@ cIncludeArgs = do
     pkg     <- getPackage
     root    <- getBuildRoot
     path    <- getBuildPath
-    incDirs <- getConfiguredCabalData ConfCabal.includeDirs
-    depDirs <- getConfiguredCabalData ConfCabal.depIncludeDirs
+    incDirs <- getPackageData PD.includeDirs
+    depDirs <- getPackageData PD.depIncludeDirs
     iconvIncludeDir <- getSetting IconvIncludeDir
     gmpIncludeDir   <- getSetting GmpIncludeDir
     ffiIncludeDir   <- getSetting FfiIncludeDir

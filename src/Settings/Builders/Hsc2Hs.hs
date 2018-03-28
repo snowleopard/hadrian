@@ -3,7 +3,7 @@ module Settings.Builders.Hsc2Hs (hsc2hsBuilderArgs) where
 import Builder ()
 import GHC (autogenPath)
 import Hadrian.Builder (getBuilderPath)
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 import Settings.Builders.Common
 
 hsc2hsBuilderArgs :: Args
@@ -43,10 +43,10 @@ getCFlags = do
     mconcat [ remove ["-O"] (cArgs <> getStagedSettingList ConfCcArgs)
             , getStagedSettingList ConfCppArgs
             , cIncludeArgs
-            , getConfiguredCabalData ConfCabal.ccOpts
-            -- XXX: is cppOpts correct here?
-            , getConfiguredCabalData ConfCabal.cppOpts
-            , getConfiguredCabalData ConfCabal.depCcOpts
+            , getPackageData PD.ccOpts
+            -- we might be able to leave out cppOpts, to be investigated.
+            , getPackageData PD.cppOpts
+            , getPackageData PD.depCcOpts
             , cWarnings
             , arg "-include", arg $ autogen -/- "cabal_macros.h" ]
 
@@ -54,5 +54,5 @@ getLFlags :: Expr [String]
 getLFlags =
     mconcat [ getStagedSettingList ConfGccLinkerArgs
             , ldArgs
-            , getConfiguredCabalData ConfCabal.ldOpts
-            , getConfiguredCabalData ConfCabal.depLdOpts ]
+            , getPackageData PD.ldOpts
+            , getPackageData PD.depLdOpts ]

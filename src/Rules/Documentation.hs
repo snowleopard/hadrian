@@ -8,7 +8,7 @@ module Rules.Documentation (
 
 import Base
 import Context
-import Expression (getConfiguredCabalData, interpretInContext)
+import Expression (getPackageData, interpretInContext)
 import Flavour
 import GHC
 import Oracles.ModuleFiles
@@ -16,7 +16,7 @@ import Settings
 import Target
 import Utilities
 
-import qualified Hadrian.Haskell.Cabal.Configured as ConfCabal
+import qualified Hadrian.Haskell.Cabal.PackageData as PD
 
 -- | Build all documentation
 documentationRules :: Rules ()
@@ -139,7 +139,7 @@ haddockHtmlLib = "docs/html/haddock-bundle.min.js"
 -- | Find the haddock files for the dependencies of the current library
 haddockDependencies :: Context -> Action [FilePath]
 haddockDependencies context = do
-    depNames <- interpretInContext context (getConfiguredCabalData ConfCabal.depNames)
+    depNames <- interpretInContext context (getPackageData PD.depNames)
     sequence [ pkgHaddockFile $ vanillaContext Stage1 depPkg
              | Just depPkg <- map findPackageByName depNames, depPkg /= rts ]
 
@@ -153,8 +153,8 @@ buildPackageDocumentation context@Context {..} = when (stage == Stage1 && packag
     -- Per-package haddocks
     root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt" %> \file -> do
       -- this is how ghc-cabal produces "haddock-prologue.txt" files
-      (syn, desc) <- interpretInContext context . getConfiguredCabalData $ \p ->
-        (ConfCabal.synopsis p, ConfCabal.description p)
+      (syn, desc) <- interpretInContext context . getPackageData $ \p ->
+        (PD.synopsis p, PD.description p)
       let prologue = if null desc
                      then syn
                      else desc

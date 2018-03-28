@@ -10,7 +10,7 @@ import Builder
 import Context
 import Expression
 import GHC
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 
 newtype ModuleFiles = ModuleFiles (Stage, Package)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -89,7 +89,7 @@ hsSources context = do
 -- the build directory regardless of whether they are generated or not.
 hsObjects :: Context -> Action [FilePath]
 hsObjects context = do
-    modules <- interpretInContext context (getConfiguredCabalData ConfCabal.modules)
+    modules <- interpretInContext context (getPackageData PD.modules)
     mapM (objectPath context . moduleSource) modules
 
 -- | Generated module files live in the 'Context' specific build directory.
@@ -105,7 +105,7 @@ moduleSource moduleName = replaceEq '.' '/' moduleName <.> "hs"
 contextFiles :: Context -> Action [(String, Maybe FilePath)]
 contextFiles context@Context {..} = do
     modules <- fmap sort . interpretInContext context $
-      getConfiguredCabalData ConfCabal.modules
+      getPackageData PD.modules
     zip modules <$> askOracle (ModuleFiles (stage, package))
 
 -- | This is an important oracle whose role is to find and cache module source
@@ -123,8 +123,8 @@ moduleFilesOracle :: Rules ()
 moduleFilesOracle = void $ do
     void . addOracle $ \(ModuleFiles (stage, package)) -> do
         let context = vanillaContext stage package
-        srcDirs <- interpretInContext context (getConfiguredCabalData ConfCabal.srcDirs)
-        modules <- fmap sort $ interpretInContext context (getConfiguredCabalData ConfCabal.modules)
+        srcDirs <- interpretInContext context (getPackageData PD.srcDirs)
+        modules <- fmap sort $ interpretInContext context (getPackageData PD.modules)
         autogen <- autogenPath context
         let dirs = autogen : map (pkgPath package -/-) srcDirs
             modDirFiles = groupSort $ map decodeModule modules

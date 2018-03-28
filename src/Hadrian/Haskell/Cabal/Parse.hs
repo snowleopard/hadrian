@@ -9,7 +9,7 @@
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
 module Hadrian.Haskell.Cabal.Parse
-  ( ConfiguredCabal (..), parseCabal, parseConfiguredCabal
+  ( PackageData (..), parseCabal, parsePackageData
   , parseCabalPkgId
   , configurePackage, copyPackage, registerPackage
   ) where
@@ -42,17 +42,19 @@ import qualified Distribution.Verbosity                 as C
 
 import Base
 import Builder hiding (Builder)
-import Context -- .Type
+import Context
 import Flavour (args)
 import GHC.Packages (rts)
 import Hadrian.Expression
+import Hadrian.Haskell.Cabal.PackageData
 import Hadrian.Haskell.Cabal.Type ( Cabal( Cabal ) )
-import Hadrian.Haskell.Cabal.Configured
 import Hadrian.Oracles.TextFile
 import Hadrian.Target
 import Settings
 import Oracles.Setting
 
+-- | Parse the Cabal package identifier from the .cabal file at the given
+--   filepath.
 parseCabalPkgId :: FilePath -> IO String
 parseCabalPkgId file = C.display . C.package . C.packageDescription <$> C.readGenericPackageDescription C.silent file
 
@@ -75,6 +77,12 @@ biModules pd = go [ comp | comp@(bi,_) <- (map libBiModules . maybeToList $ C.li
         go _  = error "can not handle more than one buildinfo yet!"
         isHaskell fp = takeExtension fp `elem` [".hs", ".lhs"]
 
+-- | Parse the cabal file of the package from the given 'Context'.
+--
+--   This function reads the cabal file, gets some information about the compiler
+--   to be used corresponding to the stage it gets from the 'Context', and finalizes
+--   the package description it got from the cabal file with the additional information
+--   it got (e.g platform, compiler version conditionals, package flags).
 parseCabal :: Context -> Action Cabal
 parseCabal context@Context {..} = do
     let (Just file) = pkgCabalFile package
@@ -83,7 +91,7 @@ parseCabal context@Context {..} = do
     gpd <- liftIO $ C.readGenericPackageDescription C.verbose file
 
     -- configure the package with the ghc compiler for this stage.
-    hcPath <- builderPath' (Ghc CompileHs stage)
+    hcPath <- builderPath (Ghc CompileHs stage)
     (compiler, Just platform, _pgdb) <- liftIO $ GHC.configure C.silent (Just hcPath) Nothing Db.emptyProgramDb
 
 
@@ -109,6 +117,12 @@ parseCabal context@Context {..} = do
                    pd
                    depPkgs
 
+-- | This function runs the equivalent of @cabal configure@ using the Cabal library
+--   directly, collecting all the configuration options and flags to be passed to Cabal
+--   before invoking it.
+--
+--   It of course also 'need's package database entries for the dependencies of
+--   the package the 'Context' points to.
 configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     Just (Cabal _ _ _ gpd _pd depPkgs) <- readCabalFile context
@@ -148,7 +162,9 @@ configurePackage context@Context {..} = do
         liftIO $ do
           Hooks.defaultMainWithHooksNoReadArgs hooks gpd (argList ++ ["--flags=" ++ unwords flagList])
 
--- XXX: move this somewhere else. This is logic from ghc-cabal
+-- | Copies a built package (that the 'Context' points to) into a package
+--   database (the one for the ghc corresponding to the stage the 'Context'
+--   points to).
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
   -- original invocation
@@ -164,6 +180,8 @@ copyPackage context@Context {..} = do
 
     liftIO $ Hooks.defaultMainWithHooksNoReadArgs hooks gpd ["copy", "--builddir", ctxPath, "--target-package-db", pkgDbPath]
 
+-- | Registers a built package (the one the 'Context' points to)
+--   into the package database.
 registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
     top     <- topDirectory
@@ -175,9 +193,9 @@ registerPackage context@Context {..} = do
     liftIO $
       Hooks.defaultMainWithHooksNoReadArgs regHooks gpd ["register", "--builddir", ctxPath]
 
--- | Parse a ConfiguredCabal file.
-parseConfiguredCabal :: Context -> Action ConfiguredCabal
-parseConfiguredCabal context@Context {..} = do
+-- | Parses the 'PackageData' for a package (the one in the 'Context').
+parsePackageData :: Context -> Action PackageData
+parsePackageData context@Context {..} = do
     -- XXX: This is conceptually wrong!
     --      We should use the gpd, and
     --      the flagAssignment and compiler, hostPlatform, ... information
@@ -240,11 +258,10 @@ parseConfiguredCabal context@Context {..} = do
                     -- the RTS's library-dirs here.
             _ -> error "No (or multiple) ghc rts package is registered!!"
 
-      in return $ ConfiguredCabal
+      in return $ PackageData
       { dependencies = deps
       , name     = C.unPackageName . C.pkgName . C.package $ pd'
       , version  = C.display . C.pkgVersion . C.package $ pd'
-      -- , packageDesc = pd
       , componentId = C.localCompatPackageKey lbi'
       , modules  = map C.display . snd . biModules $ pd'
       , otherModules = map C.display . C.otherModules . fst . biModules $ pd'

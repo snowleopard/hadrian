@@ -13,7 +13,7 @@
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalFile, readConfiguredCabalFile, textFileOracle
+    readCabalFile, readPackageDataFile, textFileOracle
     ) where
 
 import Control.Monad
@@ -24,8 +24,8 @@ import Development.Shake.Classes
 import Development.Shake.Config
 
 import Context.Type
+import Hadrian.Haskell.Cabal.PackageData
 import Hadrian.Haskell.Cabal.Type
-import Hadrian.Haskell.Cabal.Configured
 import {-# SOURCE #-} Hadrian.Haskell.Cabal.Parse
 import Hadrian.Package
 import Hadrian.Utilities
@@ -39,9 +39,9 @@ newtype CabalFile = CabalFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult CabalFile = Maybe Cabal
 
-newtype ConfiguredCabalFile = ConfiguredCabalFile Context
+newtype PackageDataFile = PackageDataFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult ConfiguredCabalFile = Maybe ConfiguredCabal
+type instance RuleResult PackageDataFile = Maybe PackageData
 
 newtype KeyValue = KeyValue (FilePath, String)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -102,8 +102,8 @@ lookupDependencies depFile file = do
 readCabalFile :: Context -> Action (Maybe Cabal)
 readCabalFile = askOracle . CabalFile
 
-readConfiguredCabalFile :: Context -> Action (Maybe ConfiguredCabal)
-readConfiguredCabalFile = askOracle . ConfiguredCabalFile
+readPackageDataFile :: Context -> Action (Maybe PackageData)
+readPackageDataFile = askOracle . PackageDataFile
 
 -- | This oracle reads and parses text files to answer 'readTextFile' and
 -- 'lookupValue' queries, as well as their derivatives, tracking the results.
@@ -142,8 +142,8 @@ textFileOracle = do
         case pkgCabalFile package of
           Just file -> do
             need [file]
-            putLoud $ "| ConfiguredCabalFile oracle: reading " ++ quote file ++ " (Stage: " ++ stageString stage ++ ")..."
-            Just <$> parseConfiguredCabal ctx
+            putLoud $ "| PackageDataFile oracle: reading " ++ quote file ++ " (Stage: " ++ stageString stage ++ ")..."
+            Just <$> parsePackageData ctx
           Nothing -> return Nothing
 
-    void $ addOracle $ \(ConfiguredCabalFile ctx) -> confCabal ctx
+    void $ addOracle $ \(PackageDataFile ctx) -> confCabal ctx

@@ -63,6 +63,10 @@ isCPackage _ = False
 -- | Is this a Haskell package?
 isHsPackage :: Package -> Bool
 isHsPackage (Package Haskell _ _ _) = True
+-- we consider the RTS as a haskell package because we
+-- use information from its Cabal file to build it,
+-- and we e.g want 'pkgCabalFile' to point us to
+-- 'rts/rts.cabal' when passed the rts package as argument.
 isHsPackage (Package _ _ "rts" _)   = True
 isHsPackage _ = False
 

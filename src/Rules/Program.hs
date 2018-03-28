@@ -1,7 +1,7 @@
 module Rules.Program (buildProgram) where
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 
 import Base
 import Context
@@ -64,7 +64,7 @@ buildBinary rs bin context@Context {..} = do
             when (stage > Stage0) $ do
                 ways <- interpretInContext context (getLibraryWays <> getRtsWays)
                 needLibrary [ rtsContext { way = w } | w <- ways ]
-            cSrcs  <- interpretInContext context (getConfiguredCabalData ConfCabal.cSrcs)
+            cSrcs  <- interpretInContext context (getPackageData PD.cSrcs)
             cObjs  <- mapM (objectPath context) cSrcs
             hsObjs <- hsObjects context
             return $ cObjs ++ hsObjs

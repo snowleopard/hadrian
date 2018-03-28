@@ -3,7 +3,7 @@ module Rules.Library (
     ) where
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 import Hadrian.Haskell.Cabal.Parse (parseCabalPkgId)
 
 import Base
@@ -122,14 +122,14 @@ allObjects context = (++) <$> nonHsObjects context <*> hsObjects context
 nonHsObjects :: Context -> Action [FilePath]
 nonHsObjects context = do
     cObjs   <- cObjects context
-    cmmSrcs <- interpretInContext context (getConfiguredCabalData ConfCabal.cmmSrcs)
+    cmmSrcs <- interpretInContext context (getPackageData PD.cmmSrcs)
     cmmObjs <- mapM (objectPath context) cmmSrcs
     eObjs   <- extraObjects context
     return $ cObjs ++ cmmObjs ++ eObjs
 
 cObjects :: Context -> Action [FilePath]
 cObjects context = do
-    srcs <- interpretInContext context (getConfiguredCabalData ConfCabal.cSrcs)
+    srcs <- interpretInContext context (getPackageData PD.cSrcs)
     objs <- mapM (objectPath context) srcs
     return $ if way context == threaded
         then objs

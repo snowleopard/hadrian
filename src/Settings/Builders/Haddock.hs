@@ -1,7 +1,7 @@
 module Settings.Builders.Haddock (haddockBuilderArgs) where
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 import Hadrian.Utilities
 import Rules.Documentation
 import Settings.Builders.Common
@@ -36,7 +36,7 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
         path     <- getBuildPath
         Just version  <- expr $ pkgVersion  ctx
         Just synopsis <- expr $ pkgSynopsis ctx
-        deps     <- getConfiguredCabalData ConfCabal.depNames
+        deps     <- getPackageData PD.depNames
         haddocks <- expr . haddockDependencies =<< getContext
         Just hVersion <- expr $ pkgVersion ctx
         ghcOpts  <- haddockGhcArgs
@@ -56,7 +56,7 @@ haddockBuilderArgs = withHsPackage $ \ctx -> mconcat
             , arg $ "--prologue=" ++ takeDirectory output -/- "haddock-prologue.txt"
             , arg $ "--optghc=-D__HADDOCK_VERSION__="
                     ++ show (versionToInt hVersion)
-            , map ("--hide=" ++) <$> getConfiguredCabalData ConfCabal.otherModules
+            , map ("--hide=" ++) <$> getPackageData PD.otherModules
             , pure [ "--read-interface=../" ++ dep
                      ++ ",../" ++ dep ++ "/src/%{MODULE}.html#%{NAME},"
                      ++ haddock | (dep, haddock) <- zip deps haddocks ]

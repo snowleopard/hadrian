@@ -32,7 +32,7 @@ buildDir context = contextDir context -/- "build"
 
 -- | Path to the directory containing build artifacts of a given 'Context'.
 buildPath :: Context -> Action FilePath
-buildPath context = buildRoot <&> (-/- (buildDir context))
+buildPath context = buildRoot <&> (-/- buildDir context)
 
 -- | Get the build path of the current 'Context'.
 getBuildPath :: Expr Context b FilePath

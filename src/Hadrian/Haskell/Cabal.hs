@@ -13,11 +13,12 @@ module Hadrian.Haskell.Cabal (
     pkgVersion, pkgIdentifier, pkgDependencies, pkgSynopsis
     ) where
 
+import Data.Maybe
 import Development.Shake
 
 import Context.Type
-import Hadrian.Haskell.Cabal.Type       as C
-import Hadrian.Haskell.Cabal.Configured as CC
+import Hadrian.Haskell.Cabal.Type        as C
+import Hadrian.Haskell.Cabal.PackageData as PD
 import Hadrian.Package
 import Hadrian.Oracles.TextFile
 
@@ -29,7 +30,7 @@ pkgVersion = fmap (fmap C.version) . readCabalFile
 -- The Cabal file is tracked.
 pkgIdentifier :: Context -> Action String
 pkgIdentifier ctx = do
-    Just cabal <- readCabalFile ctx
+    cabal <- fromMaybe (error "Cabal file could not be read") <$> readCabalFile ctx
     return $ if null (C.version cabal)
         then C.name cabal
         else C.name cabal ++ "-" ++ C.version cabal
@@ -39,7 +40,7 @@ pkgIdentifier ctx = do
 -- returns a crude overapproximation of actual dependencies. The Cabal file is
 -- tracked.
 pkgDependencies :: Context -> Action (Maybe [PackageName])
-pkgDependencies = fmap (fmap CC.dependencies) . readConfiguredCabalFile
+pkgDependencies = fmap (fmap PD.dependencies) . readPackageDataFile
 
 -- | Read a Cabal file and return the package synopsis. The Cabal file is tracked.
 pkgSynopsis :: Context -> Action (Maybe String)

@@ -4,8 +4,6 @@ module Builder (
     ArMode (..), CcMode (..), GhcCabalMode (..), GhcMode (..), GhcPkgMode (..), HaddockMode (..),
     SphinxMode (..), TarMode (..), Builder (..),
 
-    builderPath',
-
     -- * Builder properties
     builderProvenance, systemBuilderPath, builderPath, isSpecified, needBuilder,
     runBuilder, runBuilderWith, runBuilderWithCmdOptions, getBuilderPath,
@@ -55,7 +53,7 @@ instance Binary   GhcMode
 instance Hashable GhcMode
 instance NFData   GhcMode
 
--- | GHC cabal mode. Can configure, copy and register pacakges.
+-- | GHC cabal mode. Can configure, copy and register packages.
 data GhcCabalMode = Conf | HsColour | Check | Sdist
     deriving (Eq, Generic, Show)
 
@@ -167,9 +165,6 @@ builderProvenance = \case
   where
     context s p = Just $ vanillaContext s p
 
-builderPath' :: Builder -> Action FilePath
-builderPath' = builderPath
-
 instance H.Builder Builder where
     builderPath :: Builder -> Action FilePath
     builderPath builder = case builderProvenance builder of
@@ -199,7 +194,7 @@ instance H.Builder Builder where
     -- query the builder for some information.
     -- contrast this with runBuilderWith, which returns @Action ()@
     -- this returns the @stdout@ from running the builder.
-    -- For now this only implements asking @ghc-pkg@ about pacakge
+    -- For now this only implements asking @ghc-pkg@ about package
     -- dependencies.
     askBuilderWith :: Builder -> BuildInfo -> Action String
     askBuilderWith builder BuildInfo {..} = case builder of
@@ -262,8 +257,12 @@ instance H.Builder Builder where
                     unit $ cmd [Cwd output] [path]        buildArgs
 
                 GhcPkg Clone _ -> do
-                    -- input is "virtual" here. it's essentially a package name
-                    Stdout pkgDesc <- cmd [path] ["--expand-pkgroot", "--no-user-package-db", "describe", input ]
+                    Stdout pkgDesc <- cmd [path]
+                      [ "--expand-pkgroot"
+                      , "--no-user-package-db"
+                      , "describe"
+                      , input -- the package name
+                      ]
                     cmd (Stdin pkgDesc) [path] (buildArgs ++ ["-"])
 
                 _  -> cmd echo [path] buildArgs

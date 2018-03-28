@@ -4,7 +4,6 @@ import Stage
 import Hadrian.Builder.Ar
 import Hadrian.Builder.Sphinx
 import Hadrian.Builder.Tar
-import Development.Shake
 
 data CcMode = CompileC | FindCDependencies
 data GhcMode =  CompileHs | CompileCWithGhc | FindHsDependencies | LinkHs
@@ -45,5 +44,3 @@ data Builder = Alex
 
 instance Eq Builder
 instance Show Builder
-
-builderPath' :: Builder -> Action FilePath

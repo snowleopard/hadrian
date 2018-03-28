@@ -8,7 +8,7 @@ module Utilities (
 
 import qualified Hadrian.Builder as H
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 import Hadrian.Utilities
 
 import Context
@@ -55,7 +55,7 @@ contextDependencies ctx@Context {..} = do
 
 cabalDependencies :: Context -> Action [String]
 cabalDependencies ctx = interpretInContext ctx $
-  getConfiguredCabalData ConfCabal.depIpIds
+  getPackageData PD.depIpIds
 
 -- | Lookup dependencies of a 'Package' in the vanilla Stage1 context.
 stage1Dependencies :: Package -> Action [Package]
@@ -71,7 +71,7 @@ libraryTargets includeGhciLib context = do
     lib0     <- buildDll0          context
     ghciLib  <- pkgGhciLibraryFile context
     ghci     <- if includeGhciLib
-                then interpretInContext context $ getConfiguredCabalData ConfCabal.buildGhciLib
+                then interpretInContext context $ getPackageData PD.buildGhciLib
                 else return False
     return $ [ libFile ] ++ [ lib0File | lib0 ] ++ [ ghciLib | ghci ]
 

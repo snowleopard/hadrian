@@ -6,7 +6,7 @@ import Settings.Builders.Common
 import Settings.Warnings
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 
 ghcBuilderArgs :: Args
 ghcBuilderArgs = mconcat [compileAndLinkHs, compileC, findHsDependencies]
@@ -25,7 +25,7 @@ compileAndLinkHs = (builder (Ghc CompileHs) ||^ builder (Ghc LinkHs)) ? do
 compileC :: Args
 compileC = builder (Ghc CompileCWithGhc) ? do
     way <- getWay
-    let ccArgs = [ getConfiguredCabalData ConfCabal.ccOpts
+    let ccArgs = [ getPackageData PD.ccOpts
                  , getStagedSettingList ConfCcArgs
                  , cIncludeArgs
                  , Dynamic `wayUnit` way ? pure [ "-fPIC", "-DDYNAMIC" ] ]
@@ -65,7 +65,7 @@ findHsDependencies = builder (Ghc FindHsDependencies) ? do
             , getInputs ]
 
 haddockGhcArgs :: Args
-haddockGhcArgs = mconcat [ commonGhcArgs, getConfiguredCabalData ConfCabal.hcOpts ]
+haddockGhcArgs = mconcat [ commonGhcArgs, getPackageData PD.hcOpts ]
 
 -- Used in ghcBuilderArgs, ghcCBuilderArgs, ghcMBuilderArgs and haddockGhcArgs.
 commonGhcArgs :: Args
@@ -90,7 +90,7 @@ commonGhcArgs = do
             , (pkg == rts) ? notStage0 ? arg ("-ghcversion-file=" ++ ghcVersion)
             , map ("-optc" ++) <$> getStagedSettingList ConfCcArgs
             , map ("-optP" ++) <$> getStagedSettingList ConfCppArgs
-            , map ("-optP" ++) <$> getConfiguredCabalData ConfCabal.cppOpts
+            , map ("-optP" ++) <$> getPackageData PD.cppOpts
             , arg "-odir"    , arg path
             , arg "-hidir"   , arg path
             , arg "-stubdir" , arg path ]
@@ -116,7 +116,7 @@ packageGhcArgs = withHsPackage $ \ctx -> do
             , arg "-no-user-package-db"
             , packageDatabaseArgs
             , libraryPackage ? arg ("-this-unit-id " ++ pkgId)
-            , map ("-package-id " ++) <$> getConfiguredCabalData ConfCabal.depIpIds ]
+            , map ("-package-id " ++) <$> getPackageData PD.depIpIds ]
 
 includeGhcArgs :: Args
 includeGhcArgs = do
@@ -124,7 +124,7 @@ includeGhcArgs = do
     path    <- getBuildPath
     root    <- getBuildRoot
     context <- getContext
-    srcDirs <- getConfiguredCabalData ConfCabal.srcDirs
+    srcDirs <- getPackageData PD.srcDirs
     autogen <- expr $ autogenPath context
     mconcat [ arg "-i"
             , arg $ "-i" ++ path

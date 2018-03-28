@@ -1,14 +1,13 @@
-module Hadrian.Haskell.Cabal.Configured where
+module Hadrian.Haskell.Cabal.PackageData where
 
 import Development.Shake.Classes
 import Hadrian.Package.Type
 import GHC.Generics
 
-data ConfiguredCabal = ConfiguredCabal
+data PackageData = PackageData
     { dependencies :: [PackageName]
     , name         :: PackageName
     , version      :: String
-    -- , packageDesc  :: C.PackageDescription
     -- * used to be pkg Data
     , componentId  :: String
     , modules      :: [String]
@@ -22,7 +21,7 @@ data ConfiguredCabal = ConfiguredCabal
     , depCompIds   :: [String]
     , includeDirs  :: [String]
     , includes     :: [String]
-    , installIncludes :: [String] -- TODO: do we need this one?
+    , installIncludes :: [String]
     , extraLibs    :: [String]
     , extraLibDirs :: [String]
     , asmSrcs      :: [String]
@@ -41,7 +40,7 @@ data ConfiguredCabal = ConfiguredCabal
     , buildGhciLib :: Bool
     } deriving (Eq, Read, Show, Typeable, Generic)
 
-instance Binary ConfiguredCabal
+instance Binary PackageData
 
-instance Hashable ConfiguredCabal
-instance NFData ConfiguredCabal
+instance Hashable PackageData
+instance NFData PackageData

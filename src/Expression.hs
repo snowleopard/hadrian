@@ -14,7 +14,7 @@ module Expression (
 
     -- * Convenient accessors
     getBuildRoot, getContext, getOutputs, getInputs,
-    getInput, getOutput, getConfiguredCabalData,
+    getInput, getOutput, getPackageData,
 
     -- * Re-exports
     module Base,
@@ -27,14 +27,14 @@ import {-# SOURCE #-} Builder
 import Context hiding (stage, package, way)
 import Expression.Type
 import Hadrian.Expression hiding (Expr, Predicate, Args)
-import Hadrian.Haskell.Cabal.Configured (ConfiguredCabal)
-import Hadrian.Oracles.TextFile (readConfiguredCabalFile)
+import Hadrian.Haskell.Cabal.PackageData (PackageData)
+import Hadrian.Oracles.TextFile (readPackageDataFile)
 
 -- | Get values from a configured cabal stage.
-getConfiguredCabalData :: (ConfiguredCabal -> a) -> Expr a
-getConfiguredCabalData key = do
+getPackageData :: (PackageData -> a) -> Expr a
+getPackageData key = do
   ctx   <- getContext
-  Just cabal <- expr (readConfiguredCabalFile ctx)
+  Just cabal <- expr (readPackageDataFile ctx)
   return $ key cabal
 
 -- | Is the build currently in the provided stage?

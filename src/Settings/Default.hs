@@ -35,7 +35,7 @@ import GHC.Packages
 import qualified Hadrian.Builder.Ar
 import qualified Hadrian.Builder.Sphinx
 import qualified Hadrian.Builder.Tar
-import Hadrian.Haskell.Cabal.Configured as ConfCabal
+import Hadrian.Haskell.Cabal.PackageData as PD
 
 -- TODO: Move C source arguments here
 -- | Default and package-specific source arguments.
@@ -49,7 +49,7 @@ data SourceArgs = SourceArgs
 sourceArgs :: SourceArgs -> Args
 sourceArgs SourceArgs {..} = builder Ghc ? mconcat
     [ hsDefault
-    , getConfiguredCabalData ConfCabal.hcOpts
+    , getPackageData PD.hcOpts
     , libraryPackage   ? hsLibrary
     , package compiler ? hsCompiler
     , package ghc      ? hsGhc ]
