@@ -39,11 +39,8 @@ matrix:
               - PATH="/opt/cabal/2.0/bin:$PATH"
 
           script:
-              # boot and configure ghc's source tree
-              - ./boot --hadrian && ./configure
-
-              # Build GHC
-              - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
+              # Build GHC, letting hadrian boot & configure the ghc source tree
+              - hadrian/build.sh -c -j $MODE --no-progress --progress-colour=never --profile=-
 
         - os: linux
           env: MODE="--flavour=quickest --integer-simple"
