@@ -31,16 +31,21 @@ allStages = [minBound .. maxBound]
 topLevelTargets :: Rules ()
 topLevelTargets = do
     phony "stage2" $ do
-      putNormal "Building stage2"
       (programs, libraries) <- partition isProgram <$> stagePackages Stage1
       pgmNames <- mapM (g Stage1) programs
       libNames <- mapM (g Stage1) libraries
-      putNormal . unlines $
-        ["| Building Programs:  " ++ intercalate ", " pgmNames
-        ,"| Building Libraries: " ++ intercalate ", " libNames]
+
+      verbosity <- getVerbosity
+      when (verbosity >= Loud) $ do
+        putNormal "Building stage2"
+        putNormal . unlines $
+          [ "| Building Programs:  " ++ intercalate ", " pgmNames
+          , "| Building Libraries: " ++ intercalate ", " libNames
+          ]
 
       targets <- mapM (f Stage1) =<< stagePackages Stage1
       need targets
+
       where
         -- either the package database config file for libraries or
         -- the programPath for programs. However this still does

@@ -8,7 +8,7 @@ module Context (
 
     -- * Paths
     contextDir, buildPath, buildDir,
-    pkgInplaceConfig, pkgDataFile, pkgSetupConfigFile,
+    pkgInplaceConfig, pkgSetupConfigFile,
     pkgHaddockFile, pkgLibraryFile, pkgLibraryFile0, pkgGhciLibraryFile,
     pkgConfFile, objectPath, contextPath, getContextPath,
     libDir, libPath
@@ -79,12 +79,6 @@ pkgInplaceConfig :: Context -> Action FilePath
 pkgInplaceConfig context = do
     path <- contextPath context
     return $ path -/- "inplace-pkg-config"
-
--- | Path to the @package-data.mk@ of a given 'Context'.
-pkgDataFile :: Context -> Action FilePath
-pkgDataFile context = do
-    path <- contextPath context
-    return $ path -/- "package-data.mk"
 
 -- | Path to the @setup-config@ of a given 'Context'.
 pkgSetupConfigFile :: Context -> Action FilePath

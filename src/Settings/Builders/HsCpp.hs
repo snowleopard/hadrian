@@ -8,7 +8,7 @@ hsCppBuilderArgs = builder HsCpp ? do
     stage   <- getStage
     root    <- getBuildRoot
     ghcPath <- expr $ buildPath (vanillaContext stage compiler)
-    mconcat [ getSettingList ConfHsCppArgs
+    mconcat [ getSettingList HsCppArgs
             , arg "-P"
             , arg "-Iincludes"
             , arg $ "-I" ++ root -/- generatedDir

@@ -10,17 +10,16 @@ import Utilities
 
 import Hadrian.Haskell.Cabal.Parse (configurePackage)
 
--- | Build @package-data.mk@ by using ghc-cabal utility to process .cabal files.
+-- | Build @setup-config@ and @inplace-pkg-config@ files
+--   for packages. Look at the "Rules" module to see this
+--   instantiated against all the packages.
 buildPackageData :: Context -> Rules ()
 buildPackageData context@Context {..} = do
     root <- buildRootRules
     let dir = root -/- contextDir context
-    -- TODO: Get rid of hardcoded file paths.
     dir -/- "setup-config" %> \_ -> configurePackage context
 
     dir -/- "inplace-pkg-config" %> \conf -> do
-      dataFile <- pkgDataFile context
-      need [dataFile]
       when (package == rts) $ do
         genPath <- buildRoot <&> (-/- generatedDir)
         rtsPath <- rtsBuildPath

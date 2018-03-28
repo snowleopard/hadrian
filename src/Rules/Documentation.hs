@@ -34,12 +34,13 @@ documentationRules = do
             archives = map pathArchive docPaths
             pdfs = map pathPdf $ docPaths \\ [ "libraries" ]
         need $ map (root -/-) $ [html] ++ archives ++ pdfs
-        need [ root -/- htmlRoot -/- "libraries" -/- "gen_contents_index" ]
-        need [ root -/- htmlRoot -/- "libraries" -/- "prologue.txt" ]
-        need [ root -/- manPagePath ]
+        need [ root -/- htmlRoot -/- "libraries" -/- "gen_contents_index"
+             , root -/- htmlRoot -/- "libraries" -/- "prologue.txt"
+             , root -/- manPageBuildPath
+             ]
 
-manPagePath :: FilePath
-manPagePath = "docs/users_guide/build-man/ghc.1"
+manPageBuildPath :: FilePath
+manPageBuildPath = "docs/users_guide/build-man/ghc.1"
 
 -- TODO: Add support for Documentation Packages so we can
 -- run the builders without this hack.
@@ -211,7 +212,7 @@ buildArchive path = do
 buildManPage :: Rules ()
 buildManPage = do
     root <- buildRootRules
-    root -/- manPagePath %> \file -> do
+    root -/- manPageBuildPath %> \file -> do
         need ["docs/users_guide/ghc.rst"]
         let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do

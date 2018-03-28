@@ -117,8 +117,27 @@ data Builder = Alex
              | Tar TarMode
              | Unlit
              | Xelatex
-             | CabalFlags Stage -- ^ a virtual builder to use the Arg predicate logic
-                                --   to collect cabal flags. +x, -x
+             | CabalFlags Stage
+               -- ^ A \"virtual\" builder (not backed by a program),
+               --   used a lot in Settings.Packages, that allows us to
+               --   toggle cabal flags of packages depending on some `Args`
+               --   predicates, and then collect all those when we are about to
+               --   configure the said packages, in Hadrian.Haskell.Cabal.Parse,
+               --   so that we end up passing the appropriate flags to the Cabal
+               --   library. For example:
+               --
+               --   > package rts
+               --   >   ? builder CabalFlags
+               --   >   ? any (wayUnit Profiling) rtsWays
+               --   >   ? arg "profiling"
+               --
+               --   (from Settings.Packages) specifies that if we're
+               --   processing the rts package with the `CabalFlag` builder,
+               --   and if we're building a profiling-enabled way of the rts,
+               --   then we pass the @profiling@ argument to the builder. This
+               --   argument is then collected by the code that performs the
+               --   package configuration, and @rts.cabal@ is processed as if
+               --   we were passing @-fprofiling@ to our build tool.
 
              deriving (Eq, Generic, Show)
 

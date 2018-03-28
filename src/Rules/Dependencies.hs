@@ -25,7 +25,6 @@ buildPackageDependencies rs context@Context {..} = do
         removeFile $ mk <.> "bak"
 
     root -/- contextDir context -/- ".dependencies" %> \deps -> do
-        need [deps <.> "mk"]
         mkDeps <- readFile' (deps <.> "mk")
         writeFileChanged deps . unlines
                               . map (\(src, deps) -> unwords $ src : deps)
