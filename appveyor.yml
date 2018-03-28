@@ -39,8 +39,8 @@ build_script:
     - build selftest
 
     # Build GHC
-    - build -j --flavour=quickest --no-progress --progress-colour=never --profile=- stage2
+    - build -j --flavour=quickest --no-progress --progress-colour=never --profile=-
 
     # Test GHC binary
     - cd ..
-    - inplace\bin\ghc-stage2 -e 1+2
+    - _build/stage1/bin/ghc -e 1+2

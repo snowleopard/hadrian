@@ -24,7 +24,7 @@ matrix:
               - hadrian/build.sh selftest
  
         - os: linux
-          env: MODE="--flavour=quickest stage2"
+          env: MODE="--flavour=quickest"
           compiler: "GHC 8.2.2"
           addons:
               apt:
@@ -46,7 +46,7 @@ matrix:
               - hadrian/build.sh -j $MODE --no-progress --progress-colour=never --profile=-
 
         - os: linux
-          env: MODE="--flavour=quickest --integer-simple stage2"
+          env: MODE="--flavour=quickest --integer-simple"
           compiler: "GHC 8.4.1"
           addons:
               apt:
@@ -72,7 +72,7 @@ matrix:
 
         - os: osx
           osx_image: xcode8
-          env: MODE="--flavour=quickest --integer-simple stage2"
+          env: MODE="--flavour=quickest --integer-simple"
           before_install:
               - brew update
               - brew install ghc cabal-install
