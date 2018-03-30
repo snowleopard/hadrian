@@ -137,7 +137,7 @@ optDescrs =
     [ Option ['c'] ["configure"] (NoArg readConfigure)
       "Run the boot and configure scripts (if you do not want to run them manually)."
     , Option ['o'] ["build-root"] (OptArg readBuildRoot "BUILD_ROOT")
-      "Where to store build artefacts. (Default _build)."
+      "Where to store build artifacts. (Default _build)."
     , Option [] ["flavour"] (OptArg readFlavour "FLAVOUR")
       "Build flavour (Default, Devel1, Devel2, Perf, Prof, Quick or Quickest)."
     , Option [] ["freeze1"] (NoArg readFreeze1)
