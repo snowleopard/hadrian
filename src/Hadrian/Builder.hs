@@ -126,17 +126,6 @@ askWith :: (Builder b, ShakeValue c) => [(Resource, Int)] -> [CmdOption] -> Targ
 askWith = doWith askBuilderWith askInfo
 
 -- | Print out information about the command being executed.
-putInfo :: Show b => Target c b -> Action ()
-putInfo t = putProgressInfo =<< renderAction
-    ("Run " ++ show (builder t)) -- TODO: Bring back contextInfo.
-    (digest $ inputs  t)
-    (digest $ outputs t)
-  where
-    digest [] = "none"
-    digest [x] = x
-    digest (x:xs) = x ++ " (and " ++ show (length xs) ++ " more)"
-
--- | Print out information about the command being executed.
 runInfo :: Show b => Target c b -> Action ()
 runInfo t = putProgressInfo =<< renderAction
     ("Run " ++ show (builder t)) -- TODO: Bring back contextInfo.

@@ -48,7 +48,7 @@ contextDependencies ctx@Context {..} = do
         let newPkgs = nubOrd $ sort (deps ++ pkgs)
         if pkgs == newPkgs then return pkgs else go newPkgs
     step pkg = pkgDependencies (ctx { Context.package = pkg }) >>= \case
-      Nothing -> return [] -- non cabal package => no dependencies
+      Nothing -> return [] -- Non-Cabal packages have no dependencies.
       Just deps -> do
         active <- sort <$> stagePackages depStage
         return $ intersectOrd (compare . pkgName) active deps
