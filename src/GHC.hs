@@ -158,16 +158,16 @@ autogenPath context@Context {..}
 
 -- ref: mk/config.mk
 -- | Command line tool for stripping.
-stripCmdPath :: Action FilePath
-stripCmdPath = do
-    targetPlatform <- setting TargetPlatform
-    top <- topDirectory
-    case targetPlatform of
-        "x86_64-unknown-mingw32" ->
-             return (top -/- "inplace/mingw/bin/strip.exe")
-        "arm-unknown-linux" ->
-             return ":" -- HACK: from the make-based system, see the ref above
-        _ -> return "strip"
+-- stripCmdPath :: Action FilePath
+-- stripCmdPath = do
+--     targetPlatform <- setting TargetPlatform
+--     top <- topDirectory
+--     case targetPlatform of
+--         "x86_64-unknown-mingw32" ->
+--              return (top -/- "inplace/mingw/bin/strip.exe")
+--         "arm-unknown-linux" ->
+--              return ":" -- HACK: from the make-based system, see the ref above
+--         _ -> return "strip"
 
 buildDll0 :: Context -> Action Bool
 buildDll0 Context {..} = do
