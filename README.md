@@ -127,6 +127,17 @@ are currently not supported.
 
 To build a GHC source distribution tarball, run `build sdist-ghc`.
 
+#### Binary distribution
+
+To build a GHC binary distribution, run `build binary-dist`. The resulting
+tarball contains just enough to support the
+
+``` sh
+$ ./configure [--prefix=PATH] && make install
+```
+
+workflow, for now.
+
 #### Testing
 
 * `build validate` runs GHC tests by simply executing `make fast` in `testsuite/tests`
