@@ -125,7 +125,7 @@ are currently not supported.
 
 #### Source distribution
 
-To build a GHC source distribution tarball, run `build sdist-ghc`.
+To build a GHC source distribution tarball, run `build source-dist`.
 
 #### Binary distribution
 
