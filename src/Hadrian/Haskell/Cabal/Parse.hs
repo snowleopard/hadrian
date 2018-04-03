@@ -222,6 +222,7 @@ parsePackageData context@Context {..} = do
     liftIO $ C.initialBuildSteps cPath pd' lbi' C.silent
 
     -- TODO: Get rid of deprecated 'externalPackageDeps' and drop -Wno-deprecations
+    -- See: https://github.com/snowleopard/hadrian/issues/548
     let extDeps = C.externalPackageDeps lbi'
         deps    = map (C.display . snd) extDeps
         dep_direct = map (fromMaybe (error "dep_keys failed")

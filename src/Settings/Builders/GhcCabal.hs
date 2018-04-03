@@ -24,6 +24,7 @@ ghcCabalBuilderArgs = mconcat
             -- XXX we need to set --with-strip= (stripCmdPath :: Action FilePath), and if it's ':' disable
             --     stripping as well. As it is now, I believe we might have issues with stripping on
             --     windows, as I can't see a consumer of `stripCmdPath`.
+            -- TODO: See https://github.com/snowleopard/hadrian/issues/549.
             , crossCompiling ? pure [ "--disable-executable-stripping", "--disable-library-stripping" ]
             , arg "--cabal-file"
             , arg =<< fromJust . pkgCabalFile <$> getPackage
@@ -51,7 +52,6 @@ ghcCabalBuilderArgs = mconcat
                    ]
             ]
   ]
-
 
 -- TODO: Isn't vanilla always built? If yes, some conditions are redundant.
 -- TODO: Need compiler_stage1_CONFIGURE_OPTS += --disable-library-for-ghci?
