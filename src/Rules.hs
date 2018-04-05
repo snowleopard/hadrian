@@ -98,12 +98,7 @@ packageRules = do
     let contexts        = liftM3 Context        allStages knownPackages allWays
         vanillaContexts = liftM2 vanillaContext allStages knownPackages
 
-    forM_ contexts $ mconcat
-        [ Rules.Compile.compilePackage readPackageDb
-        , Rules.Library.buildPackageLibrary ]
-
-    let dynamicContexts = liftM3 Context [Stage1 ..] knownPackages [dynamic]
-    forM_ dynamicContexts Rules.Library.buildDynamicLib
+    forM_ contexts (Rules.Compile.compilePackage readPackageDb)
 
     Rules.Program.buildProgram readPackageDb
 
@@ -118,7 +113,6 @@ packageRules = do
         [ Rules.PackageData.buildPackageData
         , Rules.Dependencies.buildPackageDependencies readPackageDb
         , Rules.Documentation.buildPackageDocumentation
-        , Rules.Library.buildPackageGhciLibrary
         , Rules.Generate.generatePackageCode ]
 
 buildRules :: Rules ()
@@ -129,6 +123,7 @@ buildRules = do
     Rules.Generate.generateRules
     Rules.Gmp.gmpRules
     Rules.Libffi.libffiRules
+    Rules.Library.libraryRules
     packageRules
 
 oracleRules :: Rules ()
