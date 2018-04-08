@@ -51,6 +51,7 @@ ghcLinkArgs = builder (Ghc LinkHs) ? do
             , arg "-no-auto-link-packages"
             ,      nonHsMainPackage pkg  ? arg "-no-hs-main"
             , not (nonHsMainPackage pkg) ? arg "-rtsopts"
+            , arg "-lnuma"
             , pure [ "-optl-l" ++           lib | lib <- libs ++ gmpLibs ]
             ]
 
