@@ -32,8 +32,8 @@ install:
 build_script:
     # Boot and configure ghc source tree
     - cd ..
-    - python3 boot
-    - configure --enable-tarballs-autodownload
+    - stack exec -- python3 boot
+    - stack exec -- configure --enable-tarballs-autodownload
     - cd hadrian
 
     # Build Hadrian and run internal Hadrian tests
