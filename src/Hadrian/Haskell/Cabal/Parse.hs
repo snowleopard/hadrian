@@ -51,7 +51,6 @@ import Hadrian.Haskell.Cabal.Type ( Cabal( Cabal ) )
 import Hadrian.Oracles.TextFile
 import Hadrian.Target
 import Settings
-import Oracles.Setting
 
 -- | Parse the Cabal package identifier from the .cabal file at the given
 --   filepath.
@@ -151,7 +150,6 @@ configurePackage context@Context {..} = do
               pure $ Hooks.simpleUserHooks { Hooks.postConf = \_ _ _ _ -> return () }
             | otherwise -> pure Hooks.simpleUserHooks
 
-
     case pkgCabalFile package of
       Nothing -> error "No a cabal package!"
       Just _ -> do
@@ -167,31 +165,20 @@ configurePackage context@Context {..} = do
 --   points to).
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
-  -- original invocation
     Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
-
-    top     <- topDirectory
-    ctxPath <- (top -/-) <$> Context.contextPath context
-    pkgDbPath <- (top -/-) <$> packageDbPath stage
-
-    let userHooks = Hooks.autoconfUserHooks
-        copyHooks = userHooks
-        hooks = copyHooks
-
-    liftIO $ Hooks.defaultMainWithHooksNoReadArgs hooks gpd ["copy", "--builddir", ctxPath, "--target-package-db", pkgDbPath]
+    ctxPath   <- Context.contextPath context
+    pkgDbPath <- packageDbPath stage
+    liftIO $ Hooks.defaultMainWithHooksNoReadArgs Hooks.autoconfUserHooks gpd
+        [ "copy", "--builddir", ctxPath, "--target-package-db", pkgDbPath ]
 
 -- | Registers a built package (the one the 'Context' points to)
 --   into the package database.
 registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
-    top     <- topDirectory
-    ctxPath <- (top -/-) <$> Context.contextPath context
+    ctxPath <- Context.contextPath context
     Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
-    let userHooks = Hooks.autoconfUserHooks
-        regHooks = userHooks
-
-    liftIO $
-      Hooks.defaultMainWithHooksNoReadArgs regHooks gpd ["register", "--builddir", ctxPath]
+    liftIO $ Hooks.defaultMainWithHooksNoReadArgs Hooks.autoconfUserHooks gpd
+        [ "register", "--builddir", ctxPath ]
 
 -- | Parses the 'PackageData' for a package (the one in the 'Context').
 parsePackageData :: Context -> Action PackageData
