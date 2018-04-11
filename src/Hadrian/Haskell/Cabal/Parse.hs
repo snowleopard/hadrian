@@ -81,7 +81,7 @@ biModules pd = go [ comp | comp@(bi,_) <-
 -- such as platform, compiler version conditionals, and package flags.
 parseCabal :: Context -> Action Cabal
 parseCabal context@Context {..} = do
-    let Just file = pkgCabalFile package
+    let file = unsafePkgCabalFile package
 
     -- Read the package description from the Cabal file
     gpd <- liftIO $ C.readGenericPackageDescription C.verbose file
@@ -113,7 +113,6 @@ parseCabal context@Context {..} = do
                    (C.display . C.pkgVersion . C.package $ pd)
                    (C.synopsis pd) gpd pd depPkgs
 
--- TODO: Add proper error handling for partiality due to Nothing cases.
 -- | This function runs the equivalent of @cabal configure@ using the Cabal
 -- library directly, collecting all the configuration options and flags to be
 -- passed to Cabal before invoking it. It 'need's package database entries for
@@ -121,9 +120,8 @@ parseCabal context@Context {..} = do
 configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
-    when (isNothing $ pkgCabalFile package) $ error "Not a Cabal package!"
 
-    Just (Cabal _ _ _ gpd _pd depPkgs) <- readCabalFile context
+    Cabal _ _ _ gpd _pd depPkgs <- unsafeReadCabalFile context
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -162,7 +160,7 @@ configurePackage context@Context {..} = do
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
     putLoud $ "| Copy package " ++ quote (pkgName package)
-    Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
+    Cabal _ _ _ gpd _ _ <- unsafeReadCabalFile context
     ctxPath   <- Context.contextPath context
     pkgDbPath <- packageDbPath stage
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
@@ -173,7 +171,7 @@ registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
     putLoud $ "| Register package " ++ quote (pkgName package)
     ctxPath <- Context.contextPath context
-    Just (Cabal _ _ _ gpd _ _) <- readCabalFile context
+    Cabal _ _ _ gpd _ _ <- unsafeReadCabalFile context
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
         [ "register", "--builddir", ctxPath ]
 
@@ -188,7 +186,7 @@ parsePackageData context@Context {..} = do
     -- let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
     --
     -- However when using the new-build path's this might change.
-    Just (Cabal _ _ _ _gpd pd _depPkgs) <- readCabalFile context
+    Cabal _ _ _ _gpd pd _depPkgs <- unsafeReadCabalFile context
 
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]
