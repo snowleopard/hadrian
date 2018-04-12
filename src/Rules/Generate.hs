@@ -161,13 +161,19 @@ copyRules = do
     root <- buildRootRules
     forM_ [Stage0 ..] $ \stage -> do
         let prefix = root -/- stageString stage -/- "lib"
-        (prefix -/- "ghc-usage.txt")     <~ return "driver"
-        (prefix -/- "ghci-usage.txt"  )  <~ return "driver"
-        (prefix -/- "llvm-targets")      <~ return "."
-        (prefix -/- "platformConstants") <~ (buildRoot <&> (-/- generatedDir))
-        (prefix -/- "settings")          <~ return "."
-        (prefix -/- "template-hsc.h")    <~ return (pkgPath hsc2hs)
+        prefix -/- "ghc-usage.txt"     <~ return "driver"
+        prefix -/- "ghci-usage.txt"    <~ return "driver"
+        prefix -/- "llvm-targets"      <~ return "."
+        prefix -/- "platformConstants" <~ (buildRoot <&> (-/- generatedDir))
+        prefix -/- "settings"          <~ return "."
+        prefix -/- "template-hsc.h"    <~ return (pkgPath hsc2hs)
+
+    -- TODO: Get rid of this workaround.
+    -- See https://github.com/snowleopard/hadrian/issues/554
+    root -/- buildDir rtsContext -/- "rts/fs.h"     <~ return "rts"
+    root -/- buildDir rtsContext -/- "rts/fs_rts.h" <~ return "rts"
   where
+    infixl 1 <~
     pattern <~ mdir = pattern %> \file -> do
         dir <- mdir
         copyFile (dir -/- takeFileName file) file
