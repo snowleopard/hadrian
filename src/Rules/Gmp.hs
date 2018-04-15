@@ -45,7 +45,7 @@ gmpRules = do
     root <- buildRootRules
     root <//> gmpLibraryH %> \header -> do
         windows  <- windowsHost
-        configMk <- readFile' =<< (gmpBuildPath <&> (-/- "config.mk"))
+        configMk <- readFile' =<< (gmpBuildPath <&> (-/- "../config.mk"))
         if not windows && -- TODO: We don't use system GMP on Windows. Fix?
            any (`isInfixOf` configMk) [ "HaveFrameworkGMP = YES", "HaveLibGmp = YES" ]
         then do
