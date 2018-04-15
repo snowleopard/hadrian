@@ -22,6 +22,7 @@ gmpLibrary = ".libs/libgmp.a"
 gmpContext :: Context
 gmpContext = vanillaContext Stage1 integerGmp
 
+-- TODO: Move this to a higher-level directory for simplicity.
 -- | Build directory for in-tree GMP library.
 gmpBuildPath :: Action FilePath
 gmpBuildPath = buildRoot <&> (-/- buildDir gmpContext -/- "gmp")
@@ -75,14 +76,13 @@ gmpRules = do
 
     -- This causes integerGmp package to be configured, hence creating the files
     root <//> "gmp/config.mk" %> \_ -> do
-        -- setup-config, triggers `ghc-cabal configure`
-        -- everything of a package should depend on that
-        -- in the first place.
+        -- Calling 'need' on @setup-config@, triggers @ghc-cabal configure@
+        -- Building anything in a package transitively depends on its configuration.
         setupConfig <- contextPath gmpContext <&> (-/- "setup-config")
         need [setupConfig]
 
-    -- Run GMP's configure script
     -- TODO: Get rid of hard-coded @gmp@.
+    -- Run GMP's configure script
     root <//> "gmp/Makefile" %> \mk -> do
         env     <- configureEnvironment
         gmpPath <- gmpBuildPath
