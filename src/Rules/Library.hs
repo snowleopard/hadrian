@@ -78,8 +78,8 @@ buildPackageLibrary :: Context -> Rules ()
 buildPackageLibrary context@Context {..} = do
     root <- buildRootRules
     pkgId <- case pkgCabalFile package of
-        Just file -> liftIO (parseCabalPkgId file)
-        Nothing   -> return (pkgName package)
+        Just file -> liftIO $ parseCabalPkgId file
+        Nothing   -> return $ pkgName package
     let libPrefix = root -/- buildDir context -/- "libHS" ++ pkgId
         archive = libPrefix ++ (waySuffix way <.> "a")
     archive %%> \a -> do
