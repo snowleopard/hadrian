@@ -10,6 +10,7 @@ import Utilities
 import Distribution.ParseUtils
 import qualified Distribution.Compat.ReadP as Parse
 import Distribution.Version (Version)
+import qualified System.Directory as IO
 
 import Hadrian.Expression
 import Hadrian.Haskell.Cabal.Parse as Cabal
@@ -82,7 +83,10 @@ copyConf rs context@Context {..} conf = do
     -- about existing package: https://github.com/snowleopard/hadrian/issues/543.
     -- Also, we don't always do the unregistration + registration to avoid
     -- repeated work after a full build.
-    unlessM (doesFileExist conf) $ do
+    -- We do not track 'doesFileExist' since we are going to create the file if
+    -- it is currently missing. TODO: Is this the right thing to do?
+    -- See https://github.com/snowleopard/hadrian/issues/569.
+    unlessM (liftIO $ IO.doesFileExist conf) $ do
         buildWithResources rs $
             target context (GhcPkg Unregister stage) [pkgName package] []
         buildWithResources rs $
