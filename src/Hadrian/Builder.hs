@@ -109,17 +109,11 @@ doWith :: (Builder b, ShakeValue c)
        -> (Target c b -> Action ())
        -> [(Resource, Int)] -> [CmdOption] -> Target c b -> Args c b -> Action a
 doWith f info rs opts target args = do
-    putLoud "in doWith"
     needBuilder (builder target)
-    putLoud "builder ready"
     argList <- interpret target args
-    putLoud $ "args: " ++ show argList
     trackArgsHash target -- Rerun the rule if the hash of argList has changed.
-    putLoud "args hash tracked"
     info target
-    putLoud "target info printed"
     verbose <- interpret target verboseCommand
-    putLoud "target interpreted"
     let quietlyUnlessVerbose = if verbose then withVerbosity Loud else quietly
     quietlyUnlessVerbose $ f (builder target) $
         BuildInfo { buildArgs      = argList

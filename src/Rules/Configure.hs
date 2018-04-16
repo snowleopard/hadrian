@@ -26,15 +26,10 @@ configureRules = do
                 quietly $ cmd ["bash", "mk/get-win32-tarballs.sh", "download", System.arch]
             let srcs    = map (<.> "in") outs
                 context = vanillaContext Stage0 compiler
-            putLoud $ "[hadrian/cfg/system.cfg, settings, mk/config.h]"
-            putLoud $ "about to need " ++ show srcs
             need srcs
-            putLoud $ "about to run ./configure"
             build $ target context (Configure ".") srcs outs
-            putLoud "done running ./configure!"
 
     ["configure", configH <.> "in"] &%> \_ -> do
-        putLoud $ "will generate ./configure and mk/config.h.in"
         skip <- not <$> cmdConfigure
         if skip
         then unlessM (doesFileExist "configure") $
@@ -45,4 +40,4 @@ configureRules = do
             need ["configure.ac"]
             putBuild "| Running boot..."
             verbosity <- getVerbosity
-            quietly $ cmd [EchoStdout (verbosity >= Loud)] "python3 boot"
+            quietly $ cmd [EchoStdout (verbosity >= Loud)] "python3 boot --hadrian"

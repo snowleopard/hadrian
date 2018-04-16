@@ -213,7 +213,6 @@ instance H.Builder Builder where
 
     runBuilderWith :: Builder -> BuildInfo -> Action ()
     runBuilderWith builder BuildInfo {..} = do
-        putLoud $ "about to run builder: " ++ show builder
         path <- builderPath builder
         withResources buildResources $ do
             verbosity <- getVerbosity
@@ -237,7 +236,6 @@ instance H.Builder Builder where
 
                 Autoreconf dir -> cmd echo [Cwd dir] [path] buildArgs
                 Configure dir -> do
-                    putLoud "running the configure builder"
                     -- Inject /bin/bash into `libtool`, instead of /bin/sh,
                     -- otherwise Windows breaks. TODO: Figure out why.
                     bash <- bashPath
