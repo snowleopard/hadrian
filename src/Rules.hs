@@ -98,6 +98,14 @@ packageRules = do
     let contexts        = liftM3 Context        allStages knownPackages allWays
         vanillaContexts = liftM2 vanillaContext allStages knownPackages
 
+    -- TODO: we might want to look into converting more and more
+    --       rules to the style introduced in Rules.Library in
+    --       https://github.com/snowleopard/hadrian/pull/571,
+    --       where "catch-all" rules are used to "catch" the need
+    --       for library files, and we then use parsec parsers to
+    --       extract all sorts of information needed to build them, like
+    --       the package, the stage, the way, etc.
+
     forM_ contexts (Rules.Compile.compilePackage readPackageDb)
 
     Rules.Program.buildProgram readPackageDb

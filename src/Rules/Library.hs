@@ -43,15 +43,10 @@ buildStaticLib root archivePath = do
                  archivePath
   let context = libAContext l
   objs <- libraryObjects context
-  asuf <- libsuf way
-  let isLib0 = ("//*-0" ++ asuf) ?== archivePath
   removeFile archivePath
-  if isLib0
-    then build $ target context (Ar Pack stage) []   [archivePath]
-         --  ^^^ TODO: scan for dlls
-    else build $ target context (Ar Pack stage) objs [archivePath]
+  build $ target context (Ar Pack stage) objs [archivePath]
   synopsis <- pkgSynopsis context
-  unless isLib0 . putSuccess $ renderLibrary
+  putSuccess $ renderLibrary
     (quote pkgname ++ " (" ++ show stage ++ ", way " ++ show way ++ ").")
     archivePath synopsis
 
