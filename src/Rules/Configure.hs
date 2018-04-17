@@ -12,7 +12,8 @@ import Utilities
 
 configureRules :: Rules ()
 configureRules = do
-    [configFile, "settings", configH] &%> \outs -> do
+    -- TODO: consider other files we should track here (rts/rts.cabal etc)
+    [configFile, "settings", configH, "compiler/ghc.cabal"] &%> \outs -> do
         skip <- not <$> cmdConfigure
         if skip
         then unlessM (doesFileExist configFile) $
