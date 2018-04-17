@@ -43,5 +43,4 @@ build_script:
     - build -j --flavour=quickest --no-progress --progress-colour=never --profile=-
 
     # Test GHC binary
-    - cd ..
     - _build/stage1/bin/ghc -e 1+2
