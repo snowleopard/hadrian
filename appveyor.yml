@@ -35,11 +35,8 @@ build_script:
     - hadrian\stack exec -- python3 boot
     - hadrian\stack exec -- bash configure --enable-distro-toolchain
 
-    # Build Hadrian and run internal Hadrian tests
-    - hadrian\build selftest
-
     # Build GHC
-    - hadrian\build -j --flavour=quickest --no-progress --progress-colour=never --profile=-
+    - hadrian\build -j --flavour=quickest --integer-simple --no-progress --progress-colour=never --profile=-
 
     # Test GHC binary
     - _build\stage1\bin\ghc -e 1+2
