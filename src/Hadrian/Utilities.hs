@@ -125,6 +125,7 @@ unifyPath = toStandard . normaliseEx
 
 -- | Combine paths with a forward slash regardless of platform.
 (-/-) :: FilePath -> FilePath -> FilePath
+_ -/- b@('/':_) = b -- don't prefix if second argument is already absolute
 "" -/- b = b
 a  -/- b
     | last a == '/' = a ++       b
