@@ -13,7 +13,7 @@ nofibRules :: Rules ()
 nofibRules = do
   "nofib" ~> do
     needNofibBuilders
-    makePath <- builderPath (Make "")
+    makePath <- builderPath (Make "nofib")
     top <- topDirectory
     root <- buildRoot
     liftIO (setEnv "MAKE" makePath)
