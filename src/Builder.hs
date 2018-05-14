@@ -112,6 +112,7 @@ data Builder = Alex
              | Perl
              | Python
              | Ranlib
+             | RunNofib
              | RunTest
              | Sphinx SphinxMode
              | Tar TarMode
@@ -273,6 +274,14 @@ instance H.Builder Builder where
                     Exit _ <- cmd echo [path] (buildArgs ++ [input])
                     return ()
 
+                RunNofib -> do
+                    let [ghcPath, perlPath] = buildInputs
+                        nofibArgs = ["WithNofibHc=" ++ ghcPath, "PERL=" ++ perlPath]
+                    unit $ cmd (Cwd "nofib") [path] ["clean"]
+                    unit $ cmd (Cwd "nofib") [path] (nofibArgs ++ ["boot"])
+                    Stdouterr log <- cmd (Cwd "nofib") [path] nofibArgs
+                    writeFile' output log
+
                 _  -> cmd echo [path] buildArgs
 
 -- TODO: Some builders are required only on certain platforms. For example,
@@ -307,6 +316,7 @@ systemBuilderPath builder = case builder of
     Perl            -> fromKey "perl"
     Python          -> fromKey "python"
     Ranlib          -> fromKey "ranlib"
+    RunNofib        -> fromKey "make"
     RunTest         -> fromKey "python"
     Sphinx _        -> fromKey "sphinx-build"
     Tar _           -> fromKey "tar"

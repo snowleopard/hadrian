@@ -2,7 +2,7 @@ module Rules.Nofib where
 
 import Base
 import Expression
-import GHC.Packages
+import GHC
 import Oracles.Setting
 import Target
 import Utilities
@@ -11,27 +11,31 @@ import System.Environment
 
 nofibRules :: Rules ()
 nofibRules = do
-  "nofib" ~> do
+  root <- buildRootRules
+
+  "nofib" ~> need [root -/- nofibLogFile]
+
+  root -/- nofibLogFile %> \fp -> do
     needNofibBuilders
     makePath <- builderPath (Make "nofib")
     top <- topDirectory
-    root <- buildRoot
+    ghcPath <- builderPath (Ghc CompileHs Stage2)
+    perlPath <- builderPath Perl
     liftIO (setEnv "MAKE" makePath)
 
-    let out = top -/- root -/- "nofib.stdout"
-        err = top -/- root -/- "nofib.stderr"
-
-    buildWithCmdOptions [FileStdout out, FileStderr err] $
+    build $
       target (vanillaContext Stage2 compiler)
-             (Make "nofib")
-             []
-             [out, err]
+             RunNofib
+             [top -/- ghcPath, perlPath]
+             [fp]
 
-nofibHC :: FilePath -> String
-nofibHC ghcPath = "WithNofibHc=" ++ ghcPath
-
-perlProg :: FilePath -> String
-perlProg perlPath = "PERL=" ++ perlPath
+nofibLogFile :: FilePath
+nofibLogFile = "nofib-log"
 
 needNofibBuilders :: Action ()
-needNofibBuilders = needBuilder $ Ghc CompileHs Stage2
+needNofibBuilders = do
+  unlitPath <- programPath (Context Stage1 unlit vanilla)
+  mtlPath <- pkgConfFile (Context Stage1 mtl vanilla)
+  liftIO $ print (unlitPath, mtlPath)
+  need [ unlitPath, mtlPath ]
+  needBuilder (Ghc CompileHs Stage2)
