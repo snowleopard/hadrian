@@ -25,6 +25,7 @@ import Hadrian.Oracles.Path
 import Hadrian.Oracles.TextFile
 import Hadrian.Utilities
 import qualified System.Directory.Extra as IO
+import System.Exit
 
 import Base
 import Context
@@ -279,9 +280,11 @@ instance H.Builder Builder where
                         nofibArgs = ["WithNofibHc=" ++ ghcPath, "PERL=" ++ perlPath]
                     unit $ cmd (Cwd "nofib") [path] ["clean"]
                     unit $ cmd (Cwd "nofib") [path] (nofibArgs ++ ["boot"])
-                    Stdouterr log <- cmd (Cwd "nofib") [path] nofibArgs
+                    (Exit e, Stdouterr log) <- cmd (Cwd "nofib") [path] nofibArgs
                     writeFile' output log
-
+                    if e == ExitSuccess
+                      then putLoud $ "nofib log available at " ++ output
+                      else error $ "nofib failed, full log available at " ++ output
                 _  -> cmd echo [path] buildArgs
 
 -- TODO: Some builders are required only on certain platforms. For example,
