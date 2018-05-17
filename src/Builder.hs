@@ -25,7 +25,6 @@ import Hadrian.Oracles.Path
 import Hadrian.Oracles.TextFile
 import Hadrian.Utilities
 import qualified System.Directory.Extra as IO
-import System.Exit
 
 import Base
 import Context
@@ -113,7 +112,6 @@ data Builder = Alex
              | Perl
              | Python
              | Ranlib
-             | RunNofib
              | RunTest
              | Sphinx SphinxMode
              | Tar TarMode
@@ -275,16 +273,6 @@ instance H.Builder Builder where
                     Exit _ <- cmd echo [path] (buildArgs ++ [input])
                     return ()
 
-                RunNofib -> do
-                    let [ghcPath, perlPath] = buildInputs
-                        nofibArgs = ["WithNofibHc=" ++ ghcPath, "PERL=" ++ perlPath]
-                    unit $ cmd (Cwd "nofib") [path] ["clean"]
-                    unit $ cmd (Cwd "nofib") [path] (nofibArgs ++ ["boot"])
-                    (Exit e, Stdouterr log) <- cmd (Cwd "nofib") [path] nofibArgs
-                    writeFile' output log
-                    if e == ExitSuccess
-                      then putLoud $ "nofib log available at " ++ output
-                      else error $ "nofib failed, full log available at " ++ output
                 _  -> cmd echo [path] buildArgs
 
 -- TODO: Some builders are required only on certain platforms. For example,
@@ -319,7 +307,6 @@ systemBuilderPath builder = case builder of
     Perl            -> fromKey "perl"
     Python          -> fromKey "python"
     Ranlib          -> fromKey "ranlib"
-    RunNofib        -> fromKey "make"
     RunTest         -> fromKey "python"
     Sphinx _        -> fromKey "sphinx-build"
     Tar _           -> fromKey "tar"

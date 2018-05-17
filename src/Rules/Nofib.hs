@@ -5,9 +5,9 @@ import Expression
 import GHC
 import Oracles.Setting
 import Target
-import Utilities
 
 import System.Environment
+import System.Exit
 
 nofibRules :: Rules ()
 nofibRules = do
@@ -36,11 +36,14 @@ nofibRules = do
     -- subdirectory, passing the path to
     -- the GHC to benchmark and perl to
     -- nofib's makefiles.
-    build $
-      target (vanillaContext Stage2 compiler)
-             RunNofib
-             [top -/- ghcPath, perlPath]
-             [fp]
+    let nofibArgs = ["WithNofibHc=" ++ (top -/- ghcPath), "PERL=" ++ perlPath]
+    unit $ cmd (Cwd "nofib") [makePath] ["clean"]
+    unit $ cmd (Cwd "nofib") [makePath] (nofibArgs ++ ["boot"])
+    (Exit e, Stdouterr log) <- cmd (Cwd "nofib") [makePath] nofibArgs
+    writeFile' fp log
+    if e == ExitSuccess
+      then putLoud $ "nofib log available at " ++ fp
+      else error $ "nofib failed, full log available at " ++ fp
 
 nofibLogFile :: FilePath
 nofibLogFile = "nofib-log"

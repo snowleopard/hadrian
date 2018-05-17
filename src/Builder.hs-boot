@@ -36,7 +36,6 @@ data Builder = Alex
              | Perl
              | Python
              | Ranlib
-             | RunNofib
              | RunTest
              | Sphinx SphinxMode
              | Tar TarMode
