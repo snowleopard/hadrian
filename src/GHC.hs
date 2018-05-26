@@ -1,14 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module GHC (
     -- * GHC packages
-    array, base, binary, bytestring, cabal, checkPpr, compareSizes, compiler,
-    containers, deepseq, deriveConstants, directory, filepath, genapply,
-    genprimopcode, ghc, ghcBoot, ghcBootTh, ghcCabal, ghcCompact, ghcHeap, ghci,
-    ghcPkg, ghcPrim, ghcTags, ghcSplit, haddock, haskeline, hsc2hs, hp2ps, hpc,
-    hpcBin, integerGmp, integerSimple, iserv, libffi, libiserv, mtl, parsec,
-    parallel, pretty, process, rts, runGhc, stm, templateHaskell, terminfo,
-    text, time, touchy, transformers, unlit, unix, win32, xhtml, ghcPackages,
-    isGhcPackage, defaultPackages, testsuitePackages,
+    array, base, binary, bytestring, cabal, checkPpr, checkApiAnnotations, 
+    compareSizes, compiler, containers, deepseq, deriveConstants, directory, 
+    filepath, genapply, genprimopcode, ghc, ghcBoot, ghcBootTh, ghcCabal, 
+    ghcCompact, ghcHeap, ghci, ghcPkg, ghcPrim, ghcTags, ghcSplit, haddock, 
+    haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp, integerSimple, iserv, 
+    libffi, libiserv, mtl, parsec, parallel, pretty, process, rts, runGhc, stm,
+    templateHaskell, terminfo, text, time, touchy, transformers, unlit, unix, 
+    win32, xhtml, ghcPackages, isGhcPackage, defaultPackages, testsuitePackages,
 
     -- * Package information
     programName, nonCabalContext, nonHsMainPackage, autogenPath, installStage,
@@ -103,7 +103,9 @@ stage2Packages = return [haddock]
 
 -- | Packages that are built only for the testsuite.
 testsuitePackages :: Action [Package]
-testsuitePackages = return [checkPpr]
+testsuitePackages = return [ checkApiAnnotations
+                           , checkPpr
+                           , hp2ps              ] 
 
 -- | Given a 'Context', compute the name of the program that is built in it
 -- assuming that the corresponding package's type is 'Program'. For example, GHC
@@ -138,7 +140,7 @@ programPath context@Context {..} = do
     -- which is likely just a historical accident that will hopefully be fixed.
     -- See: https://github.com/snowleopard/hadrian/issues/570
     -- Likewise for 'unlit'.
-    path <- if package `elem` [touchy, unlit]
+    path <- if package `elem` [touchy, unlit, iservBin]
       then stageLibPath stage <&> (-/- "bin")
       else stageBinPath stage
     pgm  <- programName context
