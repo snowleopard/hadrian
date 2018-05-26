@@ -141,7 +141,7 @@ programPath context@Context {..} = do
     -- which is likely just a historical accident that will hopefully be fixed.
     -- See: https://github.com/snowleopard/hadrian/issues/570
     -- Likewise for 'unlit'.
-    path <- if package `elem` [touchy, unlit]
+    path <- if package `elem` [touchy, unlit, iservBin]
       then stageLibPath stage <&> (-/- "bin")
       else stageBinPath stage
     pgm  <- programName context
