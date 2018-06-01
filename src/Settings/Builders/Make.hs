@@ -1,5 +1,7 @@
 module Settings.Builders.Make (makeBuilderArgs, validateBuilderArgs) where
 
+import GHC
+import Oracles.Setting
 import Rules.Gmp
 import Rules.Libffi
 import Settings.Builders.Common
@@ -19,7 +21,7 @@ validateBuilderArgs :: Args
 validateBuilderArgs = builder (Make "testsuite/tests") ? do
     threads             <- shakeThreads <$> expr getShakeOptions
     top                 <- expr topDirectory
-    compiler            <- getBuilderPath $ Ghc CompileHs Stage2
+    compiler            <- expr $ fullpath ghc
     checkPpr            <- expr $ fullpath checkPpr
     checkApiAnnotations <- expr $ fullpath checkApiAnnotations
     let t = show $ max 4 (threads - 2)
