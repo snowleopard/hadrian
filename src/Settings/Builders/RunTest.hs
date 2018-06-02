@@ -29,7 +29,6 @@ runTestBuilderArgs = builder RunTest ? do
 
     threads  <- shakeThreads <$> expr getShakeOptions
     verbose  <- shakeVerbosity <$> expr getShakeOptions
-    
     os       <- expr $ setting TargetOs
     arch     <- expr $ setting TargetArch
     platform <- expr $ setting TargetPlatform
@@ -77,7 +76,6 @@ runTestBuilderArgs = builder RunTest ? do
             , arg "-e", arg $ "config.in_tree_compiler=True"          -- Use default value, see https://github.com/ghc/ghc/blob/master/testsuite/mk/boilerplate.mk
             , arg "-e", arg $ "config.top=" ++ show (top -/- "testsuite")
             , arg "-e", arg $ "config.wordsize=\"64\""
-            
             , arg "-e", arg $ "config.os="       ++ show os
             , arg "-e", arg $ "config.arch="     ++ show arch
             , arg "-e", arg $ "config.platform=" ++ show platform
