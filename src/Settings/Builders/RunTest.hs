@@ -100,6 +100,9 @@ getTestArgs = do
     let testOnlyArg = case testOnly args of
                         Just cases -> map ("--only=" ++) (words cases)
                         Nothing -> []
+        onlyPerfArg = if testOnlyPerf args
+                        then Just "--only-perf-tests"
+                        else Nothing
         skipPerfArg = if testSkipPerf args
                         then Just "--skip-perf-tests"
                         else Nothing
@@ -111,11 +114,19 @@ getTestArgs = do
                         Just filepath -> Just $ "--junit " ++ quote filepath
                         Nothing -> Nothing
         configArgs = concat [["-e", configArg] | configArg <- testConfigs args]
-
+        threadArg    = case testThreads args of
+                           Nothing -> Nothing
+                           Just thread -> Just $ "--threads=" ++ thread
+        verbosityArg = case testVerbosity args of
+                         Nothing -> Nothing
+                         Just verbosity -> Just $ "--verbose=" ++ verbosity
+        wayArgs    = map ("--way=" ++) (testWays args) 
     pure $  testOnlyArg
          ++ speedArg 
-         ++ catMaybes [skipPerfArg, summaryArg, junitArg] 
+         ++ catMaybes [ onlyPerfArg, skipPerfArg, summaryArg
+                      , junitArg, threadArg, verbosityArg  ] 
          ++ configArgs
+         ++ wayArgs
 
 -- | Set speed for test
 setTestSpeed :: TestSpeed -> String

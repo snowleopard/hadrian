@@ -42,23 +42,31 @@ defaultCommandLineArgs = CommandLineArgs
 
 -- | These arguments are used by the `test` target.
 data TestArgs = TestArgs
-    { testOnly     :: Maybe String
+    { testConfigs  :: [String]
+    , testJUnit    :: Maybe FilePath
+    , testOnly     :: Maybe String
+    , testOnlyPerf :: Bool
     , testSkipPerf :: Bool
     , testSpeed    :: TestSpeed
     , testSummary  :: Maybe FilePath
-    , testJUnit    :: Maybe FilePath
-    , testConfigs  :: [String] }
+    , testThreads  :: Maybe String
+    , testVerbosity:: Maybe String
+    , testWays     :: [String] }
     deriving (Eq, Show)
 
 -- | Default value for `TestArgs`.
 defaultTestArgs :: TestArgs
 defaultTestArgs = TestArgs
-    { testOnly     = Nothing
+    { testConfigs  = []
+    , testJUnit    = Nothing
+    , testOnly     = Nothing
+    , testOnlyPerf = False
     , testSkipPerf = False
     , testSpeed    = Average
     , testSummary  = Nothing
-    , testJUnit    = Nothing
-    , testConfigs  = [] }
+    , testThreads  = Nothing
+    , testVerbosity= Nothing
+    , testWays     = [] }
 
 readConfigure :: Either String (CommandLineArgs -> CommandLineArgs)
 readConfigure = Right $ \flags -> flags { configure = True }
@@ -112,8 +120,22 @@ readProgressInfo ms =
 readSplitObjects :: Either String (CommandLineArgs -> CommandLineArgs)
 readSplitObjects = Right $ \flags -> flags { splitObjects = True }
 
+readTestConfig :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestConfig config =
+    case config of
+         Nothing -> Right id
+         Just conf -> Right $ \flags ->
+                        let configs = conf : testConfigs (testArgs flags)
+                        in flags { testArgs = (testArgs flags) { testConfigs = configs } }
+
+readTestJUnit :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestJUnit filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
+
 readTestOnly :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestOnly tests = Right $ \flags -> flags { testArgs = (testArgs flags) { testOnly = tests } }
+
+readTestOnlyPerf :: Either String (CommandLineArgs -> CommandLineArgs)
+readTestOnlyPerf = Right $ \flags -> flags { testArgs = (testArgs flags) { testOnlyPerf = True } }
 
 readTestSkipPerf :: Either String (CommandLineArgs -> CommandLineArgs)
 readTestSkipPerf = Right $ \flags -> flags { testArgs = (testArgs flags) { testSkipPerf = True } }
@@ -133,17 +155,20 @@ readTestSpeed ms =
 readTestSummary :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestSummary filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
 
-readTestJUnit :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestJUnit filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
+readTestThreads :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestThreads thread = Right $ \flags -> flags { testArgs = (testArgs flags) { testThreads = thread } }
 
-readTestConfig :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestConfig config =
-    case config of
-         Nothing -> Right id
-         Just conf -> Right $ \flags ->
-                        let configs = conf : testConfigs (testArgs flags)
-                        in flags { testArgs = (testArgs flags) { testConfigs = configs } }
+readTestVerbose :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestVerbose verbose = Right $ \flags -> flags { testArgs = (testArgs flags) { testVerbosity = verbose } }
 
+readTestWays :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestWays ways = 
+    case ways of
+        Nothing -> Right id
+        Just way -> Right $ \flags -> 
+            let newWays = way : testWays (testArgs flags)
+            in flags { testArgs = (testArgs flags) {testWays = newWays} }
+ 
 -- | Standard 'OptDescr' descriptions of Hadrian's command line arguments.
 optDescrs :: [OptDescr (Either String (CommandLineArgs -> CommandLineArgs))]
 optDescrs =
@@ -165,19 +190,27 @@ optDescrs =
       "Progress info style (None, Brief, Normal or Unicorn)."
     , Option [] ["split-objects"] (NoArg readSplitObjects)
       "Generate split objects (requires a full clean rebuild)."
+    , Option [] ["config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
+      "Configurations to run test, in key=value format."
+    , Option [] ["summary-junit"] (OptArg readTestJUnit "TEST_SUMMARY_JUNIT")
+      "Output testsuite summary in JUnit format."
     , Option [] ["only"] (OptArg readTestOnly "TESTS")
       "Test cases to run."
+    , Option [] ["only-perf"] (NoArg readTestOnlyPerf)
+      "Only run performance tests."
     , Option [] ["skip-perf"] (NoArg readTestSkipPerf)
       "Skip performance tests."
     , Option [] ["test-speed"] (OptArg readTestSpeed "SPEED")
       "fast, slow or normal. Normal by default"
     , Option [] ["summary"] (OptArg readTestSummary "TEST_SUMMARY")
       "Where to output the test summary file."
-    , Option [] ["summary-junit"] (OptArg readTestJUnit "TEST_SUMMARY_JUNIT")
-      "Output testsuite summary in JUnit format."
-    , Option [] ["config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
-      "Configurations to run test, in key=value format." ]
-
+    , Option [] ["test-threads"] (OptArg readTestThreads "TEST_THREADS")
+      "Number of concurrent parallel jobs"
+    , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
+      "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
+    , Option [] ["test-way"] (OptArg readTestWays "TEST_WAY")
+      "only run these ways" ]
+    
 -- | A type-indexed map containing Hadrian command line arguments to be passed
 -- to Shake via 'shakeExtra'.
 cmdLineArgsMap :: IO (Map.HashMap TypeRep Dynamic)
