@@ -52,6 +52,10 @@ data TestArgs = TestArgs
     , testSkipPerf :: Bool
     , testSpeed    :: TestSpeed
     , testSummary  :: Maybe FilePath
+<<<<<<< HEAD
+=======
+    , testThreads  :: Maybe String
+>>>>>>> Added support for more testing features
     , testVerbosity:: Maybe String
     , testWays     :: [String] }
     deriving (Eq, Show)
@@ -66,6 +70,10 @@ defaultTestArgs = TestArgs
     , testSkipPerf = False
     , testSpeed    = Average
     , testSummary  = Nothing
+<<<<<<< HEAD
+=======
+    , testThreads  = Nothing
+>>>>>>> Added support for more testing features
     , testVerbosity= Nothing
     , testWays     = [] }
 
@@ -160,8 +168,8 @@ readTestVerbose :: Maybe String -> Either String (CommandLineArgs -> CommandLine
 readTestVerbose verbose = Right $ \flags -> flags { testArgs = (testArgs flags) { testVerbosity = verbose } }
 
 readTestWay :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestWay ways = 
-    case ways of
+readTestWay way = 
+    case way of
         Nothing -> Right id
         Just way -> Right $ \flags -> 
             let newWays = way : testWays (testArgs flags)
@@ -202,9 +210,17 @@ optDescrs =
       "fast, slow or normal. Normal by default"
     , Option [] ["summary"] (OptArg readTestSummary "TEST_SUMMARY")
       "Where to output the test summary file."
+<<<<<<< HEAD
     , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
       "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
     , Option [] ["test-way"] (OptArg readTestWay "TEST_WAY")
+=======
+    , Option [] ["test-threads"] (OptArg readTestThreads "TEST_THREADS")
+      "Number of concurrent parallel jobs"
+    , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
+      "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
+    , Option [] ["test-way"] (OptArg readTestWays "TEST_WAY")
+>>>>>>> Added support for more testing features
       "only run these ways" ]
     
 -- | A type-indexed map containing Hadrian command line arguments to be passed
