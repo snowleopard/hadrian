@@ -110,7 +110,7 @@ getTestArgs = do
         junitArg = case testJUnit args of
                         Just filepath -> Just $ "--junit " ++ quote filepath
                         Nothing -> Nothing
-        configArgs = map ("-e " ++) (testConfigs args)
+        configArgs = concat [["-e", configArg] | configArg <- testConfigs args]
 
     pure $  testOnlyArg
          ++ speedArg 
