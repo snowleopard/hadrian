@@ -29,7 +29,6 @@ runTestBuilderArgs = builder RunTest ? do
 
     threads  <- shakeThreads <$> expr getShakeOptions
     verbose  <- shakeVerbosity <$> expr getShakeOptions
-    
     os       <- expr $ setting TargetOs
     arch     <- expr $ setting TargetArch
     platform <- expr $ setting TargetPlatform
@@ -77,7 +76,6 @@ runTestBuilderArgs = builder RunTest ? do
             , arg "-e", arg $ "config.in_tree_compiler=True"          -- Use default value, see https://github.com/ghc/ghc/blob/master/testsuite/mk/boilerplate.mk
             , arg "-e", arg $ "config.top=" ++ show (top -/- "testsuite")
             , arg "-e", arg $ "config.wordsize=\"64\""
-            
             , arg "-e", arg $ "config.os="       ++ show os
             , arg "-e", arg $ "config.arch="     ++ show arch
             , arg "-e", arg $ "config.platform=" ++ show platform 
@@ -105,6 +103,7 @@ getTestArgs = do
         skipPerfArg = if testSkipPerf args
                         then Just "--skip-perf-tests"
                         else Nothing
+        speedArg   = ["-e", "config.speed=" ++ setTestSpeed (testSpeed args)]
         summaryArg = case testSummary args of
                         Just filepath -> Just $ "--summary-file" ++ quote filepath
                         Nothing -> Just $ "--summary-file=testsuite_summary.txt"
@@ -113,4 +112,14 @@ getTestArgs = do
                         Nothing -> Nothing
         configArgs = map ("-e " ++) (testConfigs args)
 
-    pure $ testOnlyArg ++ catMaybes [skipPerfArg, summaryArg, junitArg] ++ configArgs
+    pure $  testOnlyArg
+         ++ speedArg 
+         ++ catMaybes [skipPerfArg, summaryArg, junitArg] 
+         ++ configArgs
+
+-- | Set speed for test
+setTestSpeed :: TestSpeed -> String
+setTestSpeed Fast    = "2"
+setTestSpeed Average = "1"
+setTestSpeed Slow    = "0"
+

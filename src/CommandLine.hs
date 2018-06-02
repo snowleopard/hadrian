@@ -44,6 +44,7 @@ defaultCommandLineArgs = CommandLineArgs
 data TestArgs = TestArgs
     { testOnly     :: Maybe String
     , testSkipPerf :: Bool
+    , testSpeed    :: TestSpeed
     , testSummary  :: Maybe FilePath
     , testJUnit    :: Maybe FilePath
     , testConfigs  :: [String] }
@@ -54,6 +55,7 @@ defaultTestArgs :: TestArgs
 defaultTestArgs = TestArgs
     { testOnly     = Nothing
     , testSkipPerf = False
+    , testSpeed    = Average
     , testSummary  = Nothing
     , testJUnit    = Nothing
     , testConfigs  = [] }
@@ -116,6 +118,18 @@ readTestOnly tests = Right $ \flags -> flags { testArgs = (testArgs flags) { tes
 readTestSkipPerf :: Either String (CommandLineArgs -> CommandLineArgs)
 readTestSkipPerf = Right $ \flags -> flags { testArgs = (testArgs flags) { testSkipPerf = True } }
 
+readTestSpeed :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestSpeed ms =
+    maybe (Left "Cannot parse test-speed") (Right . set) (go =<< lower <$> ms)
+  where
+    go :: String -> Maybe TestSpeed
+    go "fast"    = Just Fast
+    go "slow"    = Just Slow
+    go "average" = Just Average
+    go _         = Nothing
+    set :: TestSpeed -> CommandLineArgs -> CommandLineArgs
+    set flag flags = flags { testArgs = (testArgs flags) {testSpeed = flag} }
+
 readTestSummary :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestSummary filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
 
@@ -128,7 +142,7 @@ readTestConfig config =
          Nothing -> Right id
          Just conf -> Right $ \flags ->
                         let configs = conf : testConfigs (testArgs flags)
-                         in flags { testArgs = (testArgs flags) { testConfigs = configs } }
+                        in flags { testArgs = (testArgs flags) { testConfigs = configs } }
 
 -- | Standard 'OptDescr' descriptions of Hadrian's command line arguments.
 optDescrs :: [OptDescr (Either String (CommandLineArgs -> CommandLineArgs))]
@@ -155,6 +169,8 @@ optDescrs =
       "Test cases to run."
     , Option [] ["skip-perf"] (NoArg readTestSkipPerf)
       "Skip performance tests."
+    , Option [] ["test-speed"] (OptArg readTestSpeed "SPEED")
+      "fast, slow or normal. Normal by default"
     , Option [] ["summary"] (OptArg readTestSummary "TEST_SUMMARY")
       "Where to output the test summary file."
     , Option [] ["summary-junit"] (OptArg readTestJUnit "TEST_SUMMARY_JUNIT")
