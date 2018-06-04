@@ -1,14 +1,15 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module GHC (
     -- * GHC packages
-    array, base, binary, bytestring, cabal, checkPpr, checkApiAnnotations, 
-    compareSizes, compiler, containers, deepseq, deriveConstants, directory, 
-    filepath, genapply, genprimopcode, ghc, ghcBoot, ghcBootTh, ghcCabal, 
+    array, base, binary, bytestring, cabal, checkApiAnnotations, checkPpr, 
+    compareSizes, compiler, containers, deepseq, deriveConstants, directory,
+    filepath, genapply, genprimopcode, ghc, ghcBoot, ghcBootTh, ghcCabal,
     ghcCompact, ghcHeap, ghci, ghcPkg, ghcPrim, ghcTags, ghcSplit, haddock, 
     haskeline, hsc2hs, hp2ps, hpc, hpcBin, integerGmp, integerSimple, iserv, 
-    libffi, libiserv, mtl, parsec, parallel, pretty, process, rts, runGhc, stm,
-    templateHaskell, terminfo, text, time, touchy, transformers, unlit, unix, 
-    win32, xhtml, ghcPackages, isGhcPackage, defaultPackages, testsuitePackages,
+    libffi, libiserv, mtl, parsec, parallel, pretty, primitive, process, rts, 
+    runGhc, stm, templateHaskell, terminfo, text, time, touchy, transformers, 
+    unlit, unix, win32, xhtml, ghcPackages, isGhcPackage, defaultPackages, 
+    testsuitePackages,
 
     -- * Package information
     programName, nonCabalContext, nonHsMainPackage, autogenPath, installStage,
@@ -140,7 +141,7 @@ programPath context@Context {..} = do
     -- which is likely just a historical accident that will hopefully be fixed.
     -- See: https://github.com/snowleopard/hadrian/issues/570
     -- Likewise for 'unlit'.
-    path <- if package `elem` [touchy, unlit, iservBin]
+    path <- if package `elem` [touchy, unlit]
       then stageLibPath stage <&> (-/- "bin")
       else stageBinPath stage
     pgm  <- programName context
