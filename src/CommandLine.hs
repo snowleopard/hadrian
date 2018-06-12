@@ -53,9 +53,12 @@ data TestArgs = TestArgs
     , testSpeed    :: TestSpeed
     , testSummary  :: Maybe FilePath
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     , testThreads  :: Maybe String
 >>>>>>> Added support for more testing features
+=======
+>>>>>>> Removed TestThread argument
     , testVerbosity:: Maybe String
     , testWays     :: [String] }
     deriving (Eq, Show)
@@ -71,9 +74,12 @@ defaultTestArgs = TestArgs
     , testSpeed    = Average
     , testSummary  = Nothing
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     , testThreads  = Nothing
 >>>>>>> Added support for more testing features
+=======
+>>>>>>> Removed TestThread argument
     , testVerbosity= Nothing
     , testWays     = [] }
 
@@ -210,21 +216,9 @@ optDescrs =
       "fast, slow or normal. Normal by default"
     , Option [] ["summary"] (OptArg readTestSummary "TEST_SUMMARY")
       "Where to output the test summary file."
-<<<<<<< HEAD
     , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
       "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
     , Option [] ["test-way"] (OptArg readTestWay "TEST_WAY")
-=======
-    , Option [] ["test-threads"] (OptArg readTestThreads "TEST_THREADS")
-      "Number of concurrent parallel jobs"
-    , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
-      "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
-<<<<<<< HEAD
-    , Option [] ["test-way"] (OptArg readTestWays "TEST_WAY")
->>>>>>> Added support for more testing features
-=======
-    , Option [] ["test-way"] (OptArg readTestWay "TEST_WAY")
->>>>>>> Minor Revision
       "only run these ways" ]
     
 -- | A type-indexed map containing Hadrian command line arguments to be passed
