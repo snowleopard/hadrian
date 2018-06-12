@@ -114,8 +114,8 @@ rtsPackageArgs = package rts ? do
           , flag UseSystemFfi ? arg ("-I" ++ ffiIncludeDir)
           , arg $ "-DRtsWay=\"rts_" ++ show way ++ "\""
           -- Set the namespace for the rts fs functions
-          , arg $ "-DCOMPILING_RTS"
           , arg $ "-DFS_NAMESPACE=rts"
+          , arg $ "-DCOMPILING_RTS"
           -- RTS *must* be compiled with optimisations. The INLINE_HEADER macro
           -- requires that functions are inlined to work as expected. Inlining
           -- only happens for optimised builds. Otherwise we can assume that
@@ -201,9 +201,7 @@ rtsPackageArgs = package rts ? do
     mconcat
         [ builder (Cc FindCDependencies) ? cArgs
         , builder (Ghc CompileCWithGhc) ? map ("-optc" ++) <$> cArgs
-        , builder Ghc ? mconcat [ arg "-Irts"
-                                , arg $ "-DCOMPILING_RTS"
-                                , arg $ "-DFS_NAMESPACE=rts" ]
+        , builder Ghc ? arg "-Irts"
 
           , builder HsCpp ? pure
           [ "-DTOP="             ++ show top
