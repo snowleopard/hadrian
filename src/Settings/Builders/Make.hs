@@ -24,9 +24,8 @@ validateBuilderArgs = builder (Make "testsuite/tests") ? do
     compiler            <- expr $ fullpath ghc
     checkPpr            <- expr $ fullpath checkPpr
     checkApiAnnotations <- expr $ fullpath checkApiAnnotations
-    let t = show $ max 4 (threads - 2)
     return [ "fast"
-           , "THREADS=" ++ t
+           , "THREADS=" ++ threads
            , "TEST_HC=" ++ (top -/- compiler)
            , "CHECK_PPR=" ++ (top -/- checkPpr)
            , "CHECK_API_ANNOTATIONS=" ++ (top -/- checkApiAnnotations)
