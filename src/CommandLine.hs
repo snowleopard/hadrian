@@ -219,8 +219,12 @@ optDescrs =
       "Number of concurrent parallel jobs"
     , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
       "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
+<<<<<<< HEAD
     , Option [] ["test-way"] (OptArg readTestWays "TEST_WAY")
 >>>>>>> Added support for more testing features
+=======
+    , Option [] ["test-way"] (OptArg readTestWay "TEST_WAY")
+>>>>>>> Minor Revision
       "only run these ways" ]
     
 -- | A type-indexed map containing Hadrian command line arguments to be passed

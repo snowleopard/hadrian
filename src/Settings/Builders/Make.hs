@@ -25,7 +25,7 @@ validateBuilderArgs = builder (Make "testsuite/tests") ? do
     checkPpr            <- expr $ fullpath checkPpr
     checkApiAnnotations <- expr $ fullpath checkApiAnnotations
     return [ "fast"
-           , "THREADS=" ++ threads
+           , "THREADS=" ++ show threads
            , "TEST_HC=" ++ (top -/- compiler)
            , "CHECK_PPR=" ++ (top -/- checkPpr)
            , "CHECK_API_ANNOTATIONS=" ++ (top -/- checkApiAnnotations)
