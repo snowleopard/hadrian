@@ -1,6 +1,6 @@
 module Settings.Builders.RunTest (runTestBuilderArgs) where
 
-import CommandLine (TestArgs(..), defaultTestArgs)
+import CommandLine (TestArgs(..), defaultTestArgs, TestSpeed(..))
 import Flavour
 import GHC.Packages
 import Hadrian.Builder (getBuilderPath)

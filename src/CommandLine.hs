@@ -1,7 +1,8 @@
 module CommandLine (
     optDescrs, cmdLineArgsMap, cmdFlavour, lookupFreeze1, cmdIntegerSimple,
     cmdProgressColour, cmdProgressInfo, cmdConfigure, cmdSplitObjects,
-    cmdInstallDestDir, lookupBuildRoot, TestArgs(..), defaultTestArgs
+    cmdInstallDestDir, lookupBuildRoot, TestArgs(..), TestSpeed(..), 
+    defaultTestArgs
     ) where
 
 import Data.Either
@@ -11,6 +12,8 @@ import Development.Shake hiding (Normal)
 import Hadrian.Utilities hiding (buildRoot)
 import System.Console.GetOpt
 import System.Environment
+
+data TestSpeed = Slow | Average | Fast deriving (Show, Eq)
 
 -- | All arguments that can be passed to Hadrian via the command line.
 data CommandLineArgs = CommandLineArgs
@@ -161,8 +164,8 @@ readTestThreads thread = Right $ \flags -> flags { testArgs = (testArgs flags) {
 readTestVerbose :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestVerbose verbose = Right $ \flags -> flags { testArgs = (testArgs flags) { testVerbosity = verbose } }
 
-readTestWays :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestWays ways = 
+readTestWay :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestWay ways = 
     case ways of
         Nothing -> Right id
         Just way -> Right $ \flags -> 
@@ -208,7 +211,7 @@ optDescrs =
       "Number of concurrent parallel jobs"
     , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
       "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
-    , Option [] ["test-way"] (OptArg readTestWays "TEST_WAY")
+    , Option [] ["test-way"] (OptArg readTestWay "TEST_WAY")
       "only run these ways" ]
     
 -- | A type-indexed map containing Hadrian command line arguments to be passed

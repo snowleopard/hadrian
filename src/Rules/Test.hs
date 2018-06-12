@@ -71,8 +71,7 @@ needTestsuiteBuilders = do
     need targets
   where
     needfile :: Stage -> Package -> Action FilePath
-    needfile stage pkg | isLibrary pkg = pkgConfFile (Context stage pkg vanilla)
-                       | otherwise     = programPath =<< programContext stage pkg
+    needfile stage pkg = programPath =<< programContext stage pkg
 
 
 needTestBuilders :: Action ()

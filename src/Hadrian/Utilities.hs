@@ -31,9 +31,6 @@ module Hadrian.Utilities (
 
     -- * Useful re-exports
     Dynamic, fromDynamic, toDyn, TypeRep, typeOf,
-
-    -- * Testsuite Settings
-    TestSpeed (..)
     ) where
 
 import Control.Monad.Extra
@@ -484,6 +481,3 @@ renderUnicorn ls =
     ponyPadding = "                                            "
     boxLines :: [String]
     boxLines = ["", "", ""] ++ (lines . renderBox $ ls)
-
-data TestSpeed = Slow | Average | Fast deriving (Show, Eq)
-
