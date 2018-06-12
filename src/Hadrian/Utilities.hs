@@ -30,7 +30,7 @@ module Hadrian.Utilities (
     (<&>), (%%>), cmdLineLengthLimit,
 
     -- * Useful re-exports
-    Dynamic, fromDynamic, toDyn, TypeRep, typeOf,
+    Dynamic, fromDynamic, toDyn, TypeRep, typeOf
     ) where
 
 import Control.Monad.Extra
