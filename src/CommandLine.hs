@@ -52,7 +52,6 @@ data TestArgs = TestArgs
     , testSkipPerf :: Bool
     , testSpeed    :: TestSpeed
     , testSummary  :: Maybe FilePath
-    , testThreads  :: Maybe String
     , testVerbosity:: Maybe String
     , testWays     :: [String] }
     deriving (Eq, Show)
@@ -67,7 +66,6 @@ defaultTestArgs = TestArgs
     , testSkipPerf = False
     , testSpeed    = Average
     , testSummary  = Nothing
-    , testThreads  = Nothing
     , testVerbosity= Nothing
     , testWays     = [] }
 
@@ -158,9 +156,6 @@ readTestSpeed ms =
 readTestSummary :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestSummary filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
 
-readTestThreads :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestThreads thread = Right $ \flags -> flags { testArgs = (testArgs flags) { testThreads = thread } }
-
 readTestVerbose :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestVerbose verbose = Right $ \flags -> flags { testArgs = (testArgs flags) { testVerbosity = verbose } }
 
@@ -207,8 +202,6 @@ optDescrs =
       "fast, slow or normal. Normal by default"
     , Option [] ["summary"] (OptArg readTestSummary "TEST_SUMMARY")
       "Where to output the test summary file."
-    , Option [] ["test-threads"] (OptArg readTestThreads "TEST_THREADS")
-      "Number of concurrent parallel jobs"
     , Option [] ["test-verbose"] (OptArg readTestVerbose "TEST_VERBOSE")
       "A verbosity value between 0 and 5. 0 is silent, 4 and higher activates extra output."
     , Option [] ["test-way"] (OptArg readTestWay "TEST_WAY")

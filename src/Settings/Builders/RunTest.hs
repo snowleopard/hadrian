@@ -114,9 +114,6 @@ getTestArgs = do
                         Just filepath -> Just $ "--junit " ++ quote filepath
                         Nothing -> Nothing
         configArgs = concat [["-e", configArg] | configArg <- testConfigs args]
-        threadArg    = case testThreads args of
-                           Nothing -> Nothing
-                           Just thread -> Just $ "--threads=" ++ thread
         verbosityArg = case testVerbosity args of
                          Nothing -> Nothing
                          Just verbosity -> Just $ "--verbose=" ++ verbosity
@@ -124,7 +121,7 @@ getTestArgs = do
     pure $  testOnlyArg
          ++ speedArg 
          ++ catMaybes [ onlyPerfArg, skipPerfArg, summaryArg
-                      , junitArg, threadArg, verbosityArg  ] 
+                      , junitArg, verbosityArg  ] 
          ++ configArgs
          ++ wayArgs
 
