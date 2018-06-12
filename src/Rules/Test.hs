@@ -79,7 +79,6 @@ needTestBuilders :: Action ()
 needTestBuilders = do
     needBuilder $ Ghc CompileHs Stage2
     needBuilder $ GhcPkg Update Stage1
-    needBuilder Hp2Ps
     needBuilder Hpc
     needBuilder (Hsc2Hs Stage1)
     needTestsuiteBuilders
