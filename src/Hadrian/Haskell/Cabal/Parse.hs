@@ -225,15 +225,20 @@ parsePackageData context@Context {..} = do
             C.GHC | C.pkgName (C.package pd') /= (C.mkPackageName "rts") -> hackRtsPackage
             _   -> id
 
+        -- TODO: Get rid of this hack.
         -- We don't link in the actual Haskell libraries of our dependencies, so
-        -- the -u flags in the ldOptions of the rts package mean linking fails
-        -- on OS X (it's ld is a tad stricter than gnu ld). Thus we remove the
-        -- ldOptions for GHC's rts package:
+        -- the "-u" flags in @ldOptions@ of the @rts@ package mean linking fails
+        -- on OS X (its @ld@ is a tad stricter than GNU @ld@). Thus we remove
+        -- @ldOptions@ for the @rts@ package. With one exception (see below).
         hackRtsPackage index | null (C.allPackages index) = index
         -- ^ do not hack the empty index
         hackRtsPackage index = case C.lookupPackageName index (C.mkPackageName "rts") of
             [(_,[rts])] -> C.insert rts {
-                Installed.ldOptions   = [],
+                -- However, we keep "-Wl,-u,findPtr" and "-Wl,-u,_findPtr"
+                -- since OSX build fails without them.
+                -- See https://github.com/snowleopard/hadrian/issues/614.
+                Installed.ldOptions   = filter ("findPtr" `isInfixOf`)
+                                               (Installed.ldOptions rts),
                 Installed.libraryDirs = filter (not . ("gcc-lib" `isSuffixOf`))
                                                (Installed.libraryDirs rts)} index
             -- GHC <= 6.12 had $topdir/gcc-lib in their library-dirs for the rts
