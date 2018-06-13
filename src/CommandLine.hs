@@ -45,7 +45,8 @@ defaultCommandLineArgs = CommandLineArgs
 
 -- | These arguments are used by the `test` target.
 data TestArgs = TestArgs
-    { testConfigs  :: [String]
+    { testCompiler :: String
+    , testConfigs  :: [String]
     , testJUnit    :: Maybe FilePath
     , testOnly     :: Maybe String
     , testOnlyPerf :: Bool
@@ -66,7 +67,8 @@ data TestArgs = TestArgs
 -- | Default value for `TestArgs`.
 defaultTestArgs :: TestArgs
 defaultTestArgs = TestArgs
-    { testConfigs  = []
+    { testCompiler = "stage2"
+    , testConfigs  = []
     , testJUnit    = Nothing
     , testOnly     = Nothing
     , testOnlyPerf = False
@@ -135,6 +137,11 @@ readProgressInfo ms =
 readSplitObjects :: Either String (CommandLineArgs -> CommandLineArgs)
 readSplitObjects = Right $ \flags -> flags { splitObjects = True }
 
+readTestCompiler :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
+readTestCompiler compiler = maybe (Left "Cannot parse compiler") (Right . set) (lower <$> compiler)  
+  where
+     set compiler  = \flags -> flags { testArgs = (testArgs flags) { testCompiler = compiler } }
+
 readTestConfig :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestConfig config =
     case config of
@@ -202,6 +209,8 @@ optDescrs =
       "Progress info style (None, Brief, Normal or Unicorn)."
     , Option [] ["split-objects"] (NoArg readSplitObjects)
       "Generate split objects (requires a full clean rebuild)."
+    , Option [] ["test-compiler"] (OptArg readTestCompiler "TEST_COMPILER")
+      "Use given compiler [Default=Stage2]."
     , Option [] ["config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
       "Configurations to run test, in key=value format."
     , Option [] ["summary-junit"] (OptArg readTestJUnit "TEST_SUMMARY_JUNIT")
