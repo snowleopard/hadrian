@@ -233,7 +233,7 @@ parsePackageData context@Context {..} = do
         -- ^ do not hack the empty index
         hackRtsPackage index = case C.lookupPackageName index (C.mkPackageName "rts") of
             [(_,[rts])] -> C.insert rts {
-                Installed.ldOptions   = [],
+                -- Installed.ldOptions   = [],
                 Installed.libraryDirs = filter (not . ("gcc-lib" `isSuffixOf`))
                                                (Installed.libraryDirs rts)} index
             -- GHC <= 6.12 had $topdir/gcc-lib in their library-dirs for the rts
