@@ -53,13 +53,6 @@ data TestArgs = TestArgs
     , testSkipPerf :: Bool
     , testSpeed    :: TestSpeed
     , testSummary  :: Maybe FilePath
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    , testThreads  :: Maybe String
->>>>>>> Added support for more testing features
-=======
->>>>>>> Removed TestThread argument
     , testVerbosity:: Maybe String
     , testWays     :: [String] }
     deriving (Eq, Show)
@@ -75,13 +68,6 @@ defaultTestArgs = TestArgs
     , testSkipPerf = False
     , testSpeed    = Average
     , testSummary  = Nothing
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    , testThreads  = Nothing
->>>>>>> Added support for more testing features
-=======
->>>>>>> Removed TestThread argument
     , testVerbosity= Nothing
     , testWays     = [] }
 
@@ -138,7 +124,7 @@ readSplitObjects :: Either String (CommandLineArgs -> CommandLineArgs)
 readSplitObjects = Right $ \flags -> flags { splitObjects = True }
 
 readTestCompiler :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestCompiler compiler = maybe (Left "Cannot parse compiler") (Right . set) (lower <$> compiler)  
+readTestCompiler compiler = maybe (Left "Cannot parse compiler") (Right . set) compiler  
   where
      set compiler  = \flags -> flags { testArgs = (testArgs flags) { testCompiler = compiler } }
 

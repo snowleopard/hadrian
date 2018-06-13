@@ -107,7 +107,7 @@ getTestArgs = do
                            Just verbosity -> Just $ "--verbose=" ++ verbosity
         wayArgs      = map ("--way=" ++) (testWays args) 
         compilerArg  = ["--config", "compiler=" ++ show (compiler)]
-        ghcPkgArg    = ["--config", "ghc-pkg=" ++ show (bindir -/- "ghc-pkg")]
+        ghcPkgArg    = ["--config", "ghc_pkg=" ++ show (bindir -/- "ghc-pkg")]
         haddockArg   = ["--config", "haddock=" ++ show (bindir -/- "haddock")]
         hp2psArg     = ["--config", "hp2ps=" ++ show (bindir -/- "hp2ps")]
         hpcArg       = ["--config", "hpc=" ++ show (bindir -/- "hpc")]   
