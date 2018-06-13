@@ -1,9 +1,10 @@
 module Oracles.Flag (
-    Flag (..), flag, crossCompiling, platformSupportsSharedLibs,
+    Flag (..), flag, getFlag, crossCompiling, platformSupportsSharedLibs,
     ghcWithSMP, ghcWithNativeCodeGen, supportsSplitObjects
     ) where
 
 import Hadrian.Oracles.TextFile
+import Hadrian.Expression
 
 import Base
 import Oracles.Setting
@@ -38,6 +39,10 @@ flag f = do
     when (value `notElem` ["YES", "NO", ""]) . error $ "Configuration flag "
         ++ quote (key ++ " = " ++ value) ++ " cannot be parsed."
     return $ value == "YES"
+
+-- | Get a configuration setting.
+getFlag :: Flag -> Expr c b Bool
+getFlag = expr . flag
 
 crossCompiling :: Action Bool
 crossCompiling = flag CrossCompiling
