@@ -1,6 +1,6 @@
 module Oracles.Flag (
-    Flag (..), flag, getFlag, crossCompiling, platformSupportsSharedLibs,
-    ghcWithSMP, ghcWithNativeCodeGen, supportsSplitObjects
+    Flag (..), flag, getFlag, platformSupportsSharedLibs, ghcWithSMP,
+    ghcWithNativeCodeGen, supportsSplitObjects
     ) where
 
 import Hadrian.Oracles.TextFile
@@ -43,9 +43,6 @@ flag f = do
 -- | Get a configuration setting.
 getFlag :: Flag -> Expr c b Bool
 getFlag = expr . flag
-
-crossCompiling :: Action Bool
-crossCompiling = flag CrossCompiling
 
 platformSupportsSharedLibs :: Action Bool
 platformSupportsSharedLibs = do
