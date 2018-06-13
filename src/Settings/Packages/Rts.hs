@@ -126,6 +126,13 @@ rtsPackageArgs = package rts ? do
           , arg "-fomit-frame-pointer"
           , arg "-g"
 
+          -- TODO: This flag is listed in @ld-options@ @rts.cabal@, but right
+          -- now we ignore all @ld-options@, since they break OS X build. A more
+          -- principled solution is required here.
+          -- See https://github.com/snowleopard/hadrian/issues/614
+          , osxHost ? ifM (getFlag LeadingUnderscore) (arg "-Wl,-u,_findPtr")
+                                                      (arg "-Wl,-u,findPtr")
+
           , Debug     `wayUnit` way          ? pure [ "-DDEBUG"
                                                     , "-fno-omit-frame-pointer"
                                                     , "-g"
