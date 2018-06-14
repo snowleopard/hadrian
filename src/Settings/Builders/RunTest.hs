@@ -145,6 +145,7 @@ setTestSpeed Average = "1"
 setTestSpeed Slow    = "0"
 
 -- | Returns parent path of test compiler 
+-- | TODO : Can this be implemented in a better way
 parentPath :: String -> String
 parentPath path = let upPath = init $ splitOn "/" path
                   in  intercalate "/" upPath
