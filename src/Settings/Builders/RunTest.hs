@@ -118,6 +118,13 @@ getTestArgs = do
          ++ haddockArg ++ hp2psArg ++ hpcArg
 
 -- | Directory to look for Binaries
+-- | We assume that required programs are present in the same binary directory 
+-- | in which ghc is stored and that they have their conventional name.
+-- | QUESTION : packages can be named different from their conventional names.
+-- | For example, ghc-pkg can be named as ghc-pkg-version. In such cases, it will
+-- | be impossible to search the binary. Only possible way will be to take user 
+-- | inputs for these directory also. boilerplate soes not account for this 
+-- | problem, but simply returns an error. How should we handle such cases?
 setBinaryDirectory :: String -> Action FilePath
 setBinaryDirectory "stage0" = setting InstallBinDir
 setBinaryDirectory "stage1" = liftM2 (-/-) topDirectory (stageBinPath Stage0) 
@@ -130,7 +137,6 @@ setCompiler "stage0" = setting SystemGhc
 setCompiler "stage1" = liftM2 (-/-) topDirectory (fullpath Stage0 ghc)
 setCompiler "stage2" = liftM2 (-/-) topDirectory (fullpath Stage1 ghc)
 setCompiler compiler = pure compiler 
->>>>>>> Added support to choose test compiler
 
 -- | Set speed for test
 setTestSpeed :: TestSpeed -> String
@@ -143,6 +149,7 @@ parentPath :: String -> String
 parentPath path = let upPath = init $ splitOn "/" path
                   in  intercalate "/" upPath
 
+-- | TODO: move to hadrian utilities.
 fullpath :: Stage -> Package -> Action FilePath
 fullpath stage pkg = programPath =<< programContext stage pkg
 
