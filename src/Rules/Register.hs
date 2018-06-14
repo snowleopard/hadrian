@@ -43,12 +43,12 @@ registerPackages rs context@Context {..} = do
             _               -> buildConf rs (context { package = pkg }) conf
 
 buildConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
-buildConf _ context@Context {..} _conf = do
+buildConf _ context@Context {..} conf = do
     depPkgIds <- cabalDependencies context
 
     -- Calling 'need' on @setup-config@, triggers @ghc-cabal configure@
     -- Building anything in a package transitively depends on its configuration.
-    setupConfig <- contextPath context <&> (-/- "setup-config")
+    setupConfig <- pkgSetupConfigFile context
     need [setupConfig]
     need =<< mapM (\pkgId -> packageDbPath stage <&> (-/- pkgId <.> "conf")) depPkgIds
 
@@ -73,6 +73,14 @@ buildConf _ context@Context {..} _conf = do
     -- Copy and register the package.
     copyPackage context
     registerPackage context
+
+    -- Do not unconditionally force to include @findPtr@ when linking.
+    -- See https://github.com/snowleopard/hadrian/issues/614.
+    when (package == rts) $
+        fixFile conf $ unlines
+                     . filter (not . ("-Wl,-u,findPtr"  `isInfixOf`))
+                     . filter (not . ("-Wl,-u,_findPtr" `isInfixOf`))
+                     . lines
 
 copyConf :: [(Resource, Int)] -> Context -> FilePath -> Action ()
 copyConf rs context@Context {..} conf = do
