@@ -11,7 +11,7 @@ import Settings
 -- TODO: Finish migration of package-specific settings into a single file.
 packageArgs :: Args
 packageArgs = do
-    intLibPkg         <- getIntegerPackage
+    intLib            <- getIntegerPackage
     stage             <- getStage
     rtsWays           <- getRtsWays
     path              <- getBuildPath
@@ -21,29 +21,17 @@ packageArgs = do
     let includeGmp = "-I" ++ gmpBuildPath -/- "include"
 
     mconcat
-        [ -------------------------------- base --------------------------------
-          package base ? mconcat
-          [ builder CabalFlags ? arg ('+' : pkgName intLibPkg)
-                  -- This fixes the 'unknown symbol stat' issue.
-                  -- See: https://github.com/snowleopard/hadrian/issues/259.
-                  , builder (Ghc CompileCWithGhc) ? arg "-optc-O2" ]
+        --------------------------------- base ---------------------------------
+        [ package base ? mconcat
+          [ builder CabalFlags ? arg ('+' : pkgName intLib)
+
+          -- This fixes the 'unknown symbol stat' issue.
+          -- See: https://github.com/snowleopard/hadrian/issues/259.
+          , builder (Ghc CompileCWithGhc) ? arg "-optc-O2" ]
 
         ------------------------------ bytestring ------------------------------
         , package bytestring ?
-          builder CabalFlags ? intLibPkg == integerSimple ? arg "integer-simple"
-
-        --------------------------------- text ---------------------------------
-        -- The package @text@ is rather tricky. It's a boot library, and it
-        -- tries to determine on its own if it should link against @integer-gmp@
-        -- or @integer-simple@. For Stage0, we need to use the integer library
-        -- that the bootstrap compiler has (since @interger@ is not a boot
-        -- library) and therefore we copy it over into the Stage0 package-db.
-        -- Maybe we should stop doing this? And subsequently @text@ for Stage1
-        -- detects the same integer library again, even though we don't build it
-        -- in Stage1, and at that point the configuration is just wrong.
-        , package text ?
-          builder CabalFlags ? notStage0 ? intLibPkg == integerSimple ?
-          pure [ "+integer-simple", "-bytestring-builder"]
+          builder CabalFlags ? intLib == integerSimple ? arg "integer-simple"
 
         --------------------------------- cabal --------------------------------
         -- Cabal is a large library and slow to compile. Moreover, we build it
@@ -90,8 +78,10 @@ packageArgs = do
         ---------------------------------- ghc ---------------------------------
         , package ghc ? mconcat
           [ builder Ghc ? arg ("-I" ++ compilerBuildPath)
-          , builder CabalFlags ? ghcWithInterpreter ? notStage0 ? arg "ghci"
-          , builder CabalFlags ? flag CrossCompiling ? arg "-terminfo" ]
+
+          , builder CabalFlags ? mconcat
+            [ ghcWithInterpreter ? notStage0 ? arg "ghci"
+            , flag CrossCompiling ? arg "-terminfo" ] ]
 
         -------------------------------- ghcPkg --------------------------------
         , package ghcPkg ?
@@ -100,6 +90,7 @@ packageArgs = do
         -------------------------------- ghcPrim -------------------------------
         , package ghcPrim ? mconcat
           [ builder CabalFlags ? arg "include-ghc-prim"
+
           , builder (Cc CompileC) ? (not <$> flag GccIsClang) ?
             input "//cbits/atomic.c"  ? arg "-Wno-sync-nand" ]
 
@@ -122,17 +113,21 @@ packageArgs = do
           , flag CrossCompiling ? stage0 ? builder CabalFlags ? arg "ghci" ]
 
         -------------------------------- haddock -------------------------------
-        , package haddock ? builder CabalFlags ? arg "in-ghc-tree"
+        , package haddock ?
+          builder CabalFlags ? arg "in-ghc-tree"
 
         ------------------------------- haskeline ------------------------------
-        , package haskeline ? builder CabalFlags ? flag CrossCompiling ? arg "-terminfo"
+        , package haskeline ?
+          builder CabalFlags ? flag CrossCompiling ? arg "-terminfo"
 
         -------------------------------- hsc2hs --------------------------------
-        , package hsc2hs ? builder CabalFlags ? arg "in-ghc-tree"
+        , package hsc2hs ?
+          builder CabalFlags ? arg "in-ghc-tree"
 
         ------------------------------ integerGmp ------------------------------
         , package integerGmp ? mconcat
           [ builder Cc ? arg includeGmp
+
           , builder (GhcCabal Conf) ? mconcat
             [ -- TODO: This should respect some settings flag "InTreeGmp".
               -- Depending on @IncludeDir@ and @LibDir@ is bound to fail, since
@@ -143,6 +138,19 @@ packageArgs = do
               -- arg "--configure-option=--with-intree-gmp"
               arg ("--configure-option=CFLAGS=" ++ includeGmp)
             , arg ("--gcc-options="             ++ includeGmp) ] ]
+
+        --------------------------------- text ---------------------------------
+        -- The package @text@ is rather tricky. It's a boot library, and it
+        -- tries to determine on its own if it should link against @integer-gmp@
+        -- or @integer-simple@. For Stage0, we need to use the integer library
+        -- that the bootstrap compiler has (since @interger@ is not a boot
+        -- library) and therefore we copy it over into the Stage0 package-db.
+        -- Maybe we should stop doing this? And subsequently @text@ for Stage1
+        -- detects the same integer library again, even though we don't build it
+        -- in Stage1, and at that point the configuration is just wrong.
+        , package text ?
+          builder CabalFlags ? notStage0 ? intLib == integerSimple ?
+          pure [ "+integer-simple", "-bytestring-builder"]
 
         -------------------------------- runGhc --------------------------------
         , package runGhc ?

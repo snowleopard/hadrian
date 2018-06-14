@@ -234,11 +234,7 @@ parsePackageData context@Context {..} = do
         -- ^ do not hack the empty index
         hackRtsPackage index = case C.lookupPackageName index (C.mkPackageName "rts") of
             [(_,[rts])] -> C.insert rts {
-                -- However, we keep "-Wl,-u,findPtr" and "-Wl,-u,_findPtr"
-                -- since OSX build fails without them.
-                -- See https://github.com/snowleopard/hadrian/issues/614.
-                Installed.ldOptions   = filter ("findPtr" `isInfixOf`)
-                                               (Installed.ldOptions rts),
+                Installed.ldOptions   = [],
                 Installed.libraryDirs = filter (not . ("gcc-lib" `isSuffixOf`))
                                                (Installed.libraryDirs rts)} index
             -- GHC <= 6.12 had $topdir/gcc-lib in their library-dirs for the rts
@@ -291,8 +287,8 @@ parsePackageData context@Context {..} = do
 
 getHookedBuildInfo :: FilePath -> IO C.HookedBuildInfo
 getHookedBuildInfo baseDir = do
-    -- TODO: We should probably better generate this in the build dir, rather then
-    -- in the base dir? However `configure` is run in the baseDir.
+    -- TODO: We should probably better generate this in the build dir, rather
+    -- than in the base dir? However, @configure@ is run in the baseDir.
     maybeInfoFile <- C.findHookedPackageDesc baseDir
     case maybeInfoFile of
         Nothing       -> return C.emptyHookedBuildInfo
