@@ -22,7 +22,7 @@ executable hadrian
                        , Builder
                        , CommandLine
                        , Context
-                       , Context.Paths
+                       , Context.Path
                        , Context.Type
                        , Environment
                        , Expression
@@ -94,7 +94,6 @@ executable hadrian
                        , Settings.Flavours.QuickCross
                        , Settings.Flavours.Quickest
                        , Settings.Packages
-                       , Settings.Packages.Rts
                        , Settings.Warnings
                        , Stage
                        , Target

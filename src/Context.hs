@@ -13,7 +13,7 @@ module Context (
     ) where
 
 import Base
-import Context.Paths
+import Context.Path
 import Context.Type
 import Hadrian.Expression
 import Hadrian.Haskell.Cabal
