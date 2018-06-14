@@ -196,7 +196,7 @@ optDescrs =
     , Option [] ["split-objects"] (NoArg readSplitObjects)
       "Generate split objects (requires a full clean rebuild)."
     , Option [] ["test-compiler"] (OptArg readTestCompiler "TEST_COMPILER")
-      "Use given compiler [Default=Stage2]."
+      "Use given compiler [Default=stage2]."
     , Option [] ["config"] (OptArg readTestConfig "EXTRA_TEST_CONFIG")
       "Configurations to run test, in key=value format."
     , Option [] ["summary-junit"] (OptArg readTestJUnit "TEST_SUMMARY_JUNIT")
