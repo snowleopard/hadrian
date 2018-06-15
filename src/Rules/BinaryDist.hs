@@ -230,7 +230,7 @@ wrapper _            = commonWrapper
 
 ghcWrapper :: String
 ghcWrapper = unlines
-  [ "exec \"$executablename\" -B\"$topdir\" ${1+\"$@\"}"
+  [ "exec \"$executablename\" -B\"$libdir\" ${1+\"$@\"}"
   ]
 
 ghcPkgWrapper :: String
