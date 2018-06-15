@@ -84,9 +84,7 @@ getTestArgs = do
     bindir          <- expr $ setBinaryDirectory (testCompiler args)
     compiler        <- expr $ setCompiler (testCompiler args)
     globalVerbosity <- shakeVerbosity <$> expr getShakeOptions 
-    let configFileArg= case testConfigFile args of
-                           Just filepath -> ["--config-file=" ++ filepath]
-                           Nothing       -> ["--config-file=testsuite/config/ghc"]
+    let configFileArg= ["--config-file=" ++ (testConfigFile args)]
         testOnlyArg  = case testOnly args of
                            Just cases -> map ("--only=" ++) (words cases)
                            Nothing -> []

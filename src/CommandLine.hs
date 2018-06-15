@@ -46,7 +46,7 @@ defaultCommandLineArgs = CommandLineArgs
 -- | These arguments are used by the `test` target.
 data TestArgs = TestArgs
     { testCompiler   :: String
-    , testConfigFile :: Maybe String
+    , testConfigFile :: String
     , testConfigs    :: [String]
     , testJUnit      :: Maybe FilePath
     , testOnly       :: Maybe String
@@ -62,7 +62,7 @@ data TestArgs = TestArgs
 defaultTestArgs :: TestArgs
 defaultTestArgs = TestArgs
     { testCompiler   = "stage2"
-    , testConfigFile = Nothing
+    , testConfigFile = "testsuite/config/ghc"
     , testConfigs    = []
     , testJUnit      = Nothing
     , testOnly       = Nothing
@@ -139,7 +139,10 @@ readTestConfig config =
                         in flags { testArgs = (testArgs flags) { testConfigs = configs } }
 
 readTestConfigFile :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
-readTestConfigFile filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testConfigFile = filepath } } 
+readTestConfigFile filepath = 
+    maybe (Left "Cannot parse test-speed") (Right . set) filepath
+  where
+    set filepath flags =  flags { testArgs = (testArgs flags) { testConfigFile = filepath } } 
 
 readTestJUnit :: Maybe String -> Either String (CommandLineArgs -> CommandLineArgs)
 readTestJUnit filepath = Right $ \flags -> flags { testArgs = (testArgs flags) { testJUnit = filepath } }
