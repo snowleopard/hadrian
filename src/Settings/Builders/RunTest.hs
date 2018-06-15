@@ -71,7 +71,6 @@ runTestBuilderArgs = builder RunTest ? do
             , arg "-e", arg $ "config.arch="     ++ show arch
             , arg "-e", arg $ "config.platform=" ++ show platform
 
-            , arg "--config-file=testsuite/config/ghc"
             , arg "--config", arg $ "gs=gs"                           -- Use the default value as in test.mk
             , arg "--config", arg $ "timeout_prog=" ++ show (top -/- timeoutProg)
             , arg $ "--threads=" ++ show threads
@@ -85,7 +84,10 @@ getTestArgs = do
     bindir          <- expr $ setBinaryDirectory (testCompiler args)
     compiler        <- expr $ setCompiler (testCompiler args)
     globalVerbosity <- shakeVerbosity <$> expr getShakeOptions 
-    let testOnlyArg  = case testOnly args of
+    let configFileArg= case testConfigFile args of
+                           Just filepath -> ["--config-file=" ++ filepath]
+                           Nothing       -> ["--config-file=testsuite/config/ghc"]
+        testOnlyArg  = case testOnly args of
                            Just cases -> map ("--only=" ++) (words cases)
                            Nothing -> []
         onlyPerfArg  = if testOnlyPerf args
@@ -111,7 +113,7 @@ getTestArgs = do
         haddockArg   = ["--config", "haddock=" ++ show (bindir -/- "haddock")]
         hp2psArg     = ["--config", "hp2ps=" ++ show (bindir -/- "hp2ps")]
         hpcArg       = ["--config", "hpc=" ++ show (bindir -/- "hpc")]   
-    pure $  testOnlyArg ++ speedArg 
+    pure $  configFileArg ++ testOnlyArg ++ speedArg 
          ++ catMaybes [ onlyPerfArg, skipPerfArg, summaryArg
                       , junitArg, verbosityArg  ] 
          ++ configArgs ++ wayArgs ++  compilerArg ++ ghcPkgArg
