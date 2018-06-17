@@ -33,12 +33,16 @@ testRules = do
         top            <- topDirectory
         ghcPath        <- (top -/-) <$> builderPath (Ghc CompileHs Stage2)
         ghcFlags       <- runTestGhcFlags
+        checkPprPath   <- (top -/-) <$> expr (needfile Stage1 checkPpr)
+        checkPprPath   <- (top -/-) <$> expr (needfile Stage1 checkApiAnnotations)
 
         -- Set environment variables for test's Makefile.
         liftIO $ do
             setEnv "MAKE" makePath
             setEnv "TEST_HC" ghcPath
             setEnv "TEST_HC_OPTS" ghcFlags
+            setEnv "CHECK_PPR" checkPprPath
+            setEnv "CHECK_API_ANNOTATIONS" annotationsPath 
 
         -- Execute the test target.
         buildWithCmdOptions env $ target (vanillaContext Stage2 compiler) RunTest [] []
@@ -48,14 +52,6 @@ needTestsuiteBuilders :: Action ()
 needTestsuiteBuilders = do
     targets <- mapM (needfile Stage1) =<< testsuitePackages
     need targets
-  where
-    needfile :: Stage -> Package -> Action FilePath
-    needfile stage pkg
-      -- TODO (Alp): we might sometimes need more than vanilla!
-      -- This should therefore depend on what test ways
-      -- we are going to use, I suppose?
-      | isLibrary pkg = pkgConfFile (vanillaContext stage pkg)
-      | otherwise = programPath =<< programContext stage pkg
 
 -- | Build the timeout program.
 -- See: https://github.com/ghc/ghc/blob/master/testsuite/timeout/Makefile#L23
@@ -120,3 +116,11 @@ runTestGhcFlags = do
 
 timeoutProgPath :: FilePath
 timeoutProgPath = "testsuite/timeout/install-inplace/bin/timeout" <.> exe
+
+needfile :: Stage -> Package -> Action FilePath
+needfile stage pkg
+--TODO (Alp): we might sometimes need more than vanilla!
+-- This should therefore depend on what test ways
+-- we are going to use, I suppose?
+    | isLibrary pkg = pkgConfFile (Context stage pkg profilingDynamic)
+    | otherwise = programPath =<< programContext stage pkg
