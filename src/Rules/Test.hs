@@ -29,12 +29,12 @@ testRules = do
             , builderEnvironment "TEST_HC" $ Ghc CompileHs Stage2
             , AddEnv "TEST_HC_OPTS" <$> runTestGhcFlags ]
 
-        makePath       <- builderPath $ Make ""
-        top            <- topDirectory
-        ghcPath        <- (top -/-) <$> builderPath (Ghc CompileHs Stage2)
-        ghcFlags       <- runTestGhcFlags
-        checkPprPath   <- (top -/-) <$> expr (needfile Stage1 checkPpr)
-        checkPprPath   <- (top -/-) <$> expr (needfile Stage1 checkApiAnnotations)
+        makePath        <- builderPath $ Make ""
+        top             <- topDirectory
+        ghcPath         <- (top -/-) <$> builderPath (Ghc CompileHs Stage2)
+        ghcFlags        <- runTestGhcFlags
+        checkPprPath    <- (top -/-) <$> needfile Stage1 checkPpr
+        annotationsPath <- (top -/-) <$> needfile Stage1 checkApiAnnotations
 
         -- Set environment variables for test's Makefile.
         liftIO $ do
@@ -50,8 +50,14 @@ testRules = do
 -- | Build extra programs required by testsuite
 needTestsuiteBuilders :: Action ()
 needTestsuiteBuilders = do
-    targets <- mapM (needfile Stage1) =<< testsuitePackages
+    targets        <- mapM (needfile Stage1) =<< testsuitePackages
+    binPath        <- stageBinPath Stage1
+    libPath        <- stageLibPath Stage1
+    iservPath      <- needfile Stage1 iserv 
+    runhaskellPath <- needfile Stage1 runGhc
     need targets
+    copyFile iservPath $ libPath -/- "bin/ghc-iserv"
+    copyFile runhaskellPath $ binPath -/- "runghc"
 
 -- | Build the timeout program.
 -- See: https://github.com/ghc/ghc/blob/master/testsuite/timeout/Makefile#L23

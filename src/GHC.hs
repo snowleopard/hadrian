@@ -107,9 +107,10 @@ stage2Packages = return [haddock]
 testsuitePackages :: Action [Package]
 testsuitePackages = return [ checkApiAnnotations
                            , checkPpr
+                           , ghci
                            , ghcPkg
-                           , parallel
                            , hp2ps
+                           , parallel
                            , timeout         ]
 
 -- | Given a 'Context', compute the name of the program that is built in it
