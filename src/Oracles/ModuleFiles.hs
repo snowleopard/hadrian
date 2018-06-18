@@ -142,12 +142,20 @@ moduleFilesOracle = void $ do
                     found = intersectOrd cmp files mFiles
                 return (map (fullDir -/-) found, mDir)
 
+        -- For a BuildInfo, it may be a library, which deosn't have the `Main`
+        -- module, or an executable, which must have the `Main` module and the
+        -- file path of `Main` module is indicated by the `main-is` field in it's
+        -- .cabal file.
+        --
+        -- For `Main` module, the file name may not be `Main.hs`, unlike other
+        -- exposed modules. We could get the file path by the module name for
+        -- other exposed modules, but for `Main`, we must resolve the file path
+        -- via the `main-is` field in the .cabal file.
         mainpairs <- case mainIs of
             Just (mod, filepath) ->
                 concatForM dirs $ \dir -> do
                     found <- doesFileExist (dir -/- filepath)
-                    return $ if found then [(mod, unifyPath $ dir -/- filepath)]
-                                      else []
+                    return [(mod, unifyPath $ dir -/- filepath) | found]
             Nothing              -> return []
 
         let pairs = sort $ mainpairs ++ [ (encodeModule d f, f) | (fs, d) <- result, f <- fs ]
