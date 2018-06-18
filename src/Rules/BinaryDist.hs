@@ -66,7 +66,7 @@ bindistRules = do
       writeFile' makefilePath bindistMakefile
     
     root -/- "bindist" -/- "ghc-*" -/- "wrappers/*" %> \wrapperPath -> 
-      writeFile' wrapperPath $ wrapper (basename wrapperPath)
+      writeFile' wrapperPath $ wrapper (takeFileName wrapperPath)
 
     -- copy over the various configure-related files needed for a working
     -- './configure [...] && make install' workflow
@@ -213,9 +213,6 @@ bindistMakefile = unlines
   , "# END INSTALL"
   , "# -----------------------------------------------------------------------------"
   ]
-
-basename :: FilePath -> String
-basename path = last $ splitOn "/" path
 
 wrapper :: String -> String
 wrapper "ghc"        = ghcWrapper
