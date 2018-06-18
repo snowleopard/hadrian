@@ -214,7 +214,7 @@ bindistMakefile = unlines
   , "# -----------------------------------------------------------------------------"
   ]
 
-wrapper :: String -> String
+wrapper :: FilePath -> String
 wrapper "ghc"        = ghcWrapper
 wrapper "ghc-pkg"    = ghcPkgWrapper
 wrapper "ghci"       = ghciWrapper
