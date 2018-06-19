@@ -17,6 +17,11 @@ oneZero lbl True = lbl ++ "=1"
 stringToBool :: String -> Bool
 stringToBool "YES"  = True
 stringToBool "NO"   = False
+
+-- | An abstraction to get boolean value of some settings
+getBooleanSetting :: TestSetting -> Action Bool
+getBooleanSetting key = fmap stringToBool $ testSetting key
+
 -- Arguments to send to the runtest.py script.
 --
 -- A lot of this mirrors what's achieved at testsuite/mk/test.mk.
@@ -33,14 +38,12 @@ runTestBuilderArgs = builder RunTest ? do
     let hasRtsWay w = elem w rtsways
         hasLibWay w = elem w libways
         debugged = ghcDebugged flav
-    hasProfiling  <- expr $ fmap stringToBool (testSetting TestGhcProfiled) 
-    hasDynamic    <- expr $ fmap stringToBool (testSetting TestGhcDynamic)
-    hasDebugged   <- expr $ fmap stringToBool (testSetting TestGhcDebugged)
-    hasDynamicByDefault <- expr $ fmap stringToBool (testSetting TestGhcDynamicByDefault)
-    withNativeCodeGen <- expr $ fmap stringToBool (testSetting TestGhcWithNativeCodeGen)
-    withInterpreter   <- expr $ fmap stringToBool (testSetting TestGhcWithInterpreter)
-    unregisterised    <- expr $ fmap stringToBool (testSetting TestGhcUnregisterised)
-    withSMP           <- expr $ fmap stringToBool (testSetting TestGhcWithSMP)
+    hasDynamic    <- expr $ getBooleanSetting TestGhcDynamic
+    hasDynamicByDefault <- expr $ getBooleanSetting TestGhcDynamicByDefault
+    withNativeCodeGen <- expr $ getBooleanSetting TestGhcWithNativeCodeGen
+    withInterpreter   <- expr $ getBooleanSetting TestGhcWithInterpreter
+    unregisterised    <- expr $ getBooleanSetting TestGhcUnregisterised
+    withSMP           <- expr $ getBooleanSetting TestGhcWithSMP
 
     windows  <- expr windowsHost
     darwin   <- expr osxHost

@@ -8,7 +8,7 @@ import Base
 testConfigFile :: Action FilePath
 testConfigFile = buildRoot <&> (-/- "test/ghcconfig")
 
--- | Test settings obtained from 
+-- | Test settings obtained from ghcConfig
 data TestSetting = TestHostOS
                  | TestWORDSIZE
                  | TestTARGETPLATFORM
@@ -32,6 +32,7 @@ data TestSetting = TestHostOS
                  | TestMinGhcVersion801
                  deriving (Show)
 
+-- | Lookup for testsettings in ghcconfig file
 testSetting :: TestSetting -> Action String
 testSetting key = do
     file <- testConfigFile
@@ -59,6 +60,7 @@ testSetting key = do
         TestMinGhcVersion801      -> "MinGhcVersion801"
     
 
+-- | Get the RTS ways of the test compiler
 testRTSSettings :: Action [String]
 testRTSSettings = do 
     file <- testConfigFile
