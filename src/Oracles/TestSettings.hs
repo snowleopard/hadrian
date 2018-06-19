@@ -1,3 +1,7 @@
+-- | We create a file <root>/test/ghcconfig containing configuration of test
+-- | compiler. We need to search this file for required keys and setting 
+-- | required for testsuite e.g. WORDSIZE, HOSTOS etc.  
+
 module Oracles.TestSettings (
     TestSetting (..), testSetting, testRTSSettings
     ) where
@@ -8,7 +12,7 @@ import Base
 testConfigFile :: Action FilePath
 testConfigFile = buildRoot <&> (-/- "test/ghcconfig")
 
--- | Test settings obtained from ghcConfig
+-- | Test settings that are obtained from ghcconfig file.
 data TestSetting = TestHostOS
                  | TestWORDSIZE
                  | TestTARGETPLATFORM
@@ -33,6 +37,7 @@ data TestSetting = TestHostOS
                  deriving (Show)
 
 -- | Lookup for testsettings in ghcconfig file
+-- | To obtain RTS Ways supported in ghcconfig file, use testRTSSettings.
 testSetting :: TestSetting -> Action String
 testSetting key = do
     file <- testConfigFile

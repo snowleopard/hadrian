@@ -20,13 +20,13 @@ testRules = do
     -- | Using program shipped with testsuite to generate ghcconfig file.
     root -/- ghcConfigProgPath ~> do
         ghc             <- builderPath $ Ghc CompileHs Stage0
-        command [] ghc [ghcConfigHsPath, "-o" , root -/- ghcConfigProgPath]
+        cmd ghc [ghcConfigHsPath, "-o" , root -/- ghcConfigProgPath]
  
     -- | TODO : Use input test compiler and not just stage2 compiler.  
     root -/- ghcConfigPath ~> do
         ghcPath         <- needfile Stage1 ghc
         need [ root -/- ghcConfigProgPath]
-        command [FileStdout $ root -/- ghcConfigPath] (root -/- ghcConfigProgPath)
+        cmd [FileStdout $ root -/- ghcConfigPath] (root -/- ghcConfigProgPath)
             [ ghcPath  ] 
 
     "validate" ~> do
@@ -66,8 +66,8 @@ testRules = do
         buildWithCmdOptions env $ target (vanillaContext Stage2 compiler) RunTest [] []
 
 -- | Build extra programs and libraries required by testsuite
-needTestsuiteLibraries :: Action ()
-needTestsuiteLibraries = do
+needTestsuitePackages :: Action ()
+needTestsuitePackages = do
     targets        <- mapM (needfile Stage1) =<< testsuitePackages
     binPath        <- stageBinPath Stage1
     libPath        <- stageLibPath Stage1
@@ -109,7 +109,7 @@ needTestBuilders = do
     needBuilder Hpc
     needBuilder (Hsc2Hs Stage1)
     timeoutProgBuilder
-    needTestsuiteLibraries
+    needTestsuitePackages
 
 -- | Extra flags to send to the Haskell compiler to run tests.
 runTestGhcFlags :: Action String
@@ -160,3 +160,4 @@ needfile stage pkg
 -- we are going to use, I suppose?
     | isLibrary pkg = pkgConfFile (Context stage pkg profilingDynamic)
     | otherwise = programPath =<< programContext stage pkg
+
