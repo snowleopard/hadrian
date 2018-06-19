@@ -15,7 +15,6 @@ bindistRules = do
       -- We 'need' all binaries and libraries
       targets <- mapM pkgTarget =<< stagePackages Stage1
       need targets
-
       version        <- setting ProjectVersion
       targetPlatform <- setting TargetPlatformFull
       hostOs         <- setting BuildOs
