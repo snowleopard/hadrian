@@ -14,10 +14,10 @@ bindistRules = do
       -- We 'need' all binaries and libraries
       targets <- mapM pkgTarget =<< stagePackages Stage1
       need targets
-
+      ctxPath <- contextPath $ vanillaContext Stage1 rts
       version <- setting ProjectVersion
       targetPlatform <- setting TargetPlatformFull
-
+      putLoud ctxPath
       let ghcBuildDir      = root -/- stageString Stage1
           bindistFilesDir  = root -/- "bindist" -/- ghcVersionPretty
           ghcVersionPretty = "ghc-" ++ version ++ "-" ++ targetPlatform
