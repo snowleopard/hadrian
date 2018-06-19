@@ -79,7 +79,6 @@ commonGhcArgs = do
             , arg "-hcsuf", arg $ hcsuf way
             , wayGhcArgs
             , packageGhcArgs
-            , arg "-lnuma"
             , includeGhcArgs
             -- when compiling the rts for stage1 or stage2
             -- we do not have the rts in the package db at
