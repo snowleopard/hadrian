@@ -46,7 +46,8 @@ bindistRules = do
                  (["configure", "Makefile"] ++ bindistInstallFiles)
       need $ map ((bindistFilesDir -/- "wrappers") -/-) ["check-api-annotations"
                  , "check-ppr", "ghc", "ghc-iserv", "ghc-pkg", "ghc-split"
-                 , "ghci", "haddock", "hpc", "hp2ps", "hsc2hs", "runhaskell"]
+                 , "ghci-script", "ghci", "haddock", "hpc", "hp2ps", "hsc2hs"
+                 , "runhaskell"]
 
       -- finally, we create the archive, at
       -- <root>/bindist/ghc-X.Y.Z-platform.tar.xz
@@ -193,6 +194,12 @@ bindistMakefile = unlines
   , "\tfor i in $(BINARIES); do \\"
   , "\t\tcp -R $$i \"$(GHCBINDIR)\"; \\"
   , "\tdone"
+  , "\t@echo \"Copying and installing ghci\""
+  , "\trm -f $(GHCBINDIR)/dir"
+  , "\t$(CREATE_SCRIPT) $(GHCBINDIR)/ghci"
+  , "\t@echo \"#!$(SHELL)\" >>  $(GHCBINDIR)/ghci"
+  , "\tcat wrappers/ghci-script >> $(GHCBINDIR)/ghci"
+  , "\t$(EXECUTABLE_FILE) $(GHCBINDIR)/ghci"
   , ""
   , "LIBRARIES = $(wildcard ./lib/*)"
   , "install_lib:"
@@ -230,13 +237,14 @@ bindistMakefile = unlines
   ]
 
 wrapper :: FilePath -> String
-wrapper "ghc"        = ghcWrapper
-wrapper "ghc-pkg"    = ghcPkgWrapper
-wrapper "ghci"       = ghciWrapper
-wrapper "haddock"    = haddockWrapper
-wrapper "hsc2hs"     = hsc2hsWrapper                          
-wrapper "runhaskell" = runhaskellWrapper
-wrapper _            = commonWrapper
+wrapper "ghc"         = ghcWrapper
+wrapper "ghc-pkg"     = ghcPkgWrapper
+wrapper "ghci"        = ghciWrapper
+wrapper "ghci-script" = ghciScriptWrapper
+wrapper "haddock"     = haddockWrapper
+wrapper "hsc2hs"      = hsc2hsWrapper                          
+wrapper "runhaskell"  = runhaskellWrapper
+wrapper _             = commonWrapper
 
 -- | Wrapper scripts for different programs. Common is default wrapper. 
 
@@ -294,4 +302,12 @@ runhaskellWrapper = unlines
   ["exec \"$executablename\" -f \"$exedir/ghc\" ${1+\"$@\"}"
   ]
 
+-- | We need to ship ghci executable, which basically just calls ghc with
+-- | --interactive flag. 
+ghciScriptWrapper :: String
+ghciScriptWrapper = unlines
+  [ "DIR=`dirname \"$0\"`"
+  , "executable=\"$DIR/ghc\""
+  , "exec $executable --interactive \"$@\""
+  ]
 
