@@ -1,6 +1,7 @@
-module Rules.Test (testRules, runTestGhcFlags, timeoutProgPath) where
+module Rules.Test (testRules, runTestGhcFlags, timeoutProgPath, compilerPath) where
 
 import Base
+import CommandLine
 import Expression
 import GHC
 import GHC.Packages (timeout)
@@ -22,9 +23,8 @@ testRules = do
         ghc             <- builderPath $ Ghc CompileHs Stage0
         cmd ghc [ghcConfigHsPath, "-o" , root -/- ghcConfigProgPath]
  
-    -- | TODO : Use input test compiler and not just stage2 compiler.  
     root -/- ghcConfigPath ~> do
-        ghcPath         <- needfile Stage1 ghc
+        ghcPath         <- getCompiler
         need [ root -/- ghcConfigProgPath]
         cmd [FileStdout $ root -/- ghcConfigPath] (root -/- ghcConfigProgPath)
             [ ghcPath  ] 
@@ -160,4 +160,15 @@ needfile stage pkg
 -- we are going to use, I suppose?
     | isLibrary pkg = pkgConfFile (Context stage pkg profilingDynamic)
     | otherwise = programPath =<< programContext stage pkg
+ 
+getCompiler :: Action FilePath
+getCompiler = do
+    args            <- userSetting defaultTestArgs
+    compilerPath $ testCompiler args
 
+-- | Set Test Compiler
+compilerPath :: String -> Action FilePath
+compilerPath "stage0" = setting SystemGhc
+compilerPath "stage1" = liftM2 (-/-) topDirectory (needfile Stage0 ghc)
+compilerPath "stage2" = liftM2 (-/-) topDirectory (needfile Stage1 ghc)
+compilerPath compiler = pure compiler

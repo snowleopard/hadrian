@@ -1,7 +1,6 @@
 module Settings.Builders.RunTest (runTestBuilderArgs) where
 
 import CommandLine (TestArgs(..), defaultTestArgs, TestSpeed(..))
-import Context
 import Flavour
 import GHC
 import Hadrian.Utilities
@@ -17,6 +16,7 @@ oneZero lbl True = lbl ++ "=1"
 stringToBool :: String -> Bool
 stringToBool "YES"  = True
 stringToBool "NO"   = False
+stringToBool _      = error "Cannot parse string"
 
 -- | An abstraction to get boolean value of some settings
 getBooleanSetting :: TestSetting -> Action Bool
@@ -102,7 +102,7 @@ getTestArgs :: Args
 getTestArgs = do
     args            <- expr $ userSetting defaultTestArgs
     bindir          <- expr $ setBinaryDirectory (testCompiler args)
-    compiler        <- expr $ setCompiler (testCompiler args)
+    compiler        <- expr $ compilerPath (testCompiler args)
     globalVerbosity <- shakeVerbosity <$> expr getShakeOptions 
     let configFileArg= ["--config-file=" ++ (testConfigFile args)]
         testOnlyArg  = case testOnly args of
@@ -151,13 +151,6 @@ setBinaryDirectory "stage1" = liftM2 (-/-) topDirectory (stageBinPath Stage0)
 setBinaryDirectory "stage2" = liftM2 (-/-) topDirectory (stageBinPath Stage1) 
 setBinaryDirectory compiler = pure $ parentPath compiler
 
--- | Set Test Compiler
-setCompiler :: String -> Action FilePath
-setCompiler "stage0" = setting SystemGhc
-setCompiler "stage1" = liftM2 (-/-) topDirectory (fullpath Stage0 ghc)
-setCompiler "stage2" = liftM2 (-/-) topDirectory (fullpath Stage1 ghc)
-setCompiler compiler = pure compiler 
-
 -- | Set speed for test
 setTestSpeed :: TestSpeed -> String
 setTestSpeed Fast    = "2"
@@ -169,8 +162,3 @@ setTestSpeed Slow    = "0"
 parentPath :: String -> String
 parentPath path = let upPath = init $ splitOn "/" path
                   in  intercalate "/" upPath
-
--- | TODO: move to hadrian utilities.
-fullpath :: Stage -> Package -> Action FilePath
-fullpath stage pkg = programPath =<< programContext stage pkg
-
