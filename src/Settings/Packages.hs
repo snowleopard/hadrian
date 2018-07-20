@@ -79,7 +79,7 @@ packageArgs = do
             [ ghcWithNativeCodeGen ? arg "ncg"
             , ghcWithInterpreter ? notStage0 ? arg "ghci"
             , flag CrossCompiling ? arg "-terminfo"
-            , (stage == Stage2) ? arg "integer-simple" ]
+            , stage2 ? arg "integer-simple" ]
 
           , builder (Haddock BuildPackage) ? arg ("--optghc=-I" ++ path) ]
 
