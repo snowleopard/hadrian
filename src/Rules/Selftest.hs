@@ -4,7 +4,9 @@ module Rules.Selftest (selftestRules) where
 import Test.QuickCheck
 
 import Base
+import Context
 import GHC
+import Hadrian.Haskell.Cabal
 import Oracles.ModuleFiles
 import Oracles.Setting
 import Settings
@@ -24,6 +26,7 @@ selftestRules =
     "selftest" ~> do
         testBuilder
         testChunksOfSize
+        testDependencies
         testLookupAll
         testModuleName
         testPackages
@@ -46,6 +49,16 @@ testChunksOfSize = do
     test $ \n xs ->
         let res = chunksOfSize n xs
         in concat res == xs && all (\r -> length r == 1 || length (concat r) <= n) res
+
+testDependencies :: Action ()
+testDependencies = do
+    putBuild "==== pkgDependencies"
+    depLists <- mapM (pkgDependencies . vanillaContext Stage1) ghcPackages
+    test $ and [ deps == sort deps | Just deps <- depLists ]
+    putBuild "==== Dependencies of the 'ghc-bin' package"
+    ghcDeps <- pkgDependencies (vanillaContext Stage1 ghc)
+    test $ isJust ghcDeps
+    test $ pkgName compiler `elem` (fromJust ghcDeps)
 
 testLookupAll :: Action ()
 testLookupAll = do
@@ -89,4 +102,3 @@ testWay :: Action ()
 testWay = do
     putBuild "==== Read Way, Show Way"
     test $ \(x :: Way) -> read (show x) == x
-
