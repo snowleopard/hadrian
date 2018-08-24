@@ -1,4 +1,4 @@
-module Rules.Library (libraryRules, libraryObjects) where
+module Rules.Library (libraryRules) where
 
 import Hadrian.Haskell.Cabal
 import Hadrian.Haskell.Cabal.PackageData as PD

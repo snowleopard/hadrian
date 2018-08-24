@@ -9,7 +9,6 @@ import GHC
 import Hadrian.Haskell.Cabal
 import Oracles.ModuleFiles
 import Oracles.Setting
-import Rules.Library
 import Settings
 import Target
 import Utilities
@@ -69,10 +68,6 @@ testDependencies = do
     test $ vanillaContext Stage2 compiler `notElem` stage1Deps
     test $ stage1Deps /= stage0Deps
     test $ stage1Deps == stage2Deps
-    putBuild "==== Dependencies of the 'compiler' library"
-    compilerObjects <- libraryObjects (vanillaContext Stage1 compiler)
-    test $       any ("//Parser.o"  ?==) compilerObjects
-    test $ not $ any ("//Prelude.o" ?==) compilerObjects
 
 testLookupAll :: Action ()
 testLookupAll = do
