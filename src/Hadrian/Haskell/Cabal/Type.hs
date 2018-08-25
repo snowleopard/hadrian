@@ -5,8 +5,13 @@ import Distribution.PackageDescription (GenericPackageDescription, PackageDescri
 import GHC.Generics
 import Hadrian.Package.Type
 
--- | Haskell package metadata extracted from a Cabal file.
-data Cabal = Cabal
+-- TODO: This doesn't need to be in a separate module.
+-- | Haskell package metadata extracted from a Cabal file, without performing
+-- the resolution of package configuration flags and associated conditionals.
+-- One consequence is that 'packageDependencies' is an overappoximation of
+-- actual package dependencies; for example, both 'unix' and 'win32' packages
+-- may be included even if only one of them is required on the target OS.
+data CabalData = CabalData
     { name                      :: PackageName
     , version                   :: String
     , synopsis                  :: String
@@ -15,9 +20,9 @@ data Cabal = Cabal
     , packageDependencies       :: [Package]
     } deriving (Eq, Show, Typeable, Generic)
 
-instance Binary Cabal
+instance Binary CabalData
 
-instance Hashable Cabal where
+instance Hashable CabalData where
     hashWithSalt salt = hashWithSalt salt . show
 
-instance NFData Cabal
+instance NFData CabalData

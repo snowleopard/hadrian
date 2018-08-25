@@ -38,7 +38,7 @@ type instance RuleResult TextFile = String
 
 newtype CabalFile = CabalFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult CabalFile = Maybe Cabal
+type instance RuleResult CabalFile = Maybe CabalData
 
 newtype PackageDataFile = PackageDataFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
@@ -100,11 +100,11 @@ lookupDependencies depFile file = do
         Just (source : files) -> return (source, files)
 
 -- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalFile :: Context -> Action (Maybe Cabal)
+readCabalFile :: Context -> Action (Maybe CabalData)
 readCabalFile = askOracle . CabalFile
 
 -- | Like 'readCabalFile' but raises an error on a non-Cabal context.
-unsafeReadCabalFile :: HasCallStack => Context -> Action Cabal
+unsafeReadCabalFile :: HasCallStack => Context -> Action CabalData
 unsafeReadCabalFile context = fromMaybe (error msg) <$> readCabalFile context
   where
     msg = "[unsafeReadCabalFile] Non-Cabal context: " ++ show context

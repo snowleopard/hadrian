@@ -81,7 +81,7 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
 -- corresponding to the 'Stage' it gets from the 'Context', and finalises the
 -- package description it got from the Cabal file with additional information
 -- such as platform, compiler version conditionals, and package flags.
-parseCabal :: Context -> Action Cabal
+parseCabal :: Context -> Action CabalData
 parseCabal context@Context {..} = do
     let file = unsafePkgCabalFile package
 
@@ -93,7 +93,7 @@ parseCabal context@Context {..} = do
     (compiler, Just platform, _pgdb) <- liftIO $
         C.configure C.silent (Just hcPath) Nothing C.emptyProgramDb
 
-    flagList <- interpret (target context (CabalFlags stage) [] []) =<< args <$> flavour
+    flagList <- interpret (target context (Cabal Flags stage) [] []) =<< args <$> flavour
     let flags = foldr addFlag mempty flagList
           where
             addFlag :: String -> C.FlagAssignment -> C.FlagAssignment
@@ -111,19 +111,20 @@ parseCabal context@Context {..} = do
             findPackageByName' p = fromMaybe (error msg) (findPackageByName p)
               where
                 msg = "Failed to find package " ++ quote (show p)
-    return $ Cabal (C.unPackageName . C.pkgName . C.package $ pd)
-                   (C.display . C.pkgVersion . C.package $ pd)
-                   (C.synopsis pd) gpd pd depPkgs
+    return $ CabalData (C.unPackageName . C.pkgName . C.package $ pd)
+                       (C.display . C.pkgVersion . C.package $ pd)
+                       (C.synopsis pd) gpd pd depPkgs
 
--- | This function runs the equivalent of @cabal configure@ using the Cabal
--- library directly, collecting all the configuration options and flags to be
--- passed to Cabal before invoking it. It 'need's package database entries for
--- the dependencies of the package the 'Context' points to.
+-- TODO: Track command line arguments and package configuration flags.
+-- | Configure a package using the Cabal library by collecting all the command
+-- line arguments (to be passed to the setup script) and package configuration
+-- flags. The function 'need's package database entries for the dependencies of
+-- the package the 'Context' points to.
 configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
 
-    Cabal _ _ _ gpd _pd depPkgs <- unsafeReadCabalFile context
+    CabalData _ _ _ gpd _pd depPkgs <- unsafeReadCabalFile context
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -152,8 +153,8 @@ configurePackage context@Context {..} = do
     -- Compute the list of flags
     -- Compute the Cabal configurartion arguments
     flavourArgs <- args <$> flavour
-    flagList    <- interpret (target context (CabalFlags    stage) [] []) flavourArgs
-    argList     <- interpret (target context (GhcCabal Conf stage) [] []) flavourArgs
+    flagList    <- interpret (target context (Cabal Flags stage) [] []) flavourArgs
+    argList     <- interpret (target context (Cabal Setup stage) [] []) flavourArgs
     verbosity   <- getVerbosity
     let v = if verbosity >= Loud then "-v3" else "-v0"
     liftIO $ C.defaultMainWithHooksNoReadArgs hooks gpd
@@ -164,7 +165,7 @@ configurePackage context@Context {..} = do
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
     putLoud $ "| Copy package " ++ quote (pkgName package)
-    Cabal _ _ _ gpd _ _ <- unsafeReadCabalFile context
+    CabalData _ _ _ gpd _ _ <- unsafeReadCabalFile context
     ctxPath   <- Context.contextPath context
     pkgDbPath <- packageDbPath stage
     verbosity <- getVerbosity
@@ -177,7 +178,7 @@ registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
     putLoud $ "| Register package " ++ quote (pkgName package)
     ctxPath <- Context.contextPath context
-    Cabal _ _ _ gpd _ _ <- unsafeReadCabalFile context
+    CabalData _ _ _ gpd _ _ <- unsafeReadCabalFile context
     verbosity <- getVerbosity
     let v = if verbosity >= Loud then "-v3" else "-v0"
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
@@ -194,7 +195,7 @@ parsePackageData context@Context {..} = do
     -- let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
     --
     -- However when using the new-build path's this might change.
-    Cabal _ _ _ _gpd pd _depPkgs <- unsafeReadCabalFile context
+    CabalData _ _ _ _gpd pd _depPkgs <- unsafeReadCabalFile context
 
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]
