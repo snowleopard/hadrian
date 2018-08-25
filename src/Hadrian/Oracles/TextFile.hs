@@ -13,7 +13,7 @@
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalFile, unsafeReadCabalFile, readPackageDataFile, textFileOracle
+    readCabalData, unsafeReadCabalData, readPackageData, textFileOracle
     ) where
 
 import Control.Monad
@@ -25,8 +25,8 @@ import Development.Shake.Config
 import GHC.Stack
 
 import Context.Type
+import Hadrian.Haskell.Cabal.CabalData
 import Hadrian.Haskell.Cabal.PackageData
-import Hadrian.Haskell.Cabal.Type
 import {-# SOURCE #-} Hadrian.Haskell.Cabal.Parse
 import Hadrian.Package
 import Hadrian.Utilities
@@ -100,17 +100,20 @@ lookupDependencies depFile file = do
         Just (source : files) -> return (source, files)
 
 -- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalFile :: Context -> Action (Maybe CabalData)
-readCabalFile = askOracle . CabalFile
+readCabalData :: Context -> Action (Maybe CabalData)
+readCabalData = askOracle . CabalFile
 
--- | Like 'readCabalFile' but raises an error on a non-Cabal context.
-unsafeReadCabalFile :: HasCallStack => Context -> Action CabalData
-unsafeReadCabalFile context = fromMaybe (error msg) <$> readCabalFile context
+-- | Like 'readCabalData' but raises an error on a non-Cabal context.
+unsafeReadCabalData :: HasCallStack => Context -> Action CabalData
+unsafeReadCabalData context = fromMaybe (error msg) <$> readCabalData context
   where
-    msg = "[unsafeReadCabalFile] Non-Cabal context: " ++ show context
+    msg = "[unsafeReadCabalData] Non-Cabal context: " ++ show context
 
-readPackageDataFile :: Context -> Action (Maybe PackageData)
-readPackageDataFile = askOracle . PackageDataFile
+-- | Read and parse a @.cabal@ file recording the obtained 'PackageData',
+-- caching and tracking the result. Note that unlike 'readCabalData' this
+-- function resolves all Cabal configuration flags.
+readPackageData :: Context -> Action (Maybe PackageData)
+readPackageData = askOracle . PackageDataFile
 
 -- | This oracle reads and parses text files to answer 'readTextFile' and
 -- 'lookupValue' queries, as well as their derivatives, tracking the results.

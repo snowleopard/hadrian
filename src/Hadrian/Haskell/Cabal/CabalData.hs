@@ -1,4 +1,4 @@
-module Hadrian.Haskell.Cabal.Type where
+module Hadrian.Haskell.Cabal.CabalData where
 
 import Development.Shake.Classes
 import Distribution.PackageDescription (GenericPackageDescription, PackageDescription)
@@ -20,9 +20,6 @@ data CabalData = CabalData
     , packageDependencies       :: [Package]
     } deriving (Eq, Show, Typeable, Generic)
 
-instance Binary CabalData
-
-instance Hashable CabalData where
-    hashWithSalt salt = hashWithSalt salt . show
-
-instance NFData CabalData
+instance Binary   CabalData
+instance Hashable CabalData where hashWithSalt salt = hashWithSalt salt . show
+instance NFData   CabalData

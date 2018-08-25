@@ -44,8 +44,8 @@ import Context
 import Flavour
 import GHC.Packages
 import Hadrian.Expression
+import Hadrian.Haskell.Cabal.CabalData
 import Hadrian.Haskell.Cabal.PackageData
-import Hadrian.Haskell.Cabal.Type
 import Hadrian.Oracles.TextFile
 import Hadrian.Target
 import Settings
@@ -124,7 +124,7 @@ configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
 
-    CabalData _ _ _ gpd _pd depPkgs <- unsafeReadCabalFile context
+    CabalData _ _ _ gpd _pd depPkgs <- unsafeReadCabalData context
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -165,7 +165,7 @@ configurePackage context@Context {..} = do
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
     putLoud $ "| Copy package " ++ quote (pkgName package)
-    CabalData _ _ _ gpd _ _ <- unsafeReadCabalFile context
+    CabalData _ _ _ gpd _ _ <- unsafeReadCabalData context
     ctxPath   <- Context.contextPath context
     pkgDbPath <- packageDbPath stage
     verbosity <- getVerbosity
@@ -178,7 +178,7 @@ registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
     putLoud $ "| Register package " ++ quote (pkgName package)
     ctxPath <- Context.contextPath context
-    CabalData _ _ _ gpd _ _ <- unsafeReadCabalFile context
+    CabalData _ _ _ gpd _ _ <- unsafeReadCabalData context
     verbosity <- getVerbosity
     let v = if verbosity >= Loud then "-v3" else "-v0"
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
@@ -195,7 +195,7 @@ parsePackageData context@Context {..} = do
     -- let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
     --
     -- However when using the new-build path's this might change.
-    CabalData _ _ _ _gpd pd _depPkgs <- unsafeReadCabalFile context
+    CabalData _ _ _ _gpd pd _depPkgs <- unsafeReadCabalData context
 
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]
