@@ -155,7 +155,6 @@ builderProvenance = \case
     GenPrimopCode    -> context Stage0 genprimopcode
     Ghc _ Stage0     -> Nothing
     Ghc _ stage      -> context (pred stage) ghc
-    GhcCabal _ _     -> context Stage1 ghcCabal
     GhcPkg _ Stage0  -> Nothing
     GhcPkg _ _       -> context Stage0 ghcPkg
     Haddock _        -> context Stage1 haddock
