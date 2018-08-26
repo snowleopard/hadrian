@@ -52,7 +52,7 @@ textFileOracle = do
                 need [file]
                 putLoud $ "| CabalFile oracle: reading " ++ quote file
                        ++ " (Stage: " ++ stageString stage ++ ")..."
-                Just <$> parseCabal ctx
+                Just <$> parseCabalFile ctx
             Nothing -> return Nothing
     void $ addOracle $ \(CabalFile ctx) -> cabal ctx
 

@@ -10,7 +10,7 @@
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
 module Hadrian.Haskell.Cabal.Parse (
-    PackageData (..), parseCabal, parsePackageData, parseCabalPkgId,
+    PackageData (..), parseCabalFile, parsePackageData, parseCabalPkgId,
     configurePackage, copyPackage, registerPackage
     ) where
 
@@ -81,8 +81,8 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
 -- corresponding to the 'Stage' it gets from the 'Context', and finalises the
 -- package description it got from the Cabal file with additional information
 -- such as platform, compiler version conditionals, and package flags.
-parseCabal :: Context -> Action CabalData
-parseCabal context@Context {..} = do
+parseCabalFile :: Context -> Action CabalData
+parseCabalFile context@Context {..} = do
     let file = unsafePkgCabalFile package
 
     -- Read the package description from the Cabal file
