@@ -40,6 +40,7 @@ stage0Packages = do
     cross <- flag CrossCompiling
     return $ [ binary
              , cabal
+             , compareSizes
              , compiler
              , deriveConstants
              , genapply
@@ -50,7 +51,9 @@ stage0Packages = do
              , ghcHeap
              , ghci
              , ghcPkg
+             , ghcTags
              , hsc2hs
+             , hp2ps
              , hpc
              , mtl
              , parsec
@@ -72,7 +75,6 @@ stage1Packages = do
              , base
              , bytestring
              , containers
-             , compareSizes
              , deepseq
              , directory
              , filepath
@@ -91,29 +93,30 @@ stage1Packages = do
              , unlit
              , xhtml                         ]
           ++ [ haddock  | not cross          ]
+          ++ [ runGhc   | not cross          ]
           ++ [ hpcBin   | not cross          ]
           ++ [ iserv    | not win, not cross ]
           ++ [ libiserv | not win, not cross ]
-          ++ [ runGhc   | not cross          ]
           ++ [ unix     | not win            ]
           ++ [ win32    | win                ]
 
 stage2Packages :: Action [Package]
-stage2Packages = return [ghcTags, haddock]
+stage2Packages = return [haddock]
 
 -- | Packages that are built only for the testsuite.
 testsuitePackages :: Action [Package]
 testsuitePackages = do
-    win <- windowsHost
-    return $ [ checkApiAnnotations
-             , checkPpr
-             , ghci
-             , ghcPkg
-             , hp2ps
-             , iserv
-             , parallel
-             , runGhc        ] ++
-             [ timeout | win ]
+  win <- windowsHost
+  return $
+    [ checkApiAnnotations
+    , checkPpr
+    , ghci
+    , ghcPkg
+    , hp2ps
+    , iserv
+    , parallel
+    , runGhc              ] ++
+    [ timeout | win       ]
 
 -- | Given a 'Context', compute the name of the program that is built in it
 -- assuming that the corresponding package's type is 'Program'. For example, GHC
