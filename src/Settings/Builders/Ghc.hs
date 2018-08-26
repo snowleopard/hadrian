@@ -133,4 +133,5 @@ includeGhcArgs = do
             , cIncludeArgs
             , arg $      "-I" ++ root -/- generatedDir
             , arg $ "-optc-I" ++ root -/- generatedDir
-            , pure [ "-optP-include", "-optP" ++ autogen -/- "cabal_macros.h" ] ]
+            , (not $ nonCabalContext context) ?
+              pure [ "-optP-include", "-optP" ++ autogen -/- "cabal_macros.h" ] ]
