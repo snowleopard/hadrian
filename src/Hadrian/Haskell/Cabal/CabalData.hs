@@ -1,15 +1,14 @@
 module Hadrian.Haskell.Cabal.CabalData where
 
 import Development.Shake.Classes
-import Distribution.PackageDescription (GenericPackageDescription, PackageDescription)
+import Distribution.PackageDescription
 import GHC.Generics
 import Hadrian.Package.Type
 
--- TODO: This doesn't need to be in a separate module.
 -- | Haskell package metadata extracted from a Cabal file, without performing
 -- the resolution of package configuration flags and associated conditionals.
 -- One consequence is that 'packageDependencies' is an overappoximation of
--- actual package dependencies; for example, both 'unix' and 'win32' packages
+-- actual package dependencies; for example, both @unix@ and @win32@ packages
 -- may be included even if only one of them is required on the target OS.
 data CabalData = CabalData
     { name                      :: PackageName

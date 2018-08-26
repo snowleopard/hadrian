@@ -43,6 +43,8 @@ executable hadrian
                        , Hadrian.Oracles.DirectoryContents
                        , Hadrian.Oracles.Path
                        , Hadrian.Oracles.TextFile
+                       , Hadrian.Oracles.TextFile.Rules
+                       , Hadrian.Oracles.TextFile.Type
                        , Hadrian.Package
                        , Hadrian.Package.Type
                        , Hadrian.Target

@@ -3,7 +3,7 @@ module Rules (buildRules, oracleRules, packageTargets, topLevelTargets) where
 import qualified Hadrian.Oracles.ArgsHash
 import qualified Hadrian.Oracles.DirectoryContents
 import qualified Hadrian.Oracles.Path
-import qualified Hadrian.Oracles.TextFile
+import qualified Hadrian.Oracles.TextFile.Rules
 
 import Expression
 import GHC
@@ -136,5 +136,5 @@ oracleRules = do
     Hadrian.Oracles.ArgsHash.argsHashOracle trackArgument getArgs
     Hadrian.Oracles.DirectoryContents.directoryContentsOracle
     Hadrian.Oracles.Path.pathOracle
-    Hadrian.Oracles.TextFile.textFileOracle
+    Hadrian.Oracles.TextFile.Rules.textFileOracle
     Oracles.ModuleFiles.moduleFilesOracle

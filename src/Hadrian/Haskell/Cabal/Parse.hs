@@ -9,10 +9,10 @@
 --
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
-module Hadrian.Haskell.Cabal.Parse
-  ( PackageData (..), parseCabal, parsePackageData, parseCabalPkgId
-  , configurePackage, copyPackage, registerPackage
-  ) where
+module Hadrian.Haskell.Cabal.Parse (
+    PackageData (..), parseCabal, parsePackageData, parseCabalPkgId,
+    configurePackage, copyPackage, registerPackage
+    ) where
 
 import Data.List.Extra
 import Development.Shake
