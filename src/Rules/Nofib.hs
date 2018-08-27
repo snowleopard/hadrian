@@ -2,8 +2,8 @@ module Rules.Nofib where
 
 import Base
 import Expression
-import GHC.Packages
 import Oracles.Setting
+import Packages
 
 import System.Environment
 import System.Exit

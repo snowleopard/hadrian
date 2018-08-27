@@ -1,7 +1,7 @@
 module Settings.Builders.Make (makeBuilderArgs, validateBuilderArgs) where
 
-import GHC.Packages
 import Oracles.Setting
+import Packages
 import Rules.Gmp
 import Settings.Builders.Common
 import CommandLine

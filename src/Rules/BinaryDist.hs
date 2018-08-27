@@ -2,8 +2,8 @@ module Rules.BinaryDist where
 
 import Context
 import Expression
-import GHC.Packages
 import Oracles.Setting
+import Packages
 import Settings
 import Target
 import Utilities

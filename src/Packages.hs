@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-module GHC.Packages (
-        -- * GHC packages
+module Packages (
+    -- * GHC packages
     array, base, binary, bytestring, cabal, checkApiAnnotations, checkPpr,
     compareSizes, compiler, containers, deepseq, deriveConstants, directory,
     filepath, genapply, genprimopcode, ghc, ghcBoot, ghcBootTh, ghcCompact,
@@ -11,11 +11,9 @@ module GHC.Packages (
     unlit, unix, win32, xhtml, ghcPackages, isGhcPackage,
 
     -- * Package information
-    programName, nonHsMainPackage, autogenPath,
-
-    -- * Miscellaneous
-    programPath, buildDll0, rtsContext, rtsBuildPath, libffiContext,
-    libffiBuildPath, libffiLibraryName
+    programName, nonHsMainPackage, autogenPath, programPath, timeoutPath,
+    buildDll0, rtsContext, rtsBuildPath, libffiContext, libffiBuildPath,
+    libffiLibraryName
     ) where
 
 import Hadrian.Package
@@ -158,6 +156,11 @@ programPath context@Context {..} = do
     path <- if package `elem` [touchy, unlit] then stageLibPath stage <&> (-/- "bin")
                                               else stageBinPath stage
     return $ path -/- name <.> exe
+
+-- TODO: Move @timeout@ to the @util@ directory and build in a more standard
+-- location like other programs used only by the testsuite.
+timeoutPath :: FilePath
+timeoutPath = "testsuite/timeout/install-inplace/bin/timeout" <.> exe
 
 -- TODO: Can we extract this information from Cabal files?
 -- | Some program packages should not be linked with Haskell main function.
