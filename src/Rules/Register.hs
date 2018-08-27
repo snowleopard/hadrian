@@ -5,7 +5,7 @@ import Distribution.Version (Version)
 
 import Base
 import Context
-import GHC
+import GHC.Packages
 import Settings
 import Target
 import Utilities

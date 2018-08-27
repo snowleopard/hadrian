@@ -10,7 +10,7 @@ import Base
 import Context
 import Expression (getPackageData, interpretInContext)
 import Flavour
-import GHC
+import GHC.Packages
 import Oracles.ModuleFiles
 import Settings
 import Target

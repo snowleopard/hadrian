@@ -6,7 +6,7 @@ import Base
 import Builder
 import CommandLine
 import Context
-import GHC
+import GHC.Packages
 import Target
 import Utilities
 

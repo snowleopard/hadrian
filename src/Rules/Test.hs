@@ -3,7 +3,7 @@ module Rules.Test (testRules, runTestGhcFlags, timeoutProgPath) where
 import Base
 import Expression
 import GHC
-import GHC.Packages (timeout)
+import GHC.Packages
 import Oracles.Flag
 import Oracles.Setting
 import Settings
@@ -62,7 +62,7 @@ testRules = do
             setEnv "TEST_HC" ghcPath
             setEnv "TEST_HC_OPTS" ghcFlags
             setEnv "CHECK_PPR" checkPprPath
-            setEnv "CHECK_API_ANNOTATIONS" annotationsPath 
+            setEnv "CHECK_API_ANNOTATIONS" annotationsPath
 
         -- Execute the test target.
         buildWithCmdOptions env $ target (vanillaContext Stage2 compiler) RunTest [] []
@@ -73,12 +73,12 @@ needTestsuitePackages = do
     targets        <- mapM (needfile Stage1) =<< testsuitePackages
     binPath        <- stageBinPath Stage1
     libPath        <- stageLibPath Stage1
-    iservPath      <- needfile Stage1 iserv 
+    iservPath      <- needfile Stage1 iserv
     runhaskellPath <- needfile Stage1 runGhc
     need targets
     -- | We need to copy iserv bin to lib/bin as this is where testsuite looks
-    -- | for iserv. Also, using runhaskell gives different stdout due to 
-    -- | difference in program name. This causes StdMismatch errors. 
+    -- | for iserv. Also, using runhaskell gives different stdout due to
+    -- | difference in program name. This causes StdMismatch errors.
     copyFile iservPath $ libPath -/- "bin/ghc-iserv"
     copyFile runhaskellPath $ binPath -/- "runghc"
 

@@ -1,6 +1,6 @@
 module Rules.Libffi (libffiRules, libffiDependencies) where
 
-import GHC
+import GHC.Packages
 import Hadrian.Utilities
 import Settings.Builders.Common
 import Target

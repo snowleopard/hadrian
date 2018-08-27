@@ -9,7 +9,7 @@ import Base
 import Builder
 import Context
 import Expression
-import GHC
+import GHC.Packages
 import Hadrian.Haskell.Cabal.PackageData as PD
 
 newtype ModuleFiles = ModuleFiles (Stage, Package)

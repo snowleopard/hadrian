@@ -1,6 +1,6 @@
 module Settings.Builders.Make (makeBuilderArgs, validateBuilderArgs) where
 
-import GHC
+import GHC.Packages
 import Oracles.Setting
 import Rules.Gmp
 import Settings.Builders.Common

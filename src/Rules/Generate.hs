@@ -6,7 +6,7 @@ module Rules.Generate (
 import Base
 import Expression
 import Flavour
-import GHC
+import GHC.Packages
 import Oracles.Flag
 import Oracles.ModuleFiles
 import Oracles.Setting

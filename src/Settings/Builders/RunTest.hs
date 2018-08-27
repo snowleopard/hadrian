@@ -2,7 +2,7 @@ module Settings.Builders.RunTest (runTestBuilderArgs) where
 
 import CommandLine (TestArgs(..), defaultTestArgs, TestSpeed(..))
 import Flavour
-import GHC
+import GHC.Packages
 import Hadrian.Utilities
 import Oracles.Setting (setting)
 import Oracles.TestSettings

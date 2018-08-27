@@ -27,7 +27,7 @@ import Hadrian.Utilities
 
 import Base
 import Context
-import GHC
+import GHC.Packages
 import Oracles.Flag
 import Oracles.Setting
 

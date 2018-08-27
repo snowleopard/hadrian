@@ -4,7 +4,7 @@ module Rules.Gmp (
 
 import Base
 import Context
-import GHC
+import GHC.Packages
 import Oracles.Setting
 import Target
 import Utilities

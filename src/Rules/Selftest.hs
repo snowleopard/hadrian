@@ -5,7 +5,7 @@ import Test.QuickCheck
 
 import Base
 import Context
-import GHC
+import GHC.Packages
 import Hadrian.Haskell.Cabal
 import Oracles.ModuleFiles
 import Oracles.Setting

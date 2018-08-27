@@ -7,6 +7,7 @@ import Base
 import Context
 import Expression hiding (stage, way)
 import GHC
+import GHC.Packages
 import Oracles.Flag
 import Oracles.ModuleFiles
 import Settings

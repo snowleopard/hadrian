@@ -1,7 +1,7 @@
 module Settings.Builders.Ghc (ghcBuilderArgs, haddockGhcArgs) where
 
 import Flavour
-import GHC
+import GHC.Packages
 import Settings.Builders.Common
 import Settings.Warnings
 

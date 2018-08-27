@@ -28,8 +28,8 @@ import Settings.Builders.Xelatex
 import Settings.Packages
 import Settings.Warnings
 
-import {-# SOURCE #-} Builder
 import GHC
+import GHC.Packages
 import qualified Hadrian.Builder.Ar
 import qualified Hadrian.Builder.Sphinx
 import qualified Hadrian.Builder.Tar

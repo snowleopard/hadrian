@@ -6,7 +6,7 @@ import qualified Hadrian.Oracles.Path
 import qualified Hadrian.Oracles.TextFile.Rules
 
 import Expression
-import GHC
+import GHC.Packages
 import qualified Oracles.ModuleFiles
 import qualified Rules.BinaryDist
 import qualified Rules.Compile
