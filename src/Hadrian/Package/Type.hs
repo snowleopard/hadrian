@@ -3,8 +3,6 @@ module Hadrian.Package.Type where
 import GHC.Generics
 import Development.Shake.Classes
 
-data PackageLanguage = C | Haskell deriving (Generic, Show)
-
 -- TODO: Make PackageType more precise.
 -- See https://github.com/snowleopard/hadrian/issues/12.
 data PackageType = Library | Program deriving (Generic, Show)
@@ -13,8 +11,6 @@ type PackageName = String
 
 -- TODO: Consider turning Package into a GADT indexed with language and type.
 data Package = Package {
-    -- | The package language. 'C' and 'Haskell' packages are supported.
-    pkgLanguage :: PackageLanguage,
     -- | The package type. 'Library' and 'Program' packages are supported.
     pkgType :: PackageType,
     -- | The package name. We assume that all packages have different names,
@@ -31,10 +27,6 @@ instance Eq Package where
 
 instance Ord Package where
     compare p q = compare (pkgName p) (pkgName q)
-
-instance Binary   PackageLanguage
-instance Hashable PackageLanguage
-instance NFData   PackageLanguage
 
 instance Binary   PackageType
 instance Hashable PackageType

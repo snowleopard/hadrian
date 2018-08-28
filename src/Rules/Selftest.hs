@@ -55,11 +55,10 @@ testDependencies :: Action ()
 testDependencies = do
     putBuild "==== pkgDependencies"
     depLists <- mapM (pkgDependencies . vanillaContext Stage1) ghcPackages
-    test $ and [ deps == sort deps | Just deps <- depLists ]
+    test $ and [ deps == sort deps | deps <- depLists ]
     putBuild "==== Dependencies of the 'ghc-bin' binary"
     ghcDeps <- pkgDependencies (vanillaContext Stage1 ghc)
-    test $ isJust ghcDeps
-    test $ pkgName compiler `elem` fromJust ghcDeps
+    test $ pkgName compiler `elem` ghcDeps
     stage0Deps <- contextDependencies (vanillaContext Stage0 ghc)
     stage1Deps <- contextDependencies (vanillaContext Stage1 ghc)
     stage2Deps <- contextDependencies (vanillaContext Stage2 ghc)
