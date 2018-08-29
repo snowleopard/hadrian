@@ -6,6 +6,8 @@ module Rules.Documentation (
     haddockDependencies
     ) where
 
+import qualified Hadrian.Haskell.Cabal.PackageData as PD
+
 import Base
 import Context
 import Expression (getPackageData, interpretInContext)
@@ -16,22 +18,53 @@ import Settings
 import Target
 import Utilities
 
-import qualified Hadrian.Haskell.Cabal.PackageData as PD
+docRoot :: FilePath
+docRoot = "docs"
+
+htmlRoot :: FilePath
+htmlRoot = docRoot -/- "html"
+
+pdfRoot :: FilePath
+pdfRoot = docRoot -/- "pdfs"
+
+archiveRoot :: FilePath
+archiveRoot = docRoot -/- "archives"
+
+haddockHtmlLib :: FilePath
+haddockHtmlLib = htmlRoot -/- "haddock-bundle.min.js"
+
+manPageBuildPath :: FilePath
+manPageBuildPath = "docs/users_guide/build-man/ghc.1"
+
+-- TODO: Get rid of this hack.
+docContext :: Context
+docContext = vanillaContext Stage2 (library "Documentation" "docs")
+
+docPaths :: [FilePath]
+docPaths = ["libraries", "users_guide", "Haddock"]
+
+pathPdf :: FilePath -> FilePath
+pathPdf path = pdfRoot -/- path <.> ".pdf"
+
+pathIndex :: FilePath -> FilePath
+pathIndex path = htmlRoot -/- path -/- "index.html"
+
+pathArchive :: FilePath -> FilePath
+pathArchive path = archiveRoot -/- path <.> "html.tar.xz"
+
+-- TODO: Get rid of this hack.
+pathPath :: FilePath -> FilePath
+pathPath "users_guide" = "docs/users_guide"
+pathPath "Haddock" = "utils/haddock/doc"
+pathPath _ = ""
 
 -- | Build all documentation
 documentationRules :: Rules ()
 documentationRules = do
-    buildHtmlDocumentation
-    buildPdfDocumentation
     buildDocumentationArchives
+    buildHtmlDocumentation
     buildManPage
-
-    root <- buildRootRules
-    root -/- htmlRoot -/- "libraries/gen_contents_index" %>
-        copyFile "libraries/gen_contents_index"
-
-    root -/- htmlRoot -/- "libraries/prologue.txt" %>
-        copyFile "libraries/prologue.txt"
+    buildPdfDocumentation
 
     "docs" ~> do
         root <- buildRoot
@@ -43,66 +76,26 @@ documentationRules = do
              , root -/- htmlRoot -/- "libraries" -/- "prologue.txt"
              , root -/- manPageBuildPath ]
 
-manPageBuildPath :: FilePath
-manPageBuildPath = "docs/users_guide/build-man/ghc.1"
+------------------------------------- HTML -------------------------------------
 
--- TODO: Add support for Documentation Packages so we can run the builders
--- without this hack.
-docContext :: Context
-docContext = vanillaContext Stage2 (library "Documentation" "docs")
-
-docPaths :: [FilePath]
-docPaths = ["libraries", "users_guide", "Haddock"]
-
-docRoot :: FilePath
-docRoot = "docs"
-
-htmlRoot :: FilePath
-htmlRoot = docRoot -/- "html"
-
-haddockHtmlLib :: FilePath
-haddockHtmlLib = htmlRoot -/- "haddock-bundle.min.js"
-
-pdfRoot :: FilePath
-pdfRoot = docRoot -/- "pdfs"
-
-archiveRoot :: FilePath
-archiveRoot = docRoot -/- "archives"
-
-pathPdf :: FilePath -> FilePath
-pathPdf path = pdfRoot -/- path <.> ".pdf"
-
-pathIndex :: FilePath -> FilePath
-pathIndex path = htmlRoot -/- path -/- "index.html"
-
-pathArchive :: FilePath -> FilePath
-pathArchive path = archiveRoot -/- path <.> "html.tar.xz"
-
--- TODO: Replace this with pkgPath when support is added
--- for Documentation Packages.
-pathPath :: FilePath -> FilePath
-pathPath "users_guide" = "docs/users_guide"
-pathPath "Haddock" = "utils/haddock/doc"
-pathPath _ = ""
-
-----------------------------------------------------------------------
--- HTML
-
--- | Build all HTML documentation
+-- | Build rules for HTML documentation.
 buildHtmlDocumentation :: Rules ()
 buildHtmlDocumentation = do
     mapM_ buildSphinxHtml $ docPaths \\ ["libraries"]
     buildLibraryDocumentation
     root <- buildRootRules
+    root -/- htmlRoot -/- "libraries/gen_contents_index" %>
+        copyFile "libraries/gen_contents_index"
+
+    root -/- htmlRoot -/- "libraries/prologue.txt" %>
+        copyFile "libraries/prologue.txt"
+
     root -/- htmlRoot -/- "index.html" %> \file -> do
         need [root -/- haddockHtmlLib]
         need $ map ((root -/-) . pathIndex) docPaths
         copyFileUntracked "docs/index.html" file
 
------------------------------
--- Sphinx
-
--- | Compile a Sphinx ReStructured Text package to HTML
+-- | Compile a Sphinx ReStructured Text package to HTML.
 buildSphinxHtml :: FilePath -> Rules ()
 buildSphinxHtml path = do
     root <- buildRootRules
@@ -111,10 +104,9 @@ buildSphinxHtml path = do
         let dest = takeDirectory file
         build $ target docContext (Sphinx Html) [pathPath path] [dest]
 
------------------------------
--- Haddock
+------------------------------------ Haddock -----------------------------------
 
--- | Build the haddocks for GHC's libraries
+-- | Build the haddocks for GHC's libraries.
 buildLibraryDocumentation :: Rules ()
 buildLibraryDocumentation = do
     root <- buildRootRules
@@ -137,13 +129,6 @@ allHaddocks = do
     pkgs <- stagePackages Stage1
     sequence [ pkgHaddockFile $ vanillaContext Stage1 pkg
              | pkg <- pkgs, isLibrary pkg ]
-
--- | Find the haddock files for the dependencies of the current library.
-haddockDependencies :: Context -> Action [FilePath]
-haddockDependencies context = do
-    depNames <- interpretInContext context (getPackageData PD.depNames)
-    sequence [ pkgHaddockFile $ vanillaContext Stage1 depPkg
-             | Just depPkg <- map findPackageByName depNames, depPkg /= rts ]
 
 -- Note: this build rule creates plenty of files, not just the .haddock one.
 -- All of them go into the 'docRoot' subdirectory. Pedantically tracking all
@@ -173,8 +158,7 @@ buildPackageDocumentation context@Context {..} = when (stage == Stage1 && packag
         let haddockWay = if dynamicPrograms then dynamic else vanilla
         build $ target (context {way = haddockWay}) (Haddock BuildPackage) srcs [file]
 
-----------------------------------------------------------------------
--- PDF
+-------------------------------------- PDF -------------------------------------
 
 -- | Build all PDF documentation
 buildPdfDocumentation :: Rules ()
@@ -191,10 +175,9 @@ buildSphinxPdf path = do
             build $ target docContext Xelatex [path <.> "tex"] [dir]
             copyFileUntracked (dir -/- path <.> "pdf") file
 
-----------------------------------------------------------------------
--- Archive
+------------------------------------ Archive -----------------------------------
 
--- | Build archives of documentation
+-- | Build documentation archives.
 buildDocumentationArchives :: Rules ()
 buildDocumentationArchives = mapM_ buildArchive docPaths
 
@@ -208,7 +191,7 @@ buildArchive path = do
         need [src]
         build $ target docContext (Tar Create) [takeDirectory src] [file]
 
--- | build man page
+-- | Build the man page.
 buildManPage :: Rules ()
 buildManPage = do
     root <- buildRootRules
@@ -217,3 +200,10 @@ buildManPage = do
         withTempDir $ \dir -> do
             build $ target docContext (Sphinx Man) ["docs/users_guide"] [dir]
             copyFileUntracked (dir -/- "ghc.1") file
+
+-- | Find the Haddock files for the dependencies of the current library.
+haddockDependencies :: Context -> Action [FilePath]
+haddockDependencies context = do
+    depNames <- interpretInContext context (getPackageData PD.depNames)
+    sequence [ pkgHaddockFile $ vanillaContext Stage1 depPkg
+             | Just depPkg <- map findPackageByName depNames, depPkg /= rts ]
