@@ -54,7 +54,8 @@ testChunksOfSize = do
 testDependencies :: Action ()
 testDependencies = do
     putBuild "==== pkgDependencies"
-    depLists <- mapM (pkgDependencies . vanillaContext Stage1) ghcPackages
+    let pkgs = ghcPackages \\ [libffi] -- @libffi@ does not have a Cabal file.
+    depLists <- mapM (pkgDependencies . vanillaContext Stage1) pkgs
     test $ and [ deps == sort deps | deps <- depLists ]
     putBuild "==== Dependencies of the 'ghc-bin' binary"
     ghcDeps <- pkgDependencies (vanillaContext Stage1 ghc)
