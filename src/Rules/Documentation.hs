@@ -121,9 +121,8 @@ buildLibraryDocumentation = do
     root <- buildRootRules
 
     -- Js and Css files for haddock output
-    root -/- haddockHtmlLib %> \d -> do
-        let dir = takeDirectory d
-        copyDirectory "utils/haddock/haddock-api/resources/html" dir
+    root -/- haddockHtmlLib %> \_ ->
+        copyDirectory "utils/haddock/haddock-api/resources/html" docRoot
 
     root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
         need [root -/- haddockHtmlLib]
