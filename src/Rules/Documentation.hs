@@ -123,7 +123,6 @@ buildLibraryDocumentation = do
     -- Js and Css files for haddock output
     root -/- haddockHtmlLib %> \d -> do
         let dir = takeDirectory d
-        liftIO $ removeFiles dir ["//*"]
         copyDirectory "utils/haddock/haddock-api/resources/html" dir
 
     root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
