@@ -187,6 +187,7 @@ buildSphinxPdf :: FilePath -> Rules ()
 buildSphinxPdf path = do
     root <- buildRootRules
     root -/- pdfRoot -/- path <.> "pdf" %> \file -> do
+        need [root -/- haddockHtmlLib]
         let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do
             build $ target context (Sphinx Latex) [pathPath path] [dir]
@@ -204,6 +205,7 @@ buildArchive :: FilePath -> Rules ()
 buildArchive path = do
     root <- buildRootRules
     root -/- pathArchive path %> \file -> do
+        need [root -/- haddockHtmlLib]
         root <- buildRoot
         let context = vanillaContext Stage1 docPackage
             src = root -/- pathIndex path
@@ -215,7 +217,7 @@ buildManPage :: Rules ()
 buildManPage = do
     root <- buildRootRules
     root -/- manPageBuildPath %> \file -> do
-        need ["docs/users_guide/ghc.rst"]
+        need [root -/- haddockHtmlLib, "docs/users_guide/ghc.rst"]
         let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do
             build $ target context (Sphinx Man) ["docs/users_guide"] [dir]
