@@ -21,23 +21,27 @@ import qualified Hadrian.Haskell.Cabal.PackageData as PD
 -- | Build all documentation
 documentationRules :: Rules ()
 documentationRules = do
-    root <- buildRootRules
     buildHtmlDocumentation
     buildPdfDocumentation
     buildDocumentationArchives
     buildManPage
-    root -/- htmlRoot -/- "libraries/gen_contents_index" %> copyFile "libraries/gen_contents_index"
-    root -/- htmlRoot -/- "libraries/prologue.txt" %> copyFile "libraries/prologue.txt"
+
+    root <- buildRootRules
+    root -/- htmlRoot -/- "libraries/gen_contents_index" %>
+        copyFile "libraries/gen_contents_index"
+
+    root -/- htmlRoot -/- "libraries/prologue.txt" %>
+        copyFile "libraries/prologue.txt"
+
     "docs" ~> do
         root <- buildRoot
-        let html = htmlRoot -/- "index.html"
+        let html     = htmlRoot -/- "index.html"
             archives = map pathArchive docPaths
-            pdfs = map pathPdf $ docPaths \\ [ "libraries" ]
+            pdfs     = map pathPdf $ docPaths \\ ["libraries"]
         need $ map (root -/-) $ [html] ++ archives ++ pdfs
         need [ root -/- htmlRoot -/- "libraries" -/- "gen_contents_index"
              , root -/- htmlRoot -/- "libraries" -/- "prologue.txt"
-             , root -/- manPageBuildPath
-             ]
+             , root -/- manPageBuildPath ]
 
 manPageBuildPath :: FilePath
 manPageBuildPath = "docs/users_guide/build-man/ghc.1"
@@ -55,6 +59,9 @@ docRoot = "docs"
 
 htmlRoot :: FilePath
 htmlRoot = docRoot -/- "html"
+
+haddockHtmlLib :: FilePath
+haddockHtmlLib = htmlRoot -/- "haddock-bundle.min.js"
 
 pdfRoot :: FilePath
 pdfRoot = docRoot -/- "pdfs"
@@ -84,11 +91,11 @@ pathPath _ = ""
 -- | Build all HTML documentation
 buildHtmlDocumentation :: Rules ()
 buildHtmlDocumentation = do
-    mapM_ buildSphinxHtml $ docPaths \\ [ "libraries" ]
+    mapM_ buildSphinxHtml $ docPaths \\ ["libraries"]
     buildLibraryDocumentation
     root <- buildRootRules
     root -/- htmlRoot -/- "index.html" %> \file -> do
-        root <- buildRoot
+        need [root -/- haddockHtmlLib]
         need $ map ((root -/-) . pathIndex) docPaths
         copyFileUntracked "docs/index.html" file
 
@@ -100,6 +107,7 @@ buildSphinxHtml :: FilePath -> Rules ()
 buildSphinxHtml path = do
     root <- buildRootRules
     root -/- htmlRoot -/- path -/- "index.html" %> \file -> do
+        need [root -/- haddockHtmlLib]
         let dest = takeDirectory file
             context = vanillaContext Stage1 docPackage
         build $ target context (Sphinx Html) [pathPath path] [dest]
@@ -119,6 +127,7 @@ buildLibraryDocumentation = do
         copyDirectory "utils/haddock/haddock-api/resources/html" dir
 
     root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
+        need [root -/- haddockHtmlLib]
         haddocks <- allHaddocks
         let libDocs = filter
                 (\x -> takeFileName x `notElem` ["ghc.haddock", "rts.haddock"])
@@ -133,10 +142,7 @@ allHaddocks = do
     sequence [ pkgHaddockFile $ vanillaContext Stage1 pkg
              | pkg <- pkgs, isLibrary pkg ]
 
-haddockHtmlLib ::FilePath
-haddockHtmlLib = "docs/html/haddock-bundle.min.js"
-
--- | Find the haddock files for the dependencies of the current library
+-- | Find the haddock files for the dependencies of the current library.
 haddockDependencies :: Context -> Action [FilePath]
 haddockDependencies context = do
     depNames <- interpretInContext context (getPackageData PD.depNames)
@@ -144,22 +150,23 @@ haddockDependencies context = do
              | Just depPkg <- map findPackageByName depNames, depPkg /= rts ]
 
 -- Note: this build rule creates plenty of files, not just the .haddock one.
--- All of them go into the 'doc' subdirectory. Pedantically tracking all built
--- files in the Shake database seems fragile and unnecessary.
+-- All of them go into the 'docRoot' subdirectory. Pedantically tracking all
+-- built files in the Shake database seems fragile and unnecessary.
 buildPackageDocumentation :: Context -> Rules ()
 buildPackageDocumentation context@Context {..} = when (stage == Stage1 && package /= rts) $ do
     root <- buildRootRules
 
     -- Per-package haddocks
     root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt" %> \file -> do
+        need [root -/- haddockHtmlLib]
         -- This is how @ghc-cabal@ used to produces "haddock-prologue.txt" files.
         (syn, desc) <- interpretInContext context . getPackageData $ \p ->
             (PD.synopsis p, PD.description p)
         let prologue = if null desc then syn else desc
-        liftIO (writeFile file prologue)
+        liftIO $ writeFile file prologue
 
     root -/- htmlRoot -/- "libraries" -/- pkgName package -/- pkgName package <.> "haddock" %> \file -> do
-        need [ root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt" ]
+        need [root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt"]
         haddocks <- haddockDependencies context
         srcs <- hsSources context
         need $ srcs ++ haddocks ++ [root -/- haddockHtmlLib]
