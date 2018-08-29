@@ -22,10 +22,30 @@ module Hadrian.Package (
     pkgCabalFile
     ) where
 
+import Development.Shake.Classes
 import Development.Shake.FilePath
+import GHC.Generics
 
-import Hadrian.Package.Type
 import Hadrian.Utilities
+
+-- TODO: Make PackageType more precise.
+-- See https://github.com/snowleopard/hadrian/issues/12.
+data PackageType = Library | Program deriving (Eq, Generic, Ord, Show)
+
+type PackageName = String
+
+-- TODO: Consider turning Package into a GADT indexed with language and type.
+data Package = Package {
+    -- | The package type. 'Library' and 'Program' packages are supported.
+    pkgType :: PackageType,
+    -- | The package name. We assume that all packages have different names,
+    -- hence two packages with the same name are considered equal.
+    pkgName :: PackageName,
+    -- | The path to the package source code relative to the root of the build
+    -- system. For example, @libraries/Cabal/Cabal@ and @ghc@ are paths to the
+    -- @Cabal@ and @ghc-bin@ packages in GHC.
+    pkgPath :: FilePath
+    } deriving (Eq, Generic, Ord, Show)
 
 -- | Construct a library package.
 library :: PackageName -> FilePath -> Package
@@ -54,3 +74,11 @@ isProgram _ = False
 -- | The path to the Cabal file of a Haskell package, e.g. @ghc/ghc-bin.cabal@.
 pkgCabalFile :: Package -> FilePath
 pkgCabalFile p = pkgPath p -/- pkgName p <.> "cabal"
+
+instance Binary   PackageType
+instance Hashable PackageType
+instance NFData   PackageType
+
+instance Binary   Package
+instance Hashable Package
+instance NFData   Package

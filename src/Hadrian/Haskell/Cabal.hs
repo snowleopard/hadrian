@@ -17,8 +17,8 @@ import Development.Shake
 
 import Context.Type
 import Hadrian.Haskell.Cabal.CabalData
-import Hadrian.Package
 import Hadrian.Oracles.TextFile
+import Hadrian.Package
 
 -- | Read a Cabal file and return the package version. The Cabal file is tracked.
 pkgVersion :: Context -> Action String
