@@ -122,7 +122,7 @@ buildLibraryDocumentation = do
 
     -- Js and Css files for haddock output
     root -/- haddockHtmlLib %> \_ ->
-        copyDirectory "utils/haddock/haddock-api/resources/html" docRoot
+        copyDirectory "utils/haddock/haddock-api/resources/html" (root -/- docRoot)
 
     root -/- htmlRoot -/- "libraries/index.html" %> \file -> do
         need [root -/- haddockHtmlLib]
