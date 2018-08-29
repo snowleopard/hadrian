@@ -48,8 +48,8 @@ manPageBuildPath = "docs/users_guide/build-man/ghc.1"
 
 -- TODO: Add support for Documentation Packages so we can run the builders
 -- without this hack.
-docPackage :: Package
-docPackage = library "Documentation" "docs"
+docContext :: Context
+docContext = vanillaContext Stage2 (library "Documentation" "docs")
 
 docPaths :: [FilePath]
 docPaths = ["libraries", "users_guide", "Haddock"]
@@ -109,8 +109,7 @@ buildSphinxHtml path = do
     root -/- htmlRoot -/- path -/- "index.html" %> \file -> do
         need [root -/- haddockHtmlLib]
         let dest = takeDirectory file
-            context = vanillaContext Stage1 docPackage
-        build $ target context (Sphinx Html) [pathPath path] [dest]
+        build $ target docContext (Sphinx Html) [pathPath path] [dest]
 
 -----------------------------
 -- Haddock
@@ -130,9 +129,8 @@ buildLibraryDocumentation = do
         let libDocs = filter
                 (\x -> takeFileName x `notElem` ["ghc.haddock", "rts.haddock"])
                 haddocks
-            context = vanillaContext Stage1 docPackage
         need (root -/- haddockHtmlLib : libDocs)
-        build $ target context (Haddock BuildIndex) libDocs [file]
+        build $ target docContext (Haddock BuildIndex) libDocs [file]
 
 allHaddocks :: Action [FilePath]
 allHaddocks = do
@@ -188,10 +186,9 @@ buildSphinxPdf path = do
     root <- buildRootRules
     root -/- pdfRoot -/- path <.> "pdf" %> \file -> do
         need [root -/- haddockHtmlLib]
-        let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do
-            build $ target context (Sphinx Latex) [pathPath path] [dir]
-            build $ target context Xelatex [path <.> "tex"] [dir]
+            build $ target docContext (Sphinx Latex) [pathPath path] [dir]
+            build $ target docContext Xelatex [path <.> "tex"] [dir]
             copyFileUntracked (dir -/- path <.> "pdf") file
 
 ----------------------------------------------------------------------
@@ -207,10 +204,9 @@ buildArchive path = do
     root -/- pathArchive path %> \file -> do
         need [root -/- haddockHtmlLib]
         root <- buildRoot
-        let context = vanillaContext Stage1 docPackage
-            src = root -/- pathIndex path
+        let src = root -/- pathIndex path
         need [src]
-        build $ target context (Tar Create) [takeDirectory src] [file]
+        build $ target docContext (Tar Create) [takeDirectory src] [file]
 
 -- | build man page
 buildManPage :: Rules ()
@@ -218,7 +214,6 @@ buildManPage = do
     root <- buildRootRules
     root -/- manPageBuildPath %> \file -> do
         need [root -/- haddockHtmlLib, "docs/users_guide/ghc.rst"]
-        let context = vanillaContext Stage1 docPackage
         withTempDir $ \dir -> do
-            build $ target context (Sphinx Man) ["docs/users_guide"] [dir]
+            build $ target docContext (Sphinx Man) ["docs/users_guide"] [dir]
             copyFileUntracked (dir -/- "ghc.1") file
