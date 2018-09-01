@@ -49,7 +49,7 @@ bindistRules = do
       need $ map ((bindistFilesDir -/- "wrappers") -/-) ["check-api-annotations"
                  , "check-ppr", "ghc", "ghc-iserv", "ghc-pkg", "ghc-split"
                  , "ghci-script", "ghci", "haddock", "hpc", "hp2ps", "hsc2hs"
-                 , "runhaskell"]
+                 , "runghc"]
 
       -- finally, we create the archive, at
       -- <root>/bindist/ghc-X.Y.Z-platform.tar.xz
@@ -245,7 +245,7 @@ wrapper "ghci"        = ghciWrapper
 wrapper "ghci-script" = ghciScriptWrapper
 wrapper "haddock"     = haddockWrapper
 wrapper "hsc2hs"      = hsc2hsWrapper
-wrapper "runhaskell"  = runhaskellWrapper
+wrapper "runghc"      = runGhcWrapper
 wrapper _             = commonWrapper
 
 -- | Wrapper scripts for different programs. Common is default wrapper.
@@ -299,8 +299,8 @@ hsc2hsWrapper = unlines
   , "exec \"$executablename\" ${tflag:+\"$tflag\"} $HSC2HS_EXTRA ${1+\"$@\"} \"$Iflag\""
   ]
 
-runhaskellWrapper :: String
-runhaskellWrapper = unlines
+runGhcWrapper :: String
+runGhcWrapper = unlines
   ["exec \"$executablename\" -f \"$exedir/ghc\" ${1+\"$@\"}"
   ]
 
