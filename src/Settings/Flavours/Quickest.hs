@@ -17,7 +17,8 @@ quickestArgs :: Args
 quickestArgs = sourceArgs SourceArgs
     { hsDefault  = mconcat $
         [ pure ["-O0", "-H64m"]
-        ] ++ naturalInBaseFixArgs
+        , naturalInBaseFixArgs
+        ]
     , hsLibrary  = mempty
     , hsCompiler = stage0 ? arg "-O"
     , hsGhc      = stage0 ? arg "-O" }

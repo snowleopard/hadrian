@@ -19,7 +19,8 @@ quickArgs :: Args
 quickArgs = sourceArgs SourceArgs
     { hsDefault  = mconcat $
         [ pure ["-O0", "-H64m"]
-        ] ++ naturalInBaseFixArgs
+        , naturalInBaseFixArgs
+        ]
     , hsLibrary  = notStage0 ? arg "-O"
     , hsCompiler =    stage0 ? arg "-O"
     , hsGhc      =    stage0 ? arg "-O" }

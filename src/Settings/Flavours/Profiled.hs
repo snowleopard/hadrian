@@ -14,9 +14,10 @@ profiledFlavour = defaultFlavour
 
 profiledArgs :: Args
 profiledArgs = sourceArgs SourceArgs
-    { hsDefault  = mconcat $
+    { hsDefault  = mconcat
         [ pure ["-O0", "-H64m"]
-        ] ++ naturalInBaseFixArgs
+        , naturalInBaseFixArgs
+        ]
     , hsLibrary  = notStage0 ? arg "-O"
     , hsCompiler = arg "-O"
     , hsGhc      = arg "-O" }
