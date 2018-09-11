@@ -71,7 +71,8 @@ packageArgs = do
             [ ghcWithNativeCodeGen ? arg "ncg"
             , ghcWithInterpreter ? notStage0 ? arg "ghci"
             , flag CrossCompiling ? arg "-terminfo"
-            , stage2 ? arg "integer-simple" ]
+            , notStage0 ? intLib == integerGmp ?
+              arg "integer-gmp" ]
 
           , builder (Haddock BuildPackage) ? arg ("--optghc=-I" ++ path) ]
 
