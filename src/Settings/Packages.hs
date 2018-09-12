@@ -22,7 +22,7 @@ packageArgs = do
     mconcat
         --------------------------------- base ---------------------------------
         [ package base ? mconcat
-          [ builder (Cabal Flags) ? arg ('+' : pkgName intLib)
+          [ builder (Cabal Flags) ? notStage0 ? arg (pkgName intLib)
 
           -- This fixes the 'unknown symbol stat' issue.
           -- See: https://github.com/snowleopard/hadrian/issues/259.
