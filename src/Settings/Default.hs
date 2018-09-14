@@ -3,7 +3,7 @@ module Settings.Default (
     defaultPackages, testsuitePackages,
 
     -- * Default build ways
-    defaultLibraryWays, defaultRtsWays,
+    defaultLibraryWays, defaultRtsWays, quickRtsWays, quickestRtsWays,
 
     -- * Default command line arguments for various builders
     SourceArgs (..), sourceArgs, defaultBuilderArgs, defaultPackageArgs,
@@ -41,6 +41,7 @@ import Settings.Builders.Ld
 import Settings.Builders.Make
 import Settings.Builders.RunTest
 import Settings.Builders.Xelatex
+import Settings.Flavours.Common
 import Settings.Packages
 import Settings.Warnings
 
@@ -147,27 +148,29 @@ testsuitePackages = do
 -- * We build 'dynamic' way when stage > Stage0 and the platform supports it.
 defaultLibraryWays :: Ways
 defaultLibraryWays = mconcat
-    [ pure [vanilla]
-    , notStage0 ? pure [profiling]
-    -- , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
+    [ vanillaAlways
+    , notStage0 ? profilingAlways
+    , notStage0 ? dynamicWhenPossible
     ]
 
 -- | Default build ways for the RTS.
 defaultRtsWays :: Ways
-defaultRtsWays = do
-    ways <- getLibraryWays
-    mconcat
-        [ pure [ logging, debug, threaded, threadedDebug, threadedLogging ]
-        , (profiling `elem` ways) ?
-          pure [ profiling, threadedProfiling, debugProfiling
-               , threadedDebugProfiling ]
-          -- we don't add the 'logging' variants of those for now, but we might
-          -- in the future?
+defaultRtsWays = mconcat
+  [ quickRtsWays
+  , notStage0 ? pure
+      [ profiling, threadedProfiling, debugProfiling, threadedDebugProfiling ]
+  ]
 
-        {- , (dynamic `elem` ways) ?
-          pure [ dynamic, debugDynamic, threadedDynamic, threadedDebugDynamic
-               , loggingDynamic, threadedLoggingDynamic ] -}
-        ]
+quickRtsWays :: Ways
+quickRtsWays = mconcat
+  [ quickestRtsWays
+  , pure [ logging, debug, threadedDebug, threadedLogging, debugDynamic
+         , threadedDynamic, threadedDebugDynamic, loggingDynamic
+         , threadedLoggingDynamic ]
+  ]
+
+quickestRtsWays :: Ways
+quickestRtsWays = pure [ vanilla, threaded ]
 
 -- TODO: Move C source arguments here
 -- | Default and package-specific source arguments.
@@ -215,7 +218,7 @@ defaultFlavour = Flavour
     , libraryWays        = defaultLibraryWays
     , rtsWays            = defaultRtsWays
     , splitObjects       = defaultSplitObjects
-    , dynamicGhcPrograms = False
+    , dynamicGhcPrograms = True
     , ghciWithDebugger   = False
     , ghcProfiled        = False
     , ghcDebugged        = False }

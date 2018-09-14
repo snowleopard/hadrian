@@ -2,7 +2,6 @@ module Settings.Flavours.QuickCross (quickCrossFlavour) where
 
 import Expression
 import Flavour
-import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
 import Settings.Flavours.Common
 
@@ -12,8 +11,9 @@ quickCrossFlavour = defaultFlavour
     { name        = "quick-cross"
     , args        = defaultBuilderArgs <> quickCrossArgs <> defaultPackageArgs
     , libraryWays = mconcat
-                    [ pure [vanilla]
-                    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic] ] }
+                    [ vanillaAlways
+                    , notStage0 ? dynamicWhenPossible ]
+    , rtsWays     = quickRtsWays }
 
 quickCrossArgs :: Args
 quickCrossArgs = sourceArgs SourceArgs

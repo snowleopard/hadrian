@@ -1,6 +1,7 @@
 module Settings.Default (
     SourceArgs (..), sourceArgs, defaultBuilderArgs, defaultPackageArgs,
-    defaultArgs, defaultLibraryWays, defaultRtsWays, defaultFlavour, defaultSplitObjects
+    defaultArgs, defaultLibraryWays, defaultRtsWays, quickRtsWays,
+    quickestRtsWays, defaultFlavour, defaultSplitObjects
     ) where
 
 import Flavour
@@ -15,6 +16,6 @@ data SourceArgs = SourceArgs
 sourceArgs :: SourceArgs -> Args
 
 defaultBuilderArgs, defaultPackageArgs, defaultArgs :: Args
-defaultLibraryWays, defaultRtsWays :: Ways
+defaultLibraryWays, defaultRtsWays, quickRtsWays, quickestRtsWays :: Ways
 defaultFlavour :: Flavour
 defaultSplitObjects :: Predicate

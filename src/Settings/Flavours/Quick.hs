@@ -2,9 +2,8 @@ module Settings.Flavours.Quick (quickFlavour) where
 
 import Expression
 import Flavour
-import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
-import Settings.Flavours.Common (naturalInBaseFixArgs)
+import Settings.Flavours.Common
 
 -- Please update doc/flavours.md when changing this file.
 quickFlavour :: Flavour
@@ -12,8 +11,9 @@ quickFlavour = defaultFlavour
     { name        = "quick"
     , args        = defaultBuilderArgs <> quickArgs <> defaultPackageArgs
     , libraryWays = mconcat
-                    [ pure [vanilla]
-                    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic] ] }
+                    [ vanillaAlways
+                    , notStage0 ? dynamicWhenPossible ]
+    , rtsWays     = quickRtsWays }
 
 quickArgs :: Args
 quickArgs = sourceArgs SourceArgs
