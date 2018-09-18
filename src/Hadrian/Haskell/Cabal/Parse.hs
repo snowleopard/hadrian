@@ -81,12 +81,30 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
 -- corresponding to the 'Stage' it gets from the 'Context', and finalises the
 -- package description it got from the Cabal file with additional information
 -- such as platform, compiler version conditionals, and package flags.
-parseCabalFile :: Context -> Action CabalData
-parseCabalFile context@Context {..} = do
+parseCabalFile :: Package -> Action CabalData
+parseCabalFile package = do
     let file = pkgCabalFile package
 
     -- Read the package description from the Cabal file
     gpd <- liftIO $ C.readGenericPackageDescription C.verbose file
+
+    let pd = C.packageDescription gpd
+    -- depPkgs are all those packages that are needed. These should be found in
+    -- the known build packages even if they are not build in this stage.
+    let depPkgs = map (findPackageByName' . C.unPackageName . C.depPkgName)
+                $ flip C.enabledBuildDepends C.defaultComponentRequestedSpec pd
+          where
+            findPackageByName' p = fromMaybe (error msg) (findPackageByName p)
+              where
+                msg = "Failed to find package " ++ quote (show p)
+    return $ CabalData (C.unPackageName . C.pkgName . C.package $ pd)
+                       (C.display . C.pkgVersion . C.package $ pd)
+                       (C.synopsis pd) gpd depPkgs
+
+resolvePD :: Context -> Action C.PackageDescription
+resolvePD context@Context {..} = do
+    -- Read the package description from the Cabal file
+    gpd <- genericPackageDescription <$> readCabalData package
 
     -- Configure the package with the GHC for this stage
     hcPath <- builderPath (Ghc CompileHs stage)
@@ -103,17 +121,9 @@ parseCabalFile context@Context {..} = do
 
     let (Right (pd,_)) = C.finalizePD flags C.defaultComponentRequestedSpec
                          (const True) platform (C.compilerInfo compiler) [] gpd
-    -- depPkgs are all those packages that are needed. These should be found in
-    -- the known build packages even if they are not build in this stage.
-    let depPkgs = map (findPackageByName' . C.unPackageName . C.depPkgName)
-                $ flip C.enabledBuildDepends C.defaultComponentRequestedSpec pd
-          where
-            findPackageByName' p = fromMaybe (error msg) (findPackageByName p)
-              where
-                msg = "Failed to find package " ++ quote (show p)
-    return $ CabalData (C.unPackageName . C.pkgName . C.package $ pd)
-                       (C.display . C.pkgVersion . C.package $ pd)
-                       (C.synopsis pd) gpd pd depPkgs
+
+    return pd
+
 
 -- TODO: Track command line arguments and package configuration flags.
 -- | Configure a package using the Cabal library by collecting all the command
@@ -124,7 +134,7 @@ configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
 
-    CabalData _ _ _ gpd _pd depPkgs <- readCabalData context
+    CabalData _ _ _ gpd depPkgs <- readCabalData package
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -165,7 +175,7 @@ configurePackage context@Context {..} = do
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
     putLoud $ "| Copy package " ++ quote (pkgName package)
-    CabalData _ _ _ gpd _ _ <- readCabalData context
+    CabalData _ _ _ gpd _ <- readCabalData package
     ctxPath   <- Context.contextPath context
     pkgDbPath <- packageDbPath stage
     verbosity <- getVerbosity
@@ -178,7 +188,7 @@ registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
     putLoud $ "| Register package " ++ quote (pkgName package)
     ctxPath <- Context.contextPath context
-    CabalData _ _ _ gpd _ _ <- readCabalData context
+    CabalData _ _ _ gpd _ <- readCabalData package
     verbosity <- getVerbosity
     let v = if verbosity >= Loud then "-v3" else "-v0"
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
@@ -195,7 +205,7 @@ parsePackageData context@Context {..} = do
     -- let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
     --
     -- However when using the new-build path's this might change.
-    CabalData _ _ _ _gpd pd _depPkgs <- readCabalData context
+    pd <- resolvePD context
 
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]

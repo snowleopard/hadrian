@@ -69,6 +69,6 @@ buildBinary rs bin context@Context {..} = do
     let binDeps = cObjs ++ hsObjs
     need binDeps
     buildWithResources rs $ target context (Ghc LinkHs stage) binDeps [bin]
-    synopsis <- pkgSynopsis context
+    synopsis <- pkgSynopsis package
     putSuccess $ renderProgram
         (quote (pkgName package) ++ " (" ++ show stage ++ ").") bin synopsis

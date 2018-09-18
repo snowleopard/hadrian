@@ -24,6 +24,7 @@ import Context.Type
 import Hadrian.Haskell.Cabal.CabalData
 import Hadrian.Haskell.Cabal.PackageData
 import Hadrian.Oracles.TextFile.Type
+import Hadrian.Package
 import Hadrian.Utilities
 
 -- | Read a text file, caching and tracking the result. To read and track
@@ -74,7 +75,7 @@ lookupDependencies depFile file = do
         Just (source : files) -> return (source, files)
 
 -- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalData :: Context -> Action CabalData
+readCabalData :: Package -> Action CabalData
 readCabalData = askOracle . CabalFile
 
 -- | Read and parse a @.cabal@ file recording the obtained 'PackageData',

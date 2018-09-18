@@ -41,7 +41,7 @@ buildStaticLib root archivePath = do
     objs <- libraryObjects context
     removeFile archivePath
     build $ target context (Ar Pack stage) objs [archivePath]
-    synopsis <- pkgSynopsis context
+    synopsis <- pkgSynopsis (package context)
     putSuccess $ renderLibrary
         (quote pkgname ++ " (" ++ show stage ++ ", way " ++ show way ++ ").")
         archivePath synopsis

@@ -36,7 +36,7 @@ askWithResources rs target = H.askWithResources rs target getArgs
 -- dependencies we transitively scan @.cabal@ files using 'pkgDependencies'
 -- defined in "Hadrian.Haskell.Cabal".
 contextDependencies :: Context -> Action [Context]
-contextDependencies ctx@Context {..} = do
+contextDependencies Context {..} = do
     depPkgs <- go [package]
     return [ Context depStage pkg way | pkg <- depPkgs, pkg /= package ]
   where
@@ -46,7 +46,7 @@ contextDependencies ctx@Context {..} = do
         let newPkgs = nubOrd $ sort (deps ++ pkgs)
         if pkgs == newPkgs then return pkgs else go newPkgs
     step pkg = do
-        deps   <- pkgDependencies $ ctx { Context.package = pkg }
+        deps   <- pkgDependencies pkg
         active <- sort <$> stagePackages depStage
         return $ intersectOrd (compare . pkgName) active deps
 

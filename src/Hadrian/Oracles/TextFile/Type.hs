@@ -19,12 +19,13 @@ import Development.Shake.Classes
 import Context.Type
 import Hadrian.Haskell.Cabal.CabalData
 import Hadrian.Haskell.Cabal.PackageData
+import Hadrian.Package
 
 newtype TextFile = TextFile FilePath
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult TextFile = String
 
-newtype CabalFile = CabalFile Context
+newtype CabalFile = CabalFile Package
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult CabalFile = CabalData
 

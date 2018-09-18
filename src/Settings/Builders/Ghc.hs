@@ -108,8 +108,8 @@ wayGhcArgs = do
 
 packageGhcArgs :: Args
 packageGhcArgs = do
-    context <- getContext
-    pkgId   <- expr $ pkgIdentifier context
+    package <- getPackage
+    pkgId   <- expr $ pkgIdentifier package
     mconcat [ arg "-hide-all-packages"
             , arg "-no-user-package-db"
             , packageDatabaseArgs

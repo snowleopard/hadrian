@@ -15,7 +15,6 @@ data CabalData = CabalData
     , version                   :: String
     , synopsis                  :: String
     , genericPackageDescription :: GenericPackageDescription
-    , packageDescription        :: PackageDescription
     , packageDependencies       :: [Package]
     } deriving (Eq, Show, Typeable, Generic)
 
