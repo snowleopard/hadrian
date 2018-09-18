@@ -46,17 +46,17 @@ textFileOracle = do
         return $ Map.fromList [ (key, values) | (key:values) <- contents ]
     void $ addOracle $ \(KeyValues (file, key)) -> Map.lookup key <$> kvs file
 
-    cabal <- newCache $ \pkg -> do
-        let file = pkgCabalFile pkg
-        need [file]
-        putLoud $ "| PackageData oracle: reading " ++ quote file ++ "..."
-        parseCabalFile pkg
-    void $ addOracle $ \(PackageDataKey pkg) -> cabal pkg
-
-    confCabal <- newCache $ \(ctx@Context {..}) -> do
+    packageData <- newCache $ \package -> do
         let file = pkgCabalFile package
         need [file]
-        putLoud $ "| ContextData oracle: reading " ++ quote file
+        putLoud $ "| PackageData oracle: parsing " ++ quote file ++ "..."
+        parsePackageData package
+    void $ addOracle $ \(PackageDataKey package) -> packageData package
+
+    contextData <- newCache $ \(context@Context {..}) -> do
+        let file = pkgCabalFile package
+        need [file]
+        putLoud $ "| ContextData oracle: resolving data in " ++ quote file
                ++ " (Stage: " ++ stageString stage ++ ")..."
-        parseContextData ctx
-    void $ addOracle $ \(ContextDataKey ctx) -> confCabal ctx
+        resolveContextData context
+    void $ addOracle $ \(ContextDataKey context) -> contextData context

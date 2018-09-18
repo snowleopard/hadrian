@@ -10,7 +10,7 @@
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
 module Hadrian.Haskell.Cabal.Parse (
-    ContextData (..), parseCabalFile, parseContextData, parseCabalPkgId,
+    ContextData (..), parsePackageData, resolveContextData, parseCabalPkgId,
     configurePackage, copyPackage, registerPackage
     ) where
 
@@ -78,8 +78,8 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
 
 -- | Parse the Cabal file of a given 'Package'. This operation is cached by the
 -- "Hadrian.Oracles.TextFile.readPackageData" oracle.
-parseCabalFile :: Package -> Action PackageData
-parseCabalFile pkg = do
+parsePackageData :: Package -> Action PackageData
+parsePackageData pkg = do
     gpd <- liftIO $ C.readGenericPackageDescription C.verbose (pkgCabalFile pkg)
     let pd      = C.packageDescription gpd
         pkgId   = C.package pd
@@ -171,8 +171,8 @@ registerPackage context@Context {..} = do
         [ "register", "--builddir", ctxPath, v ]
 
 -- | Parse the 'ContextData' of a given 'Context'.
-parseContextData :: Context -> Action ContextData
-parseContextData context@Context {..} = do
+resolveContextData :: Context -> Action ContextData
+resolveContextData context@Context {..} = do
     -- TODO: This is conceptually wrong!
     -- We should use the gpd, the flagAssignment and compiler, hostPlatform, and
     -- other information from the lbi. And then compute the finalised PD (flags,
@@ -220,7 +220,7 @@ parseContextData context@Context {..} = do
     -- See: https://github.com/snowleopard/hadrian/issues/548
     let extDeps      = C.externalPackageDeps lbi'
         deps         = map (C.display . snd) extDeps
-        dep_direct   = map (fromMaybe (error "parseContextData: dep_keys failed")
+        dep_direct   = map (fromMaybe (error "resolveContextData: dep_keys failed")
                           . C.lookupUnitId (C.installedPkgs lbi') . fst) extDeps
         dep_ipids    = map (C.display . Installed.installedUnitId) dep_direct
         Just ghcProg = C.lookupProgram C.ghcProgram (C.withPrograms lbi')
