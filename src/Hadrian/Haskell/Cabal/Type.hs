@@ -34,9 +34,10 @@ data CabalData = CabalData
     } deriving (Eq, Generic, Show, Typeable)
 
 -- | Haskell package metadata obtained after resolving package configuration
--- flags and conditionals. See 'CabalData' for metadata obtained without
--- resolving package configuration flags and conditionals.
-data PackageData = PackageData
+-- flags and associated conditionals according to the current build context.
+-- See 'CabalData' for metadata obtained without resolving package configuration
+-- flags and conditionals.
+data ContextData = ContextData
     { dependencies    :: [PackageName]
     , componentId     :: String
     , mainIs          :: Maybe (String, FilePath)  -- ("Main", filepath)
@@ -70,6 +71,6 @@ instance Binary   CabalData
 instance Hashable CabalData where hashWithSalt salt = hashWithSalt salt . show
 instance NFData   CabalData
 
-instance Binary   PackageData
-instance Hashable PackageData
-instance NFData   PackageData
+instance Binary   ContextData
+instance Hashable ContextData
+instance NFData   ContextData

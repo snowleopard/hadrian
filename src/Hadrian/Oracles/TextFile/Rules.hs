@@ -56,7 +56,7 @@ textFileOracle = do
     confCabal <- newCache $ \(ctx@Context {..}) -> do
         let file = pkgCabalFile package
         need [file]
-        putLoud $ "| PackageDataFile oracle: reading " ++ quote file
+        putLoud $ "| ContextDataFile oracle: reading " ++ quote file
                ++ " (Stage: " ++ stageString stage ++ ")..."
-        parsePackageData ctx
-    void $ addOracle $ \(PackageDataFile ctx) -> confCabal ctx
+        parseContextData ctx
+    void $ addOracle $ \(ContextDataFile ctx) -> confCabal ctx

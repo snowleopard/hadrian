@@ -28,9 +28,9 @@ newtype CabalFile = CabalFile Package
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult CabalFile = CabalData
 
-newtype PackageDataFile = PackageDataFile Context
+newtype ContextDataFile = ContextDataFile Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult PackageDataFile = PackageData
+type instance RuleResult ContextDataFile = ContextData
 
 newtype KeyValue = KeyValue (FilePath, String)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)

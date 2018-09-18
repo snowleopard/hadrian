@@ -14,7 +14,7 @@
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalData, readPackageData
+    readCabalData, readContextData
     ) where
 
 import Data.Maybe
@@ -77,8 +77,8 @@ lookupDependencies depFile file = do
 readCabalData :: Package -> Action CabalData
 readCabalData = askOracle . CabalFile
 
--- | Read and parse a @.cabal@ file recording the obtained 'PackageData',
+-- | Read and parse a @.cabal@ file recording the obtained 'ContextData',
 -- caching and tracking the result. Note that unlike 'readCabalData' this
 -- function resolves all Cabal configuration flags and associated conditionals.
-readPackageData :: Context -> Action PackageData
-readPackageData = askOracle . PackageDataFile
+readContextData :: Context -> Action ContextData
+readContextData = askOracle . ContextDataFile

@@ -14,7 +14,7 @@ module Expression (
 
     -- * Convenient accessors
     getBuildRoot, getContext, getOutputs, getInputs,
-    getInput, getOutput, getPackageData,
+    getInput, getOutput, getContextData,
 
     -- * Re-exports
     module Base,
@@ -31,10 +31,10 @@ import Hadrian.Haskell.Cabal.Type
 import Hadrian.Oracles.TextFile
 
 -- | Get values from a configured cabal stage.
-getPackageData :: (PackageData -> a) -> Expr a
-getPackageData key = do
-    packageData <- expr . readPackageData =<< getContext
-    return $ key packageData
+getContextData :: (ContextData -> a) -> Expr a
+getContextData key = do
+    contextData <- expr . readContextData =<< getContext
+    return $ key contextData
 
 -- | Is the build currently in the provided stage?
 stage :: Stage -> Predicate

@@ -10,7 +10,7 @@
 -- Extracting Haskell package metadata stored in Cabal files.
 -----------------------------------------------------------------------------
 module Hadrian.Haskell.Cabal.Parse (
-    PackageData (..), parseCabalFile, parsePackageData, parseCabalPkgId,
+    ContextData (..), parseCabalFile, parseContextData, parseCabalPkgId,
     configurePackage, copyPackage, registerPackage
     ) where
 
@@ -170,9 +170,9 @@ registerPackage context@Context {..} = do
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
         [ "register", "--builddir", ctxPath, v ]
 
--- | Parse the 'PackageData' of the 'Package' of a given 'Context'.
-parsePackageData :: Context -> Action PackageData
-parsePackageData context@Context {..} = do
+-- | Parse the 'ContextData' of a given 'Context'.
+parseContextData :: Context -> Action ContextData
+parseContextData context@Context {..} = do
     -- TODO: This is conceptually wrong!
     -- We should use the gpd, the flagAssignment and compiler, hostPlatform, and
     -- other information from the lbi. And then compute the finalised PD (flags,
@@ -220,7 +220,7 @@ parsePackageData context@Context {..} = do
     -- See: https://github.com/snowleopard/hadrian/issues/548
     let extDeps      = C.externalPackageDeps lbi'
         deps         = map (C.display . snd) extDeps
-        dep_direct   = map (fromMaybe (error "parsePackageData: dep_keys failed")
+        dep_direct   = map (fromMaybe (error "parseContextData: dep_keys failed")
                           . C.lookupUnitId (C.installedPkgs lbi') . fst) extDeps
         dep_ipids    = map (C.display . Installed.installedUnitId) dep_direct
         Just ghcProg = C.lookupProgram C.ghcProgram (C.withPrograms lbi')
@@ -252,7 +252,7 @@ parsePackageData context@Context {..} = do
 
         (buildInfo, modules, mainIs) = biModules pd'
 
-      in return $ PackageData
+      in return $ ContextData
           { dependencies    = deps
           , componentId     = C.localCompatPackageKey lbi'
           , mainIs          = case mainIs of

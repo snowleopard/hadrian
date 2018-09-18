@@ -92,7 +92,7 @@ hsSources context = do
 -- the build directory regardless of whether they are generated or not.
 hsObjects :: Context -> Action [FilePath]
 hsObjects context = do
-    modules <- interpretInContext context (getPackageData PD.modules)
+    modules <- interpretInContext context (getContextData PD.modules)
     mapM (objectPath context . moduleSource) modules
 
 -- | Generated module files live in the 'Context' specific build directory.
@@ -107,7 +107,7 @@ moduleSource moduleName = replaceEq '.' '/' moduleName <.> "hs"
 contextFiles :: Context -> Action [(ModuleName, Maybe FilePath)]
 contextFiles context@Context {..} = do
     modules <- fmap sort . interpretInContext context $
-        getPackageData PD.modules
+        getContextData PD.modules
     zip modules <$> askOracle (ModuleFiles (stage, package))
 
 -- | This is an important oracle whose role is to find and cache module source
@@ -125,12 +125,12 @@ moduleFilesOracle :: Rules ()
 moduleFilesOracle = void $ do
     void . addOracle $ \(ModuleFiles (stage, package)) -> do
         let context = vanillaContext stage package
-        srcDirs <- interpretInContext context (getPackageData PD.srcDirs)
-        mainIs  <- interpretInContext context (getPackageData PD.mainIs)
+        srcDirs <- interpretInContext context (getContextData PD.srcDirs)
+        mainIs  <- interpretInContext context (getContextData PD.mainIs)
         let removeMain = case mainIs of
                               Just (mod, _) -> delete mod
                               Nothing       -> id
-        modules <- fmap sort $ interpretInContext context (getPackageData PD.modules)
+        modules <- fmap sort $ interpretInContext context (getContextData PD.modules)
         autogen <- autogenPath context
         let dirs = autogen : map (pkgPath package -/-) srcDirs
             -- Don't resolve the file path for module `Main` twice.

@@ -7,11 +7,11 @@ module Rules.Documentation (
     ) where
 
 import Hadrian.Haskell.Cabal
-import qualified Hadrian.Haskell.Cabal.Type as PD
+import Hadrian.Haskell.Cabal.Type
 
 import Base
 import Context
-import Expression (getPackageData, interpretInContext)
+import Expression (getContextData, interpretInContext)
 import Flavour
 import Oracles.ModuleFiles
 import Packages
@@ -205,6 +205,6 @@ buildManPage = do
 -- | Find the Haddock files for the dependencies of the current library.
 haddockDependencies :: Context -> Action [FilePath]
 haddockDependencies context = do
-    depNames <- interpretInContext context (getPackageData PD.depNames)
+    depNames <- interpretInContext context (getContextData depNames)
     sequence [ pkgHaddockFile $ vanillaContext Stage1 depPkg
              | Just depPkg <- map findPackageByName depNames, depPkg /= rts ]
