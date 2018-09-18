@@ -6,7 +6,8 @@ module Rules.Documentation (
     haddockDependencies
     ) where
 
-import qualified Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal
+import qualified Hadrian.Haskell.Cabal.Type as PD
 
 import Base
 import Context
@@ -141,8 +142,8 @@ buildPackageDocumentation context@Context {..} = when (stage == Stage1 && packag
     root -/- htmlRoot -/- "libraries" -/- pkgName package -/- "haddock-prologue.txt" %> \file -> do
         need [root -/- haddockHtmlLib]
         -- This is how @ghc-cabal@ used to produces "haddock-prologue.txt" files.
-        (syn, desc) <- interpretInContext context . getPackageData $ \p ->
-            (PD.synopsis p, PD.description p)
+        syn  <- pkgSynopsis    package
+        desc <- pkgDescription package
         let prologue = if null desc then syn else desc
         liftIO $ writeFile file prologue
 

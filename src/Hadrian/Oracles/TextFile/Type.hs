@@ -17,8 +17,7 @@ import Development.Shake
 import Development.Shake.Classes
 
 import Context.Type
-import Hadrian.Haskell.Cabal.CabalData
-import Hadrian.Haskell.Cabal.PackageData
+import Hadrian.Haskell.Cabal.Type
 import Hadrian.Package
 
 newtype TextFile = TextFile FilePath

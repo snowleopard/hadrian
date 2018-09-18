@@ -9,7 +9,7 @@ module Settings.Builders.Common (
     packageDatabaseArgs, bootPackageDatabaseArgs
     ) where
 
-import Hadrian.Haskell.Cabal.PackageData
+import Hadrian.Haskell.Cabal.Type
 
 import Base
 import Expression

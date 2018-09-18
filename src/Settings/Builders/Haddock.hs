@@ -1,7 +1,7 @@
 module Settings.Builders.Haddock (haddockBuilderArgs) where
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 import Hadrian.Utilities
 
 import Packages

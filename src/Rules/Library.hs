@@ -2,7 +2,7 @@ module Rules.Library (libraryRules) where
 
 import Data.Functor
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 import qualified System.Directory as IO
 import qualified Text.Parsec      as Parsec
 

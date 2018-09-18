@@ -40,8 +40,7 @@ import qualified Distribution.Types.MungedPackageId            as C
 import qualified Distribution.Verbosity                        as C
 import Hadrian.Expression
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.CabalData
-import Hadrian.Haskell.Cabal.PackageData
+import Hadrian.Haskell.Cabal.Type
 import Hadrian.Oracles.TextFile
 import Hadrian.Target
 
@@ -92,7 +91,7 @@ parseCabalFile pkg = do
         sorted  = sort [ C.unPackageName p | C.Dependency p _ <- allDeps ]
         deps    = nubOrd sorted \\ [name]
         depPkgs = catMaybes $ map findPackageByName deps
-    return $ CabalData name version (C.synopsis pd) depPkgs gpd
+    return $ CabalData name version (C.synopsis pd) (C.description pd) depPkgs gpd
   where
     -- Collect an overapproximation of dependencies by ignoring conditionals
     collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
@@ -255,16 +254,12 @@ parsePackageData context@Context {..} = do
 
       in return $ PackageData
           { dependencies    = deps
-          , name            = C.unPackageName . C.pkgName    . C.package $ pd'
-          , version         = C.display       . C.pkgVersion . C.package $ pd'
           , componentId     = C.localCompatPackageKey lbi'
           , mainIs          = case mainIs of
                                    Just (mod, filepath) -> Just (C.display mod, filepath)
                                    Nothing              -> Nothing
           , modules         = map C.display $ modules
           , otherModules    = map C.display . C.otherModules $ buildInfo
-          , synopsis        = C.synopsis    pd'
-          , description     = C.description pd'
           , srcDirs         = C.hsSourceDirs buildInfo
           , deps            = deps
           , depIpIds        = dep_ipids

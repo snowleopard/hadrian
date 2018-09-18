@@ -5,7 +5,7 @@ module Oracles.ModuleFiles (
     ) where
 
 import qualified Data.HashMap.Strict as Map
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 
 import Base
 import Builder

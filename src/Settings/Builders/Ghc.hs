@@ -1,7 +1,7 @@
 module Settings.Builders.Ghc (ghcBuilderArgs, haddockGhcArgs) where
 
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 
 import Flavour
 import Packages

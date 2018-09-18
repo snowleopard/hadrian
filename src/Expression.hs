@@ -27,7 +27,7 @@ import Builder
 import Context hiding (stage, package, way)
 import Expression.Type
 import Hadrian.Expression hiding (Expr, Predicate, Args)
-import Hadrian.Haskell.Cabal.PackageData
+import Hadrian.Haskell.Cabal.Type
 import Hadrian.Oracles.TextFile
 
 -- | Get values from a configured cabal stage.

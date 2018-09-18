@@ -34,8 +34,7 @@ executable hadrian
                        , Hadrian.Builder.Tar
                        , Hadrian.Expression
                        , Hadrian.Haskell.Cabal
-                       , Hadrian.Haskell.Cabal.CabalData
-                       , Hadrian.Haskell.Cabal.PackageData
+                       , Hadrian.Haskell.Cabal.Type
                        , Hadrian.Haskell.Cabal.Parse
                        , Hadrian.Oracles.ArgsHash
                        , Hadrian.Oracles.DirectoryContents

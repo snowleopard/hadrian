@@ -21,8 +21,7 @@ import Data.Maybe
 import Development.Shake
 
 import Context.Type
-import Hadrian.Haskell.Cabal.CabalData
-import Hadrian.Haskell.Cabal.PackageData
+import Hadrian.Haskell.Cabal.Type
 import Hadrian.Oracles.TextFile.Type
 import Hadrian.Package
 import Hadrian.Utilities

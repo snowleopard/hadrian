@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module     : Hadrian.Haskell.Cabal
--- Copyright  : (c) Andrey Mokhov 2014-2017
+-- Copyright  : (c) Andrey Mokhov 2014-2018
 -- License    : MIT (see the file LICENSE)
 -- Maintainer : andrey.mokhov@gmail.com
 -- Stability  : experimental
@@ -10,13 +10,14 @@
 -- Cabal files.
 -----------------------------------------------------------------------------
 module Hadrian.Haskell.Cabal (
-    pkgVersion, pkgIdentifier, pkgSynopsis, pkgDependencies, pkgGenericDescription
+    pkgVersion, pkgIdentifier, pkgSynopsis, pkgDescription, pkgDependencies,
+    pkgGenericDescription
     ) where
 
 import Development.Shake
 import Distribution.PackageDescription (GenericPackageDescription)
 
-import Hadrian.Haskell.Cabal.CabalData
+import Hadrian.Haskell.Cabal.Type
 import Hadrian.Oracles.TextFile
 import Hadrian.Package
 
@@ -36,6 +37,11 @@ pkgIdentifier package = do
 -- | Read a Cabal file and return the package synopsis. The Cabal file is tracked.
 pkgSynopsis :: Package -> Action String
 pkgSynopsis = fmap synopsis . readCabalData
+
+-- | Read a Cabal file and return the package description. The Cabal file is
+-- tracked.
+pkgDescription :: Package -> Action String
+pkgDescription = fmap description . readCabalData
 
 -- | Read a Cabal file and return the sorted list of the package dependencies.
 -- The current version does not take care of Cabal conditionals and therefore

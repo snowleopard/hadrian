@@ -1,6 +1,6 @@
 module Settings.Builders.Hsc2Hs (hsc2hsBuilderArgs) where
 
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 
 import Builder
 import Packages

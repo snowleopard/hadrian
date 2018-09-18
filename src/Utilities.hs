@@ -8,7 +8,7 @@ module Utilities (
 
 import qualified Hadrian.Builder as H
 import Hadrian.Haskell.Cabal
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 import Hadrian.Utilities
 
 import Context

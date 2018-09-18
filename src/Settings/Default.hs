@@ -16,7 +16,7 @@ module Settings.Default (
 import qualified Hadrian.Builder.Ar
 import qualified Hadrian.Builder.Sphinx
 import qualified Hadrian.Builder.Tar
-import Hadrian.Haskell.Cabal.PackageData as PD
+import Hadrian.Haskell.Cabal.Type as PD
 
 import CommandLine
 import Expression
