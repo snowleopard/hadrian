@@ -14,8 +14,8 @@ data CabalData = CabalData
     { name                      :: PackageName
     , version                   :: String
     , synopsis                  :: String
-    , genericPackageDescription :: GenericPackageDescription
     , packageDependencies       :: [Package]
+    , genericPackageDescription :: GenericPackageDescription
     } deriving (Eq, Show, Typeable, Generic)
 
 instance Binary   CabalData

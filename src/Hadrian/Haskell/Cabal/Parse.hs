@@ -39,6 +39,7 @@ import qualified Distribution.Types.CondTree                   as C
 import qualified Distribution.Types.MungedPackageId            as C
 import qualified Distribution.Verbosity                        as C
 import Hadrian.Expression
+import Hadrian.Haskell.Cabal
 import Hadrian.Haskell.Cabal.CabalData
 import Hadrian.Haskell.Cabal.PackageData
 import Hadrian.Oracles.TextFile
@@ -76,19 +77,11 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
     go [x] = x
     go _   = error "Cannot handle more than one buildinfo yet."
 
--- TODO: Add proper error handling for partiality due to Nothing/Left cases.
--- | Parse the Cabal file of the 'Package' from a given 'Context'. This function
--- reads the Cabal file, gets some information about the compiler to be used
--- corresponding to the 'Stage' it gets from the 'Context', and finalises the
--- package description it got from the Cabal file with additional information
--- such as platform, compiler version conditionals, and package flags.
+-- | Parse the Cabal file of a given 'Package'. This operation is cached by the
+-- "Hadrian.Oracles.TextFile.readCabalData" oracle.
 parseCabalFile :: Package -> Action CabalData
-parseCabalFile package = do
-    let file = pkgCabalFile package
-
-    -- Read the package description from the Cabal file
-    gpd <- liftIO $ C.readGenericPackageDescription C.verbose file
-
+parseCabalFile pkg = do
+    gpd <- liftIO $ C.readGenericPackageDescription C.verbose (pkgCabalFile pkg)
     let pd      = C.packageDescription gpd
         pkgId   = C.package pd
         name    = C.unPackageName (C.pkgName pkgId)
@@ -99,49 +92,14 @@ parseCabalFile package = do
         sorted  = sort [ C.unPackageName p | C.Dependency p _ <- allDeps ]
         deps    = nubOrd sorted \\ [name]
         depPkgs = catMaybes $ map findPackageByName deps
-
-    -- let pd = C.packageDescription gpd
-
-    -- depPkgs are all those packages that are needed. These should be found in
-    -- the known build packages even if they are not build in this stage.
-    -- let depPkgs = map (findPackageByName' . C.unPackageName . C.depPkgName)
-    --             $ flip C.enabledBuildDepends C.defaultComponentRequestedSpec pd
-    --       where
-    --         findPackageByName' p = fromMaybe (error msg) (findPackageByName p)
-    --           where
-    --             msg = "Failed to find package " ++ quote (show p)
-    return $ CabalData name version (C.synopsis pd) gpd depPkgs
-
--- Restore old code
-collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
-collectDeps Nothing = []
-collectDeps (Just (C.CondNode _ deps ifs)) = deps ++ concatMap f ifs
+    return $ CabalData name version (C.synopsis pd) depPkgs gpd
   where
-    f (C.CondBranch _ t mt) = collectDeps (Just t) ++ collectDeps mt
-
-resolvePD :: Context -> Action C.PackageDescription
-resolvePD context@Context {..} = do
-    -- Read the package description from the Cabal file
-    gpd <- genericPackageDescription <$> readCabalData package
-
-    -- Configure the package with the GHC for this stage
-    hcPath <- builderPath (Ghc CompileHs stage)
-    (compiler, Just platform, _pgdb) <- liftIO $
-        C.configure C.silent (Just hcPath) Nothing C.emptyProgramDb
-
-    flagList <- interpret (target context (Cabal Flags stage) [] []) =<< args <$> flavour
-    let flags = foldr addFlag mempty flagList
-          where
-            addFlag :: String -> C.FlagAssignment -> C.FlagAssignment
-            addFlag ('-':name) = C.insertFlagAssignment (C.mkFlagName name) False
-            addFlag ('+':name) = C.insertFlagAssignment (C.mkFlagName name) True
-            addFlag name       = C.insertFlagAssignment (C.mkFlagName name) True
-
-    let (Right (pd,_)) = C.finalizePD flags C.defaultComponentRequestedSpec
-                         (const True) platform (C.compilerInfo compiler) [] gpd
-
-    return pd
-
+    -- Collect an overapproximation of dependencies by ignoring conditionals
+    collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
+    collectDeps Nothing = []
+    collectDeps (Just (C.CondNode _ deps ifs)) = deps ++ concatMap f ifs
+      where
+        f (C.CondBranch _ t mt) = collectDeps (Just t) ++ collectDeps mt
 
 -- TODO: Track command line arguments and package configuration flags.
 -- | Configure a package using the Cabal library by collecting all the command
@@ -152,7 +110,8 @@ configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
 
-    CabalData _ _ _ gpd depPkgs <- readCabalData package
+    gpd     <- pkgGenericDescription package
+    depPkgs <- packageDependencies <$> readCabalData package
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -193,7 +152,7 @@ configurePackage context@Context {..} = do
 copyPackage :: Context -> Action ()
 copyPackage context@Context {..} = do
     putLoud $ "| Copy package " ++ quote (pkgName package)
-    CabalData _ _ _ gpd _ <- readCabalData package
+    gpd <- pkgGenericDescription package
     ctxPath   <- Context.contextPath context
     pkgDbPath <- packageDbPath stage
     verbosity <- getVerbosity
@@ -206,7 +165,7 @@ registerPackage :: Context -> Action ()
 registerPackage context@Context {..} = do
     putLoud $ "| Register package " ++ quote (pkgName package)
     ctxPath <- Context.contextPath context
-    CabalData _ _ _ gpd _ <- readCabalData package
+    gpd <- pkgGenericDescription package
     verbosity <- getVerbosity
     let v = if verbosity >= Loud then "-v3" else "-v0"
     liftIO $ C.defaultMainWithHooksNoReadArgs C.autoconfUserHooks gpd
@@ -223,7 +182,25 @@ parsePackageData context@Context {..} = do
     -- let (Right (pd,_)) = C.finalizePackageDescription flags (const True) platform (compilerInfo compiler) [] gpd
     --
     -- However when using the new-build path's this might change.
-    pd <- resolvePD context
+
+    -- Read the package description from the Cabal file
+    gpd <- genericPackageDescription <$> readCabalData package
+
+    -- Configure the package with the GHC for this stage
+    hcPath <- builderPath (Ghc CompileHs stage)
+    (compiler, Just platform, _pgdb) <- liftIO $
+        C.configure C.silent (Just hcPath) Nothing C.emptyProgramDb
+
+    flagList <- interpret (target context (Cabal Flags stage) [] []) =<< args <$> flavour
+    let flags = foldr addFlag mempty flagList
+          where
+            addFlag :: String -> C.FlagAssignment -> C.FlagAssignment
+            addFlag ('-':name) = C.insertFlagAssignment (C.mkFlagName name) False
+            addFlag ('+':name) = C.insertFlagAssignment (C.mkFlagName name) True
+            addFlag name       = C.insertFlagAssignment (C.mkFlagName name) True
+
+    let (Right (pd,_)) = C.finalizePD flags C.defaultComponentRequestedSpec
+                         (const True) platform (C.compilerInfo compiler) [] gpd
 
     cPath <- Context.contextPath context
     need [cPath -/- "setup-config"]

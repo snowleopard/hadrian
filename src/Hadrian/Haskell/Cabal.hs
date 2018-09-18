@@ -10,10 +10,11 @@
 -- Cabal files.
 -----------------------------------------------------------------------------
 module Hadrian.Haskell.Cabal (
-    pkgVersion, pkgIdentifier, pkgDependencies, pkgSynopsis
+    pkgVersion, pkgIdentifier, pkgSynopsis, pkgDependencies, pkgGenericDescription
     ) where
 
 import Development.Shake
+import Distribution.PackageDescription (GenericPackageDescription)
 
 import Hadrian.Haskell.Cabal.CabalData
 import Hadrian.Oracles.TextFile
@@ -32,6 +33,10 @@ pkgIdentifier package = do
         then name cabal
         else name cabal ++ "-" ++ version cabal
 
+-- | Read a Cabal file and return the package synopsis. The Cabal file is tracked.
+pkgSynopsis :: Package -> Action String
+pkgSynopsis = fmap synopsis . readCabalData
+
 -- | Read a Cabal file and return the sorted list of the package dependencies.
 -- The current version does not take care of Cabal conditionals and therefore
 -- returns a crude overapproximation of actual dependencies. The Cabal file is
@@ -39,6 +44,7 @@ pkgIdentifier package = do
 pkgDependencies :: Package -> Action [PackageName]
 pkgDependencies = fmap (map pkgName . packageDependencies) . readCabalData
 
--- | Read a Cabal file and return the package synopsis. The Cabal file is tracked.
-pkgSynopsis :: Package -> Action String
-pkgSynopsis = fmap synopsis . readCabalData
+-- | Read a Cabal file and return the 'GenericPackageDescription'. The Cabal
+-- file is tracked.
+pkgGenericDescription :: Package -> Action GenericPackageDescription
+pkgGenericDescription = fmap genericPackageDescription . readCabalData
