@@ -261,7 +261,6 @@ parsePackageData context@Context {..} = do
           , modules         = map C.display $ modules
           , otherModules    = map C.display . C.otherModules $ buildInfo
           , srcDirs         = C.hsSourceDirs buildInfo
-          , deps            = deps
           , depIpIds        = dep_ipids
           , depNames        = map (C.display . C.mungedName . snd) extDeps
           , depCompIds      = if C.packageKeySupported (C.compiler lbi')
@@ -275,7 +274,6 @@ parsePackageData context@Context {..} = do
           , asmSrcs         = C.asmSources      buildInfo
           , cSrcs           = C.cSources        buildInfo
           , cmmSrcs         = C.cmmSources      buildInfo
-          , dataFiles       = C.dataFiles pd'
           , hcOpts          = C.programDefaultArgs ghcProg
               ++ C.hcOptions C.GHC buildInfo
               ++ C.languageToFlags   (C.compiler lbi') (C.defaultLanguage buildInfo)
