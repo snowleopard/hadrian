@@ -24,13 +24,13 @@ newtype TextFile = TextFile FilePath
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult TextFile = String
 
-newtype CabalFile = CabalFile Package
+newtype PackageDataKey = PackageDataKey Package
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult CabalFile = CabalData
+type instance RuleResult PackageDataKey = PackageData
 
-newtype ContextDataFile = ContextDataFile Context
+newtype ContextDataKey = ContextDataKey Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult ContextDataFile = ContextData
+type instance RuleResult ContextDataKey = ContextData
 
 newtype KeyValue = KeyValue (FilePath, String)
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)

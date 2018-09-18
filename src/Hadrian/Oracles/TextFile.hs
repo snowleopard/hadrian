@@ -74,11 +74,11 @@ lookupDependencies depFile file = do
         Just (source : files) -> return (source, files)
 
 -- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalData :: Package -> Action CabalData
-readCabalData = askOracle . CabalFile
+readCabalData :: Package -> Action PackageData
+readCabalData = askOracle . PackageDataKey
 
 -- | Read and parse a @.cabal@ file recording the obtained 'ContextData',
 -- caching and tracking the result. Note that unlike 'readCabalData' this
 -- function resolves all Cabal configuration flags and associated conditionals.
 readContextData :: Context -> Action ContextData
-readContextData = askOracle . ContextDataFile
+readContextData = askOracle . ContextDataKey

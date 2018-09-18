@@ -49,14 +49,14 @@ textFileOracle = do
     cabal <- newCache $ \pkg -> do
         let file = pkgCabalFile pkg
         need [file]
-        putLoud $ "| CabalFile oracle: reading " ++ quote file ++ "..."
+        putLoud $ "| PackageData oracle: reading " ++ quote file ++ "..."
         parseCabalFile pkg
-    void $ addOracle $ \(CabalFile pkg) -> cabal pkg
+    void $ addOracle $ \(PackageDataKey pkg) -> cabal pkg
 
     confCabal <- newCache $ \(ctx@Context {..}) -> do
         let file = pkgCabalFile package
         need [file]
-        putLoud $ "| ContextDataFile oracle: reading " ++ quote file
+        putLoud $ "| ContextData oracle: reading " ++ quote file
                ++ " (Stage: " ++ stageString stage ++ ")..."
         parseContextData ctx
-    void $ addOracle $ \(ContextDataFile ctx) -> confCabal ctx
+    void $ addOracle $ \(ContextDataKey ctx) -> confCabal ctx

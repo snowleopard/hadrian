@@ -77,8 +77,8 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
     go _   = error "Cannot handle more than one buildinfo yet."
 
 -- | Parse the Cabal file of a given 'Package'. This operation is cached by the
--- "Hadrian.Oracles.TextFile.readCabalData" oracle.
-parseCabalFile :: Package -> Action CabalData
+-- "Hadrian.Oracles.TextFile.readPackageData" oracle.
+parseCabalFile :: Package -> Action PackageData
 parseCabalFile pkg = do
     gpd <- liftIO $ C.readGenericPackageDescription C.verbose (pkgCabalFile pkg)
     let pd      = C.packageDescription gpd
@@ -91,7 +91,7 @@ parseCabalFile pkg = do
         sorted  = sort [ C.unPackageName p | C.Dependency p _ <- allDeps ]
         deps    = nubOrd sorted \\ [name]
         depPkgs = catMaybes $ map findPackageByName deps
-    return $ CabalData name version (C.synopsis pd) (C.description pd) depPkgs gpd
+    return $ PackageData name version (C.synopsis pd) (C.description pd) depPkgs gpd
   where
     -- Collect an overapproximation of dependencies by ignoring conditionals
     collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
