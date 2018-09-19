@@ -21,7 +21,6 @@ import Hadrian.Haskell.Cabal.Parse
 import Hadrian.Oracles.TextFile.Type
 import Hadrian.Package
 import Hadrian.Utilities
-import Stage
 
 -- | This oracle reads and parses text files to answer various queries, caching
 -- and tracking the results.
@@ -54,9 +53,8 @@ textFileOracle = do
     void $ addOracle $ \(PackageDataKey package) -> packageData package
 
     contextData <- newCache $ \(context@Context {..}) -> do
-        let file = pkgCabalFile package
-        need [file]
-        putLoud $ "| ContextData oracle: resolving data in " ++ quote file
-               ++ " (Stage: " ++ stageString stage ++ ")..."
+        putLoud $ "| ContextData oracle: resolving data for "
+               ++ quote (pkgName package) ++ " (" ++ show stage
+               ++ ", " ++ show way ++ ")..."
         resolveContextData context
     void $ addOracle $ \(ContextDataKey context) -> contextData context

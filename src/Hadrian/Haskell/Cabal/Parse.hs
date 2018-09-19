@@ -51,6 +51,30 @@ import Flavour
 import Packages
 import Settings
 
+-- | Parse the Cabal file of a given 'Package'. This operation is cached by the
+-- "Hadrian.Oracles.TextFile.readPackageData" oracle.
+parsePackageData :: Package -> Action PackageData
+parsePackageData pkg = do
+    gpd <- liftIO $ C.readGenericPackageDescription C.verbose (pkgCabalFile pkg)
+    let pd      = C.packageDescription gpd
+        pkgId   = C.package pd
+        name    = C.unPackageName (C.pkgName pkgId)
+        version = C.display (C.pkgVersion pkgId)
+        libDeps = collectDeps (C.condLibrary gpd)
+        exeDeps = map (collectDeps . Just . snd) (C.condExecutables gpd)
+        allDeps = concat (libDeps : exeDeps)
+        sorted  = sort [ C.unPackageName p | C.Dependency p _ <- allDeps ]
+        deps    = nubOrd sorted \\ [name]
+        depPkgs = catMaybes $ map findPackageByName deps
+    return $ PackageData name version (C.synopsis pd) (C.description pd) depPkgs gpd
+  where
+    -- Collect an overapproximation of dependencies by ignoring conditionals
+    collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
+    collectDeps Nothing = []
+    collectDeps (Just (C.CondNode _ deps ifs)) = deps ++ concatMap f ifs
+      where
+        f (C.CondBranch _ t mt) = collectDeps (Just t) ++ collectDeps mt
+
 -- | Parse the Cabal package identifier from a @.cabal@ file.
 parseCabalPkgId :: FilePath -> IO String
 parseCabalPkgId file = C.display . C.package . C.packageDescription <$> C.readGenericPackageDescription C.silent file
@@ -75,30 +99,6 @@ biModules pd = go [ comp | comp@(bi,_,_) <-
     go []  = error "No buildable component found."
     go [x] = x
     go _   = error "Cannot handle more than one buildinfo yet."
-
--- | Parse the Cabal file of a given 'Package'. This operation is cached by the
--- "Hadrian.Oracles.TextFile.readPackageData" oracle.
-parsePackageData :: Package -> Action PackageData
-parsePackageData pkg = do
-    gpd <- liftIO $ C.readGenericPackageDescription C.verbose (pkgCabalFile pkg)
-    let pd      = C.packageDescription gpd
-        pkgId   = C.package pd
-        name    = C.unPackageName (C.pkgName pkgId)
-        version = C.display (C.pkgVersion pkgId)
-        libDeps = collectDeps (C.condLibrary gpd)
-        exeDeps = map (collectDeps . Just . snd) (C.condExecutables gpd)
-        allDeps = concat (libDeps : exeDeps)
-        sorted  = sort [ C.unPackageName p | C.Dependency p _ <- allDeps ]
-        deps    = nubOrd sorted \\ [name]
-        depPkgs = catMaybes $ map findPackageByName deps
-    return $ PackageData name version (C.synopsis pd) (C.description pd) depPkgs gpd
-  where
-    -- Collect an overapproximation of dependencies by ignoring conditionals
-    collectDeps :: Maybe (C.CondTree v [C.Dependency] a) -> [C.Dependency]
-    collectDeps Nothing = []
-    collectDeps (Just (C.CondNode _ deps ifs)) = deps ++ concatMap f ifs
-      where
-        f (C.CondBranch _ t mt) = collectDeps (Just t) ++ collectDeps mt
 
 -- TODO: Track command line arguments and package configuration flags.
 -- | Configure a package using the Cabal library by collecting all the command
@@ -185,6 +185,8 @@ resolveContextData context@Context {..} = do
     -- Read the package description from the Cabal file
     gpd <- genericPackageDescription <$> readCabalData package
 
+    -- TODO: This depends only on stage, so we shouldn't rerun it for different
+    -- ways. Do we need another layer of caching?
     -- Configure the package with the GHC for this stage
     hcPath <- builderPath (Ghc CompileHs stage)
     (compiler, Just platform, _pgdb) <- liftIO $
