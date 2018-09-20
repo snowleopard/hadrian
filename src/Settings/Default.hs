@@ -3,7 +3,7 @@ module Settings.Default (
     defaultPackages, testsuitePackages,
 
     -- * Default build ways
-    defaultLibraryWays, defaultRtsWays, quickRtsWays, quickestRtsWays,
+    defaultLibraryWays, defaultRtsWays,
 
     -- * Default command line arguments for various builders
     SourceArgs (..), sourceArgs, defaultBuilderArgs, defaultPackageArgs,
@@ -41,7 +41,6 @@ import Settings.Builders.Ld
 import Settings.Builders.Make
 import Settings.Builders.RunTest
 import Settings.Builders.Xelatex
-import Settings.Flavours.Common
 import Settings.Packages
 import Settings.Warnings
 
@@ -148,29 +147,25 @@ testsuitePackages = do
 -- * We build 'dynamic' way when stage > Stage0 and the platform supports it.
 defaultLibraryWays :: Ways
 defaultLibraryWays = mconcat
-    [ vanillaAlways
-    , notStage0 ? profilingAlways
-    , notStage0 ? dynamicWhenPossible
+    [ pure [vanilla]
+    , notStage0 ? pure [profiling]
+    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic]
     ]
 
 -- | Default build ways for the RTS.
 defaultRtsWays :: Ways
 defaultRtsWays = mconcat
-  [ quickRtsWays
+  [ pure [vanilla, threaded]
   , notStage0 ? pure
-      [ profiling, threadedProfiling, debugProfiling, threadedDebugProfiling ]
+      [ profiling, threadedProfiling, debugProfiling, threadedDebugProfiling
+      , logging, threadedLogging
+      , debug, threadedDebug
+      ]
+  , notStage0 ? platformSupportsSharedLibs ? pure
+      [ dynamic, threadedDynamic, debugDynamic, loggingDynamic
+      , threadedDebugDynamic, threadedLoggingDynamic
+      ]
   ]
-
-quickRtsWays :: Ways
-quickRtsWays = mconcat
-  [ quickestRtsWays
-  , pure [ logging, debug, threadedDebug, threadedLogging, debugDynamic
-         , threadedDynamic, threadedDebugDynamic, loggingDynamic
-         , threadedLoggingDynamic ]
-  ]
-
-quickestRtsWays :: Ways
-quickestRtsWays = pure [ vanilla, threaded ]
 
 -- TODO: Move C source arguments here
 -- | Default and package-specific source arguments.

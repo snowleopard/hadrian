@@ -51,7 +51,8 @@ platformSupportsSharedLibs = do
                                        , "i386-unknown-mingw32" ]
     solaris       <- anyTargetPlatform [ "i386-unknown-solaris2" ]
     solarisBroken <- flag SolarisBrokenShld
-    return $ not (badPlatform || solaris && solarisBroken)
+    win <- windowsHost
+    return $ not (win || badPlatform || solaris && solarisBroken)
 
 ghcWithSMP :: Action Bool
 ghcWithSMP = do

@@ -1,16 +1,6 @@
 module Settings.Flavours.Common where
 
 import Expression
-import Oracles.Flag
-
-vanillaAlways :: Ways
-vanillaAlways = pure [vanilla]
-
-profilingAlways :: Ways
-profilingAlways = pure [profiling]
-
-dynamicWhenPossible :: Ways
-dynamicWhenPossible = platformSupportsSharedLibs ? pure [dynamic]
 
 -- See https://ghc.haskell.org/trac/ghc/ticket/15286 and
 -- https://phabricator.haskell.org/D4880

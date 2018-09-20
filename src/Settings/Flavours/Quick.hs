@@ -2,6 +2,7 @@ module Settings.Flavours.Quick (quickFlavour) where
 
 import Expression
 import Flavour
+import Oracles.Flag
 import {-# SOURCE #-} Settings.Default
 import Settings.Flavours.Common
 
@@ -11,9 +12,16 @@ quickFlavour = defaultFlavour
     { name        = "quick"
     , args        = defaultBuilderArgs <> quickArgs <> defaultPackageArgs
     , libraryWays = mconcat
-                    [ vanillaAlways
-                    , notStage0 ? dynamicWhenPossible ]
-    , rtsWays     = quickRtsWays }
+                    [ pure [vanilla]
+                    , notStage0 ? platformSupportsSharedLibs ? pure [dynamic] ]
+    , rtsWays     = mconcat
+                    [ pure
+                      [ vanilla, threaded, logging, debug
+                      , threadedDebug, threadedLogging, threaded ]
+                    , notStage0 ? platformSupportsSharedLibs ? pure
+                      [ dynamic, debugDynamic, threadedDynamic, loggingDynamic
+                      , threadedDebugDynamic, threadedLoggingDynamic ]
+                    ] }
 
 quickArgs :: Args
 quickArgs = sourceArgs SourceArgs
