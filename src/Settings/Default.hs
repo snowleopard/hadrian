@@ -213,10 +213,21 @@ defaultFlavour = Flavour
     , libraryWays        = defaultLibraryWays
     , rtsWays            = defaultRtsWays
     , splitObjects       = defaultSplitObjects
-    , dynamicGhcPrograms = True
+    , dynamicGhcPrograms = defaultDynamicGhcPrograms
     , ghciWithDebugger   = False
     , ghcProfiled        = False
     , ghcDebugged        = False }
+
+-- | Default logic for determining whether to build
+--   dynamic GHC programs.
+--
+--   It corresponds to the DYNAMIC_GHC_PROGRAMS logic implemented
+--   in @mk/config.mk.in@.
+defaultDynamicGhcPrograms :: Action Bool
+defaultDynamicGhcPrograms = do
+  win <- windowsHost
+  supportsShared <- platformSupportsSharedLibs
+  return (not win && supportsShared)
 
 -- | Default condition for building split objects.
 defaultSplitObjects :: Predicate
