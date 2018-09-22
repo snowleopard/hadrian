@@ -22,7 +22,6 @@ import qualified Distribution.PackageDescription               as C
 import qualified Distribution.PackageDescription.Configuration as C
 import qualified Distribution.PackageDescription.Parsec        as C
 import qualified Distribution.Simple.Compiler                  as C
--- import qualified Distribution.Simple.GHC                       as C
 import qualified Distribution.Simple.Program.Db                as C
 import qualified Distribution.Simple                           as C
 import qualified Distribution.Simple.Program.Builtin           as C
