@@ -23,13 +23,13 @@ import Hadrian.Oracles.Cabal.Type
 import Hadrian.Package
 import Stage
 
--- | Read and parse a @.cabal@ file, caching and tracking the result.
+-- | Read and parse a Cabal file, caching and tracking the result.
 readPackageData :: Package -> Action PackageData
 readPackageData = askOracle . PackageDataKey
 
--- | Read and parse a @.cabal@ file recording the obtained 'ContextData',
--- caching and tracking the result. Note that unlike 'readPackageData' this
--- function resolves all Cabal configuration flags and associated conditionals.
+-- | Read and parse a Cabal file recording the obtained 'ContextData', caching
+-- and tracking the result. Note that unlike 'readPackageData' this function
+-- resolves all Cabal configuration flags and associated conditionals.
 readContextData :: Context -> Action ContextData
 readContextData = askOracle . ContextDataKey
 

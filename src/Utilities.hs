@@ -33,8 +33,8 @@ askWithResources rs target = H.askWithResources rs target getArgs
 -- the results in appropriate contexts. The only subtlety here is that we never
 -- depend on packages built in 'Stage2' or later, therefore the stage of the
 -- resulting dependencies is bounded from above at 'Stage1'. To compute package
--- dependencies we transitively scan @.cabal@ files using 'pkgDependencies'
--- defined in "Hadrian.Haskell.Cabal".
+-- dependencies we transitively scan Cabal files using 'pkgDependencies' defined
+-- in "Hadrian.Haskell.Cabal".
 contextDependencies :: Context -> Action [Context]
 contextDependencies Context {..} = do
     depPkgs <- go [package]
@@ -51,9 +51,9 @@ contextDependencies Context {..} = do
         return $ intersectOrd (compare . pkgName) active deps
 
 cabalDependencies :: Context -> Action [String]
-cabalDependencies ctx = interpretInContext ctx $ getContextData depIpIds
+cabalDependencies ctx = interpretInContext ctx $ getContextData depIds
 
--- | Lookup dependencies of a 'Package' in the vanilla Stage1 context.
+-- | Lookup dependencies of a 'Package' in the @vanilla Stage1 context@.
 stage1Dependencies :: Package -> Action [Package]
 stage1Dependencies =
     fmap (map Context.package) . contextDependencies . vanillaContext Stage1

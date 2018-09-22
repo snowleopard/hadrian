@@ -114,7 +114,7 @@ packageGhcArgs = do
             , arg "-no-user-package-db"
             , packageDatabaseArgs
             , libraryPackage ? arg ("-this-unit-id " ++ pkgId)
-            , map ("-package-id " ++) <$> getContextData depIpIds ]
+            , map ("-package-id " ++) <$> getContextData depIds ]
 
 includeGhcArgs :: Args
 includeGhcArgs = do
