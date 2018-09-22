@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module     : Hadrian.Oracles.TextFile
@@ -8,22 +9,20 @@
 --
 -- Read and parse text files, tracking their contents. This oracle can be used
 -- to read configuration or package metadata files and cache the parsing.
--- This module exports various oracle queries, whereas the corresponing Shake
--- rules can be found in "Hadrian.Oracles.TextFile.Rules".
 -----------------------------------------------------------------------------
 module Hadrian.Oracles.TextFile (
     readTextFile, lookupValue, lookupValueOrEmpty, lookupValueOrError,
     lookupValues, lookupValuesOrEmpty, lookupValuesOrError, lookupDependencies,
-    readCabalData, readContextData
+    textFileOracle
     ) where
 
+import Control.Monad
+import qualified Data.HashMap.Strict as Map
 import Data.Maybe
 import Development.Shake
+import Development.Shake.Classes
+import Development.Shake.Config
 
-import Context.Type
-import Hadrian.Haskell.Cabal.Type
-import Hadrian.Oracles.TextFile.Type
-import Hadrian.Package
 import Hadrian.Utilities
 
 -- | Read a text file, caching and tracking the result. To read and track
@@ -73,12 +72,37 @@ lookupDependencies depFile file = do
         Just [] -> error $ "No source file found for file " ++ quote file
         Just (source : files) -> return (source, files)
 
--- | Read and parse a @.cabal@ file, caching and tracking the result.
-readCabalData :: Package -> Action PackageData
-readCabalData = askOracle . PackageDataKey
+newtype TextFile = TextFile FilePath
+    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
+type instance RuleResult TextFile = String
 
--- | Read and parse a @.cabal@ file recording the obtained 'ContextData',
--- caching and tracking the result. Note that unlike 'readCabalData' this
--- function resolves all Cabal configuration flags and associated conditionals.
-readContextData :: Context -> Action ContextData
-readContextData = askOracle . ContextDataKey
+newtype KeyValue = KeyValue (FilePath, String)
+    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
+type instance RuleResult KeyValue = Maybe String
+
+newtype KeyValues = KeyValues (FilePath, String)
+    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
+type instance RuleResult KeyValues = Maybe [String]
+
+-- | This oracle reads and parses text files to answer various queries, caching
+-- and tracking the results.
+textFileOracle :: Rules ()
+textFileOracle = do
+    text <- newCache $ \file -> do
+        need [file]
+        putLoud $ "| TextFile oracle: reading " ++ quote file ++ "..."
+        liftIO $ readFile file
+    void $ addOracleCache $ \(TextFile file) -> text file
+
+    kv <- newCache $ \file -> do
+        need [file]
+        putLoud $ "| KeyValue oracle: reading " ++ quote file ++ "..."
+        liftIO $ readConfigFile file
+    void $ addOracleCache $ \(KeyValue (file, key)) -> Map.lookup key <$> kv file
+
+    kvs <- newCache $ \file -> do
+        need [file]
+        putLoud $ "| KeyValues oracle: reading " ++ quote file ++ "..."
+        contents <- map words <$> readFileLines file
+        return $ Map.fromList [ (key, values) | (key:values) <- contents ]
+    void $ addOracleCache $ \(KeyValues (file, key)) -> Map.lookup key <$> kvs file

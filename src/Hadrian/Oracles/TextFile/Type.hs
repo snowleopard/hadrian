@@ -16,26 +16,3 @@ module Hadrian.Oracles.TextFile.Type where
 import Development.Shake
 import Development.Shake.Classes
 
-import Context.Type
-import Hadrian.Haskell.Cabal.Type
-import Hadrian.Package
-
-newtype TextFile = TextFile FilePath
-    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult TextFile = String
-
-newtype PackageDataKey = PackageDataKey Package
-    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult PackageDataKey = PackageData
-
-newtype ContextDataKey = ContextDataKey Context
-    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult ContextDataKey = ContextData
-
-newtype KeyValue = KeyValue (FilePath, String)
-    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult KeyValue = Maybe String
-
-newtype KeyValues = KeyValues (FilePath, String)
-    deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
-type instance RuleResult KeyValues = Maybe [String]

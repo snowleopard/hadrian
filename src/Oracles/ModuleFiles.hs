@@ -123,7 +123,7 @@ contextFiles context@Context {..} = do
 -- Just "compiler/parser/Lexer.x"]. The oracle ignores @.(l)hs-boot@ files.
 moduleFilesOracle :: Rules ()
 moduleFilesOracle = void $ do
-    void . addOracle $ \(ModuleFiles (stage, package)) -> do
+    void . addOracleCache $ \(ModuleFiles (stage, package)) -> do
         let context = vanillaContext stage package
         srcDirs <- interpretInContext context (getContextData PD.srcDirs)
         mainIs  <- interpretInContext context (getContextData PD.mainIs)
@@ -178,5 +178,5 @@ moduleFilesOracle = void $ do
                           , takeExtension src `notElem` haskellExtensions ]
         return $ Map.fromList list
 
-    addOracle $ \(Generator (stage, package, file)) ->
+    addOracleCache $ \(Generator (stage, package, file)) ->
         Map.lookup file <$> generators (stage, package)

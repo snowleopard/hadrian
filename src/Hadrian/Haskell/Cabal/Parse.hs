@@ -22,7 +22,7 @@ import qualified Distribution.PackageDescription               as C
 import qualified Distribution.PackageDescription.Configuration as C
 import qualified Distribution.PackageDescription.Parsec        as C
 import qualified Distribution.Simple.Compiler                  as C
-import qualified Distribution.Simple.GHC                       as C
+-- import qualified Distribution.Simple.GHC                       as C
 import qualified Distribution.Simple.Program.Db                as C
 import qualified Distribution.Simple                           as C
 import qualified Distribution.Simple.Program.Builtin           as C
@@ -41,7 +41,7 @@ import qualified Distribution.Verbosity                        as C
 import Hadrian.Expression
 import Hadrian.Haskell.Cabal
 import Hadrian.Haskell.Cabal.Type
-import Hadrian.Oracles.TextFile
+import Hadrian.Oracles.Cabal
 import Hadrian.Target
 
 import Base
@@ -110,7 +110,7 @@ configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
 
     gpd     <- pkgGenericDescription package
-    depPkgs <- packageDependencies <$> readCabalData package
+    depPkgs <- packageDependencies <$> readPackageData package
 
     -- Stage packages are those we have in this stage.
     stagePkgs <- stagePackages stage
@@ -183,14 +183,10 @@ resolveContextData context@Context {..} = do
     -- However when using the new-build path's this might change.
 
     -- Read the package description from the Cabal file
-    gpd <- genericPackageDescription <$> readCabalData package
+    gpd <- genericPackageDescription <$> readPackageData package
 
-    -- TODO: This depends only on stage, so we shouldn't rerun it for different
-    -- ways. Do we need another layer of caching?
     -- Configure the package with the GHC for this stage
-    hcPath <- builderPath (Ghc CompileHs stage)
-    (compiler, Just platform, _pgdb) <- liftIO $
-        C.configure C.silent (Just hcPath) Nothing C.emptyProgramDb
+    (compiler, platform) <- configurePackageGHC package stage
 
     flagList <- interpret (target context (Cabal Flags stage) [] []) =<< args <$> flavour
     let flags = foldr addFlag mempty flagList
