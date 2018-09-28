@@ -25,8 +25,15 @@ import Hadrian.Oracles.Cabal.Type
 import Hadrian.Package
 import Hadrian.Utilities
 
--- | This oracle reads and parses Cabal files to answer various queries, caching
--- and tracking the results.
+-- | These oracle rules are used to cache and track answers to the following
+-- queries, which are implemented via the Cabal library:
+--
+-- 1) 'Hadrian.Oracles.Cabal.readPackageData' that reads Cabal package data.
+--
+-- 2) 'Hadrian.Oracles.Cabal.readContextData' that reads 'Context'-dependent
+--    Cabal package data.
+--
+-- 3) 'Hadrian.Oracles.Cabal.configurePackageGHC' that configures a package.
 cabalOracle :: Rules ()
 cabalOracle = do
     packageData <- newCache $ \package -> do
