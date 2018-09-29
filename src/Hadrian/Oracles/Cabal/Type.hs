@@ -24,13 +24,13 @@ import Hadrian.Package
 import Stage
 
 -- | This type of oracle key is used by 'Hadrian.Oracles.Cabal.readPackageData'
--- to cache reading and parseing of 'Hadrian.Haskell.Cabal.Type.PackageData'.
+-- to cache reading and parsing of 'Hadrian.Haskell.Cabal.Type.PackageData'.
 newtype PackageDataKey = PackageDataKey Package
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult PackageDataKey = PackageData
 
 -- | This type of oracle key is used by 'Hadrian.Oracles.Cabal.readContextData'
--- to cache reading and parseing of 'Hadrian.Haskell.Cabal.Type.ContextData'.
+-- to cache reading and parsing of 'Hadrian.Haskell.Cabal.Type.ContextData'.
 newtype ContextDataKey = ContextDataKey Context
     deriving (Binary, Eq, Hashable, NFData, Show, Typeable)
 type instance RuleResult ContextDataKey = ContextData
