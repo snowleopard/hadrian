@@ -123,9 +123,8 @@ setPath :: Package -> FilePath -> Package
 setPath pkg path = pkg { pkgPath = path }
 
 -- | Given a 'Context', compute the name of the program that is built in it
--- assuming that the corresponding package's type is 'Program'. For example, GHC
--- built in 'Stage0' is called @ghc-stage1@. If the given package is a
--- 'Library', the function simply returns its name.
+-- assuming that the corresponding package's type is 'Program'. If the given
+-- package is a 'Library', the function simply returns its name.
 programName :: Context -> Action String
 programName Context {..} = do
     cross <- flag CrossCompiling
@@ -146,8 +145,9 @@ programPath context@Context {..} = do
     -- See: https://github.com/snowleopard/hadrian/issues/570
     -- Likewise for 'unlit'.
     name <- programName context
-    path <- if package `elem` [touchy, unlit] then stageLibPath stage <&> (-/- "bin")
-                                              else stageBinPath stage
+    path <- if package `elem` [touchy, unlit]
+            then stageLibPath (succ stage) <&> (-/- "bin")
+            else stageBinPath (succ stage)
     return $ path -/- name <.> exe
 
 -- TODO: Move @timeout@ to the @util@ directory and build in a more standard

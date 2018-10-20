@@ -6,7 +6,6 @@ import Hadrian.Haskell.Cabal.Type
 import Base
 import Context
 import Expression hiding (stage, way)
-import Oracles.Flag
 import Oracles.ModuleFiles
 import Packages
 import Settings
@@ -18,9 +17,9 @@ import Utilities
 buildProgram :: [(Resource, Int)] -> Rules ()
 buildProgram rs = do
     root <- buildRootRules
-    forM_ [Stage0 ..] $ \stage ->
-        [ root -/- stageString stage -/- "bin"     -/- "*"
-        , root -/- stageString stage -/- "lib/bin" -/- "*" ] |%> \bin -> do
+    forM_ [Stage0 .. Stage2] $ \stage ->
+        [ root -/- stageString (succ stage) -/- "bin"     -/- "*"
+        , root -/- stageString (succ stage) -/- "lib/bin" -/- "*" ] |%> \bin -> do
             -- This is quite inefficient, but we can't access 'programName' from
             -- 'Rules', because it is an 'Action' depending on an oracle.
             sPackages <- filter isProgram <$> stagePackages stage
@@ -49,16 +48,14 @@ buildProgram rs = do
                         -- @llvm-passes@.
                         need =<< ghcDeps stage
 
-                    cross <- flag CrossCompiling
-                    -- For cross compiler, copy @stage0/bin/<pgm>@ to @stage1/bin/@.
-                    case (cross, stage) of
-                        (True, s) | s > Stage0 -> do
-                            srcDir <- buildRoot <&> (-/- (stageString Stage0 -/- "bin"))
-                            copyFile (srcDir -/- takeFileName bin) bin
-                        (False, s) | s > Stage0 && (package `elem` [touchy, unlit]) -> do
-                            srcDir <- stageLibPath Stage0 <&> (-/- "bin")
-                            copyFile (srcDir -/- takeFileName bin) bin
-                        _ -> buildBinary rs bin =<< programContext stage package
+                    -- Packages 'touchy' and 'unlit' are build only in Stage0
+                    -- and then copied to @bin@ directories of future stages.
+                    if stage > Stage0 && package `elem` [touchy, unlit]
+                    then do
+                        srcDir <- stageLibPath Stage1 <&> (-/- "bin")
+                        copyFile (srcDir -/- takeFileName bin) bin
+                    else
+                        buildBinary rs bin =<< programContext stage package
 
 buildBinary :: [(Resource, Int)] -> FilePath -> Context -> Action ()
 buildBinary rs bin context@Context {..} = do
