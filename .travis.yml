@@ -59,7 +59,7 @@ matrix:
               - hadrian/build.sh -c -j $MODE --no-progress --progress-colour=never --profile=-
 
               # Test GHC binary
-              - _build/stage1/bin/ghc -e 1+2
+              - _build/stage2/bin/ghc -e 1+2
 
         - os: osx
           osx_image: xcode8
@@ -75,7 +75,7 @@ matrix:
               - hadrian/build.sh -j -c $MODE --no-progress --progress-colour=never --profile=-
 
               # Test GHC binary
-              - _build/stage1/bin/ghc -e 1+2
+              - _build/stage2/bin/ghc -e 1+2
 
 install:
     # Add Cabal to PATH

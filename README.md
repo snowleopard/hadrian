@@ -50,8 +50,9 @@ on Cabal sandboxes (`build.cabal.*`), Stack (`build.stack.*`) or the global pack
 
 Using the build system
 ----------------------
-Once your first build is successful, simply run `build` to rebuild. Build results
-are placed into `_build` and `inplace` directories.
+Once your first build is successful, simply run `build` to rebuild. Build
+results are placed into the directory `_build`, for example, the path to Stage2
+GHC is `_build/stage2/bin/ghc`.
 
 #### Command line flags
 
@@ -161,13 +162,13 @@ Here are a few simple suggestions that might help you fix the build:
   run `git pull https://github.com/snowleopard/hadrian.git`. Beware: the most recent version
   contains the most recent bugs too! If this works, please raise an issue and we will try to
   push the changes to the GHC submodule as soon as possible.
-  
+
 * Hadrian is occasionally broken by changes in GHC. If this happens, you might want to switch
   to an earlier GHC commit.
-  
+
 * If Hadrian fails with the message `Configuration file hadrian/cfg/system.config is missing`,
   you have probably forgotten to pass the `--configure` flag during the first build.
-  
+
 * If you need help in debugging Hadrian, read the [wiki](https://github.com/snowleopard/hadrian/wiki)
   and Shake's [debugging tutorial](https://shakebuild.com/debugging).
 
