@@ -109,6 +109,9 @@ configurePackage :: Context -> Action ()
 configurePackage context@Context {..} = do
     putLoud $ "| Configure package " ++ quote (pkgName package)
 
+    root <- buildRoot
+    need [root -/- stageString stage -/- "lib/package.conf.d" -/- packageDbStamp]
+
     gpd     <- pkgGenericDescription package
     depPkgs <- packageDependencies <$> readPackageData package
 

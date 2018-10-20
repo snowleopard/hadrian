@@ -56,12 +56,13 @@ cWarnings = mconcat
     , notM (flag GccIsClang) ? notM windowsHost ? arg "-Werror=unused-but-set-variable"
     , notM (flag GccIsClang) ? arg "-Wno-error=inline" ]
 
+-- TODO: Add package database to GHC's 'runtimeDependencies'?
 packageDatabaseArgs :: Args
 packageDatabaseArgs = do
-    stage <- getStage
+    root   <- getBuildRoot
+    stage  <- getStage
     dbPath <- expr (packageDbPath stage)
     expr (need [dbPath -/- packageDbStamp])
-    root <- getBuildRoot
     prefix <- ifM (builder Ghc) (return "-package-db ") (return "--package-db=")
     arg $ prefix ++ root -/- relativePackageDbPath stage
 

@@ -158,6 +158,8 @@ genPrimopCode context@(Context stage _pkg _) file = do
 copyRules :: Rules ()
 copyRules = do
     root <- buildRootRules
+    root -/- stageString Stage2 -/- "lib/package.conf.d" -/- packageDbStamp <~
+        return (root -/- relativePackageDbPath Stage1)
     forM_ [Stage0 ..] $ \stage -> do
         let prefix = root -/- stageString stage -/- "lib"
         prefix -/- "ghc-usage.txt"     <~ return "driver"
