@@ -6,10 +6,9 @@ Here is how you can build GHC, from source, on Windows. We assume that `git` and
 (see [prerequisites](https://github.com/snowleopard/hadrian/blob/master/doc/windows.md#prerequisites)).
 
 ```sh
-# Get GHC and Hadrian sources; git core.autocrlf should be set to false (see Prerequisites section)
+# Get GHC sources; git core.autocrlf should be set to false (see Prerequisites section)
 git clone --recursive git://git.haskell.org/ghc.git
 cd ghc
-git clone git://github.com/snowleopard/hadrian
 
 # Download and install the bootstrapping GHC and MSYS2
 cd hadrian
@@ -27,7 +26,7 @@ stack exec hadrian -- --directory ".." -j --flavour=quickest --configure
 
 # Test GHC
 cd ..
-inplace\bin\ghc-stage2 -e 1+2
+_build\stage1\ghc -e 1+2
 ```
 
 The entire process should take about 20 minutes. Note, this will build GHC without
