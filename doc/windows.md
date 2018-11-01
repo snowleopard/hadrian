@@ -26,7 +26,7 @@ stack exec hadrian -- --directory ".." -j --flavour=quickest --configure
 
 # Test GHC
 cd ..
-_build\stage1\ghc -e 1+2
+_build\stage1\bin\ghc -e 1+2
 ```
 
 The entire process should take about 20 minutes. Note, this will build GHC without
