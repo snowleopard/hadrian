@@ -3,6 +3,11 @@ Hadrian
 
 [![Linux & OS X status](https://img.shields.io/travis/snowleopard/hadrian/master.svg?label=Linux%20%26%20OS%20X)](https://travis-ci.org/snowleopard/hadrian) [![Windows status](https://img.shields.io/appveyor/ci/snowleopard/hadrian/master.svg?label=Windows)](https://ci.appveyor.com/project/snowleopard/hadrian) [![OS X status](https://img.shields.io/circleci/project/github/snowleopard/hadrian.svg?label=OS%20X)](https://circleci.com/gh/snowleopard/hadrian)
 
+**Note:** Hadrian has been merged to GHC and now lives in GHC's directory `hadrian`.
+The GitHub repository where Hadrian was originally developed (https://github.com/snowleopard/hadrian)
+is now out-of-date, although we may occasionally synchronise it with GHC's version.
+Please submit any new issues on GHC Trac.
+
 Hadrian is a new build system for the [Glasgow Haskell Compiler][ghc]. It is based
 on [Shake][shake] and we hope that it will soon replace the current
 [Make-based build system][make]. If you are curious about the rationale behind the
